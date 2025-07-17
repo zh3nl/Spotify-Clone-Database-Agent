@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Logger } from '../utils/logger';
 import { FileManager } from '../utils/file-manager';
+import { StateAnalyzer } from '../utils/state-analyzer';
 
 export interface ComponentInfo {
   name: string;
@@ -60,6 +61,29 @@ export interface TableColumn {
   defaultValue?: string;
 }
 
+export interface ImplementedFeature {
+  name: string;
+  description: string;
+  tables: string[];
+  apis: string[];
+  components: string[];
+  implemented: boolean;
+  implementedAt?: Date;
+  lastChecked?: Date;
+  migrationFiles?: string[];
+}
+
+export interface OperationHistory {
+  operationId: string;
+  type: 'create_table' | 'create_api' | 'update_component' | 'run_migration';
+  description: string;
+  targetFiles: string[];
+  success: boolean;
+  executedAt: Date;
+  rollbackAvailable: boolean;
+  metadata?: any;
+}
+
 export interface ProjectContext {
   components: ComponentInfo[];
   currentDataStructures: DataStructure[];
@@ -74,17 +98,38 @@ export interface ProjectContext {
   databaseTables: string[];
   aiProvider: string;
   migrationFiles: string[];
+  // Enhanced state tracking
+  implementedFeatures: ImplementedFeature[];
+  operationHistory: OperationHistory[];
+  lastAnalyzed: Date;
+  systemState?: {
+    database: {
+      connectedTables: string[];
+      executedMigrations: string[];
+      pendingMigrations: string[];
+    };
+    api: {
+      implementedRoutes: string[];
+      routesWithDatabase: string[];
+    };
+    components: {
+      usingDatabase: string[];
+      hardcodedDataRemoved: string[];
+    };
+  };
 }
 
 export class ProjectAnalyzer {
   private logger: Logger;
   private fileManager: FileManager;
   private projectRoot: string;
+  private stateAnalyzer: StateAnalyzer;
 
   constructor(projectRoot: string = process.cwd()) {
     this.logger = new Logger();
     this.fileManager = new FileManager(projectRoot);
     this.projectRoot = projectRoot;
+    this.stateAnalyzer = new StateAnalyzer(projectRoot);
   }
 
   async analyzeProject(): Promise<ProjectContext> {
@@ -103,7 +148,26 @@ export class ProjectAnalyzer {
       projectRoot: this.projectRoot,
       databaseTables: [],
       aiProvider: process.env.DB_AGENT_DEFAULT_PROVIDER || 'anthropic',
-      migrationFiles: []
+      migrationFiles: [],
+      // Enhanced state tracking
+      implementedFeatures: [],
+      operationHistory: [],
+      lastAnalyzed: new Date(),
+      systemState: {
+        database: {
+          connectedTables: [],
+          executedMigrations: [],
+          pendingMigrations: []
+        },
+        api: {
+          implementedRoutes: [],
+          routesWithDatabase: []
+        },
+        components: {
+          usingDatabase: [],
+          hardcodedDataRemoved: []
+        }
+      }
     };
 
     try {
@@ -146,6 +210,10 @@ export class ProjectAnalyzer {
       // Find existing migration files
       this.logger.analyzing('Finding migration files...');
       context.migrationFiles = await this.findMigrationFiles();
+
+      // Enhanced state analysis
+      this.logger.analyzing('Analyzing implemented features and system state...');
+      await this.enhanceContextWithState(context);
 
       this.logger.success('Project analysis completed successfully');
       return context;
@@ -700,5 +768,153 @@ export class ProjectAnalyzer {
     }
 
     return migrationFiles;
+  }
+
+  // Enhanced state analysis method
+  private async enhanceContextWithState(context: ProjectContext): Promise<void> {
+    try {
+      // Initialize state analyzer
+      await this.stateAnalyzer.initialize();
+      
+      // Get comprehensive system state
+      const systemState = await this.stateAnalyzer.getSystemState();
+      
+      // Populate systemState in context
+      if (context.systemState) {
+        context.systemState.database.connectedTables = systemState.database.tables;
+        context.systemState.database.executedMigrations = systemState.database.migrationsExecuted;
+        context.systemState.database.pendingMigrations = systemState.migrations.pendingMigrations;
+        
+        context.systemState.api.implementedRoutes = systemState.api.routes.map(r => r.path);
+        context.systemState.api.routesWithDatabase = systemState.api.routes
+          .filter(r => r.methods.length > 0)
+          .map(r => r.path);
+        
+        context.systemState.components.usingDatabase = systemState.components.components
+          .filter(c => c.hasDatabase)
+          .map(c => c.path);
+        context.systemState.components.hardcodedDataRemoved = systemState.components.components
+          .filter(c => c.hardcodedDataRemoved)
+          .map(c => c.path);
+      }
+      
+      // Analyze implemented features
+      const implementedFeatures = await this.analyzeImplementedFeatures(context, systemState);
+      context.implementedFeatures = implementedFeatures;
+      
+      // Load operation history (if available)
+      const operationHistory = await this.loadOperationHistory();
+      context.operationHistory = operationHistory;
+      
+    } catch (error) {
+      this.logger.warn(`Enhanced state analysis failed: ${error instanceof Error ? error.message : String(error)}`);
+      // Continue with basic context if state analysis fails
+    }
+  }
+
+  private async analyzeImplementedFeatures(context: ProjectContext, systemState: any): Promise<ImplementedFeature[]> {
+    const features: ImplementedFeature[] = [];
+    
+    // Common Spotify features to track
+    const featurePatterns = [
+      {
+        name: 'recently_played',
+        description: 'Recently played songs tracking',
+        expectedTable: 'recently_played',
+        expectedAPI: '/api/recently-played',
+        expectedComponents: ['recently-played', 'music-player']
+      },
+      {
+        name: 'made_for_you',
+        description: 'Personalized recommendations',
+        expectedTable: 'made_for_you',
+        expectedAPI: '/api/made-for-you',
+        expectedComponents: ['recommendations', 'made-for-you']
+      },
+      {
+        name: 'popular_albums',
+        description: 'Popular albums display',
+        expectedTable: 'popular_albums',
+        expectedAPI: '/api/popular-albums',
+        expectedComponents: ['popular-albums', 'album-grid']
+      },
+      {
+        name: 'user_playlists',
+        description: 'User playlist management',
+        expectedTable: 'user_playlists',
+        expectedAPI: '/api/playlists',
+        expectedComponents: ['playlist', 'sidebar']
+      },
+      {
+        name: 'search_functionality',
+        description: 'Search and discovery',
+        expectedTable: 'search_history',
+        expectedAPI: '/api/search',
+        expectedComponents: ['search', 'search-results']
+      }
+    ];
+    
+    for (const pattern of featurePatterns) {
+      const tableExists = systemState.database.tables.includes(pattern.expectedTable);
+      const apiExists = systemState.api.routes.some((r: any) => r.path === pattern.expectedAPI);
+      const componentsExist = pattern.expectedComponents.some(comp => 
+        context.components.some(c => c.path.toLowerCase().includes(comp))
+      );
+      
+      const migrationFiles = context.migrationFiles.filter(file => 
+        file.toLowerCase().includes(pattern.name) || 
+        file.toLowerCase().includes(pattern.expectedTable)
+      );
+      
+      features.push({
+        name: pattern.name,
+        description: pattern.description,
+        tables: tableExists ? [pattern.expectedTable] : [],
+        apis: apiExists ? [pattern.expectedAPI] : [],
+        components: componentsExist ? pattern.expectedComponents : [],
+        implemented: tableExists && apiExists,
+        lastChecked: new Date(),
+        migrationFiles
+      });
+    }
+    
+    return features;
+  }
+
+  private async loadOperationHistory(): Promise<OperationHistory[]> {
+    try {
+      const historyFile = path.join(this.projectRoot, '.db-agent-history.json');
+      const historyData = await fs.readFile(historyFile, 'utf8');
+      return JSON.parse(historyData);
+    } catch (error) {
+      // History file doesn't exist or is corrupted
+      return [];
+    }
+  }
+
+  // Public method to save operation history
+  async saveOperationHistory(operation: OperationHistory): Promise<void> {
+    try {
+      const historyFile = path.join(this.projectRoot, '.db-agent-history.json');
+      let history: OperationHistory[] = [];
+      
+      try {
+        const existingData = await fs.readFile(historyFile, 'utf8');
+        history = JSON.parse(existingData);
+      } catch (error) {
+        // File doesn't exist, start with empty history
+      }
+      
+      history.push(operation);
+      
+      // Keep only last 100 operations
+      if (history.length > 100) {
+        history = history.slice(-100);
+      }
+      
+      await fs.writeFile(historyFile, JSON.stringify(history, null, 2));
+    } catch (error) {
+      this.logger.warn(`Could not save operation history: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 } 

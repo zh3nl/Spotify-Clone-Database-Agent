@@ -11,6 +11,10 @@
     "db-agent:interactive": "tsx cli/index.ts interactive",
     "db-agent:status": "tsx cli/index.ts status",
     "db-agent:examples": "tsx cli/index.ts examples",
+    "db-agent:migrations": "tsx cli/index.ts migrations status",
+    "db-agent:migrations:run": "tsx cli/index.ts migrations run",
+    "db-agent:migrations:rollback": "tsx cli/index.ts migrations rollback",
+    "db-agent:migrations:debug": "tsx cli/index.ts migrations debug",
     "setup": "npm install && npm run db-agent:examples"
   },
   "dependencies": {

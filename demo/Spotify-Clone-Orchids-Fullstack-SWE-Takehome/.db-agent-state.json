@@ -1,0 +1,1566 @@
+{
+  "timestamp": "2025-07-17T22:42:55.419Z",
+  "state": {
+    "database": {
+      "tables": [],
+      "indexes": [],
+      "functions": [],
+      "policies": [],
+      "migrationsExecuted": [],
+      "lastChecked": "2025-07-17T22:42:54.574Z"
+    },
+    "api": {
+      "routes": [
+        {
+          "path": "/api/recently-played\\add",
+          "methods": [
+            "POST"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-17T22:34:13.093Z"
+        },
+        {
+          "path": "/api/recently-played",
+          "methods": [
+            "GET"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-17T22:34:02.758Z"
+        }
+      ],
+      "lastChecked": "2025-07-17T22:42:54.855Z"
+    },
+    "components": {
+      "components": [
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-dots-masked-vertical.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.294Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-dots-masked.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.278Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-dots.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.285Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-full-video.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.291Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-lines.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.301Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-noise-grid.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.298Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-skewed-lines.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.288Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\backgrounds\\background-with-skewed-rectangle.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.281Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\bento-grids\\bento-grid-example-three.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.230Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\bento-grids\\three-column-bento-grid-light.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.236Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\bento-grids\\three-column-bento-grid.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.247Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\bento-grids\\three-columns-with-images.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.240Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\bento-grids\\two-row-bento-grid-with-three-column-second-row.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.244Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\bento-grids\\two-row-bento-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.232Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\cards\\background-overlay-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.145Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\cards\\content-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.149Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\cards\\expandable-card-on-click.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.152Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\cards\\feature-block-animated-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.142Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\contact-forms\\contact-form-grid-with-details.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.254Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\contact-forms\\simple-centered-contact-form.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.257Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\centered-on-dark-panel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.045Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\cta-with-background-noise.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.049Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\cta-with-dashed-grid-lines.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.068Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\dark-panel-with-app-screenshot.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.053Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\simple-centered-on-brand.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.079Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\simple-centered-with-gradient.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.071Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\simple-centered.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.037Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\simple-cta-with-images.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.064Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\simple-justified.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.056Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\simple-stacked.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.040Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\two-columns-with-photo.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.061Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\ctas\\with-image-tiles.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.076Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\faqs\\faqs-with-accordion.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.267Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\faqs\\faqs-with-grid.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.271Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\faqs\\simple-faqs-with-background.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.264Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\bento-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.359Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\centered-2x2-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.355Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\contained-in-panel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.334Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\features-with-sticky-scroll.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.378Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\offset-2x2-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.331Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\offset-with-feature-list.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.328Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-3x2-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.336Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-three-column-with-large-icons-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.385Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-three-column-with-large-icons.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.318Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-three-column-with-small-icons-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.368Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-three-column-with-small-icons.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.315Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-with-card-gradient.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.362Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple-with-hover-effects.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.343Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\simple.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.345Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-code-example-panel-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.340Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-code-example-panel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.375Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-large-bordered-screenshot-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.352Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-large-bordered-screenshot.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.308Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-large-screenshot-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.372Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-large-screenshot.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.365Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-product-screenshot-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.348Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-product-screenshot-on-left.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.325Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-product-screenshot-panel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.311Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-product-screenshot.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.381Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\feature-sections\\with-testimonial.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.321Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\footers\\centered-with-logo.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.128Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\footers\\footer-with-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.135Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\footers\\simple-footer-with-four-grids.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.131Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\centered-around-testimonials.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.212Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\full-background-image-with-text.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.182Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\hero-section-with-images-grid-and-navbar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.169Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\hero-section-with-noise-background.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.202Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\hero-with-centered-image.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.200Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\modern-hero-with-gradients.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.175Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\playful-hero-section.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.185Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\simple-centered-with-background-image.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.222Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\simple-centered.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.159Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\split-with-code-example.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.215Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\split-with-image.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.163Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\split-with-screenshot-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.179Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\split-with-screenshot.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.166Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\two-column-with-image.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.189Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\with-angled-image-on-right.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.218Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\with-app-screenshot-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.196Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\with-app-screenshot.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.206Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\with-image-tiles.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.209Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\with-offset-image.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.172Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\heros\\with-phone-mockup.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.192Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\logos-clouds\\logo-cloud-marquee.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.393Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\logos-clouds\\logos-with-blur-flip.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.409Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\logos-clouds\\spotlight-logo-cloud.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.399Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\navbars\\navbar-with-children.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.518Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\navbars\\simple-navbar-with-hover-effects.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.515Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\newsletter-sections\\side-by-side-with-details.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.090Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\newsletter-sections\\simple-side-by-side.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.087Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\four-tiers-with-toggle.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.476Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\pricing-with-switch-and-add-on.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.473Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\pricing-with-switch.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.480Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\simple-pricing-with-three-tiers.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.432Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\single-price-with-details.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.465Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers-with-dividers.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.454Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers-with-emphasized-tier.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.487Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers-with-feature-comparison.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.437Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers-with-logos-and-feature-comparison.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.458Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers-with-toggle-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.484Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers-with-toggle.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.428Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\three-tiers.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.469Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\two-tiers-with-emphasized-tier.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.448Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\two-tiers-with-extra-tier.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.462Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\two-tiers.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.445Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\with-comparison-table-on-dark.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.452Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\pricing\\with-comparison-table.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.442Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\stats\\stats-for-changelog.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.503Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\stats\\stats-with-gradient.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.507Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\stats\\stats-with-grid-background.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.496Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\stats\\stats-with-number-ticker.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.500Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\testimonials\\testimonials-grid-with-centered-carousel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.117Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\testimonials\\testimonials-marquee-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.114Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\testimonials\\testimonials-masonry-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.121Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\text-animations\\text-animation-blur-fade-in.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.106Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\text-animations\\text-animation-flipping-words.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.101Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\blocks\\text-animations\\text-animation-typewriter-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.098Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\spotify-header.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.018Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\spotify-main-content.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T22:35:19.129Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\spotify-player.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.014Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\spotify-sidebar.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.022Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\3d-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.826Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\3d-marquee.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.847Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\3d-pin.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.731Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\accordion.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.707Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\alert-dialog.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.536Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\alert.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.724Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\animated-modal.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.568Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\animated-testimonials.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.812Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\animated-tooltip.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.600Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\apple-cards-carousel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.876Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\aspect-ratio.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.529Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\aurora-background.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.850Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\avatar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.819Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\background-beams-with-collision.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.690Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\background-beams.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.584Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\background-boxes.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.940Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\background-gradient-animation.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.805Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\background-gradient.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.626Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\background-lines.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.795Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\badge.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.869Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\bento-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.905Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\breadcrumb.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.777Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\button.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.895Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\calendar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.752Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\canvas-reveal-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.745Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\card-hover-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.547Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\card-spotlight.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.830Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\card-stack.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.700Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.590Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\carousel.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.975Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\chart.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.639Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\checkbox.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.927Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\code-block.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.873Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\collapsible.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.934Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\colourful-text.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.960Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\command.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.788Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\compare.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.902Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\container-scroll-animation.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.727Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\container-text-flip.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.739Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\context-menu.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.968Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\cover.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.816Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\dialog.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.858Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\direction-aware-hover.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.608Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\draggable-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.572Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\drawer.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.710Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\dropdown-menu.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.937Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\evervault-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.717Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\file-upload.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.855Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\flip-words.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.652Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\floating-dock.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.862Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\floating-navbar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.540Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\focus-cards.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.742Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\following-pointer.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.532Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\form.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.971Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\glare-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.611Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\globe.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.766Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\glowing-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.735Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\glowing-stars.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.615Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\google-gemini-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.543Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.666Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\hero-highlight.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.618Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\hero-parallax.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.645Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\hover-border-gradient.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.769Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\hover-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.642Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\images-slider.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.773Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\infinite-moving-cards.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.964Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\input-otp.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.631Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\input.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.954Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\label.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.682Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\lamp.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.920Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\layout-grid.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.659Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\lens.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.526Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\link-preview.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.695Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\macbook-scroll.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.575Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\menubar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.833Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\meteors.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.758Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\moving-border.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.840Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\moving-line.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.844Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\multi-step-loader.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.561Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\navbar-menu.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.564Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\navigation-menu.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.703Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\pagination.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.558Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\parallax-scroll-2.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.635Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\parallax-scroll.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.912Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\placeholders-and-vanish-input.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.785Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\pointer-highlight.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.791Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\popover.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.597Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\progress.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.604Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\radio-group.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.781Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\resizable-navbar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.923Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\resizable.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.678Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\scroll-area.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.674Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\select.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.947Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\separator.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.886Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\sheet.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.649Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\shooting-stars.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.836Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\sidebar.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.880Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\skeleton.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.957Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\slider.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.594Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\sonner.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.686Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\sparkles.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.714Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\spotlight-new.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.891Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\spotlight.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.865Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\stars-background.tsx",
+          "hasDatabase": true,
+          "lastModified": "2025-07-17T20:16:41.930Z",
+          "hardcodedDataRemoved": true
+        },
+        {
+          "path": "src\\components\\ui\\sticky-banner.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.915Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\sticky-scroll-reveal.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.944Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\svg-mask-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.800Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\switch.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.749Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\table.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.883Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\tabs.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.579Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\tailwindcss-buttons.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.823Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\text-generate-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.762Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\text-hover-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.587Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\text-reveal-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.551Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\textarea.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.950Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\timeline.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.755Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\toggle-group.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.808Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\toggle.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.898Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\tooltip.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.721Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\tracing-beam.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.670Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\typewriter-effect.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.623Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\vortex.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.663Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\wavy-background.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.656Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\wobble-card.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.909Z",
+          "hardcodedDataRemoved": false
+        },
+        {
+          "path": "src\\components\\ui\\world-map.tsx",
+          "hasDatabase": false,
+          "lastModified": "2025-07-17T20:16:41.554Z",
+          "hardcodedDataRemoved": false
+        }
+      ],
+      "lastChecked": "2025-07-17T22:42:54.857Z"
+    },
+    "migrations": {
+      "executedMigrations": [],
+      "pendingMigrations": [
+        "20250717T220714_create_a_'recently_played'_table_in_supabase_to_store_track_history_with_user_association.sql",
+        "20250717T223258_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_proper_relationships.sql",
+        "20250717T223312_create_a_'users'_table_in_supabase_to_store_user_information.sql",
+        "20250717T223322_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
+      ],
+      "lastChecked": "2025-07-17T22:42:54.942Z"
+    },
+    "features": {
+      "recently_played": {
+        "implemented": true,
+        "tables": [
+          "recently_played"
+        ],
+        "apis": [
+          "/api/recently-played"
+        ],
+        "components": [],
+        "implementedAt": "2025-07-17T22:42:55.090Z"
+      },
+      "made_for_you": {
+        "implemented": false,
+        "tables": [],
+        "apis": [],
+        "components": [],
+        "implementedAt": "2025-07-17T22:42:55.172Z"
+      },
+      "popular_albums": {
+        "implemented": false,
+        "tables": [],
+        "apis": [],
+        "components": [],
+        "implementedAt": "2025-07-17T22:42:55.290Z"
+      },
+      "user_playlists": {
+        "implemented": false,
+        "tables": [],
+        "apis": [],
+        "components": [],
+        "implementedAt": "2025-07-17T22:42:55.375Z"
+      },
+      "search_functionality": {
+        "implemented": false,
+        "tables": [],
+        "apis": [],
+        "components": [],
+        "implementedAt": "2025-07-17T22:42:55.419Z"
+      }
+    }
+  }
+}
