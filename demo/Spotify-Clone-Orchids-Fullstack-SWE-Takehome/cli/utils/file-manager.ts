@@ -251,22 +251,119 @@ export async function extractArrayFromFile(filePath: string, arrayName: string):
     const absPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
     const fileContent = fs.readFileSync(absPath, 'utf8');
     
-    // Enhanced regex to match: const arrayName = [ ... ] with proper bracket matching
-    const arrayRegex = new RegExp(`const\\s+${arrayName}\\s*=\\s*(\\[[\\s\\S]*?\\])(?=\\s*(?:const|let|var|function|export|$))`, 'm');
-    const match = fileContent.match(arrayRegex);
-    
-    if (!match) {
-      console.log(`No match found for array: ${arrayName}`);
-      return null;
+    // First, try to extract from backup files if this is a migrated component
+    if (filePath.includes('spotify-main-content.tsx')) {
+      const backupResult = await extractArrayFromBackupFile(filePath, arrayName);
+      if (backupResult && backupResult.length > 0) {
+        console.log(`Successfully extracted ${backupResult.length} items from backup file for ${arrayName}`);
+        return backupResult;
+      }
     }
     
-    const arrayString = match[1];
-    console.log(`Found array string for ${arrayName}: ${arrayString.substring(0, 200)}...`);
+    // Try multiple extraction patterns
+    const patterns = [
+      // Pattern 1: const arrayName = [ ... ]
+      new RegExp(`const\\s+${arrayName}\\s*=\\s*(\\[[\\s\\S]*?\\])(?=\\s*(?:const|let|var|function|export|$))`, 'm'),
+      // Pattern 2: set<ArrayName>([...]) within try-catch blocks
+      new RegExp(`set${arrayName.charAt(0).toUpperCase() + arrayName.slice(1)}\\s*\\(\\s*(\\[[\\s\\S]*?\\])\\s*\\)`, 'm'),
+      // Pattern 3: Fallback data within error handling
+      new RegExp(`//\\s*Fallback.*?${arrayName}[\\s\\S]*?(\\[[\\s\\S]*?\\])`, 'i'),
+      // Pattern 4: Assignment within catch blocks
+      new RegExp(`${arrayName}\\s*=\\s*(\\[[\\s\\S]*?\\])\\s*(?=\\}|$)`, 'm')
+    ];
     
+    for (const pattern of patterns) {
+      const match = fileContent.match(pattern);
+      if (match) {
+        const arrayString = match[1];
+        console.log(`Found array string for ${arrayName} using pattern: ${arrayString.substring(0, 200)}...`);
+        
+        const result = await parseArrayString(arrayString);
+        if (result && result.length > 0) {
+          return result;
+        }
+      }
+    }
+    
+    console.log(`No match found for array: ${arrayName}`);
+    return null;
+  } catch (err) {
+    console.error(`Error extracting array ${arrayName}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Extracts hardcoded arrays from backup files containing the original fallback data.
+ * @param originalFilePath Path to the original component file
+ * @param arrayName Name of the array variable to extract
+ * @returns Parsed array as JavaScript objects, or null if not found
+ */
+export async function extractArrayFromBackupFile(originalFilePath: string, arrayName: string): Promise<any[] | null> {
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const dir = path.dirname(originalFilePath);
+    const basename = path.basename(originalFilePath, '.tsx');
+    
+    // Find backup files with the original hardcoded data
+    const backupFiles = fs.readdirSync(dir)
+      .filter((file: string) => file.startsWith(`${basename}.tsx.backup.`))
+      .sort((a: string, b: string) => {
+        const aTime = parseInt(a.split('.backup.')[1]);
+        const bTime = parseInt(b.split('.backup.')[1]);
+        return bTime - aTime; // Most recent first
+      });
+    
+    for (const backupFile of backupFiles) {
+      const backupPath = path.join(dir, backupFile);
+      const backupContent = fs.readFileSync(backupPath, 'utf8');
+      
+      // Look for fallback data patterns in backup files
+      const patterns = [
+        // Pattern 1: set<ArrayName>([...]) calls
+        new RegExp(`set${arrayName.charAt(0).toUpperCase() + arrayName.slice(1)}\\s*\\(\\s*(\\[[\\s\\S]*?\\])\\s*\\)`, 'm'),
+        // Pattern 2: Fallback arrays within catch blocks
+        new RegExp(`//\\s*Fallback.*?${arrayName}[\\s\\S]*?(\\[[\\s\\S]*?\\])`, 'i'),
+        // Pattern 3: Direct assignment in error handling
+        new RegExp(`${arrayName}\\s*=\\s*(\\[[\\s\\S]*?\\])\\s*(?=\\}|setMadeForYou|setPopularAlbums|finally)`, 'm')
+      ];
+      
+      for (const pattern of patterns) {
+        const match = backupContent.match(pattern);
+        if (match) {
+          const arrayString = match[1];
+          console.log(`Found array in backup file ${backupFile} for ${arrayName}`);
+          
+          const result = await parseArrayString(arrayString);
+          if (result && result.length > 0) {
+            return result;
+          }
+        }
+      }
+    }
+    
+    console.log(`No backup files found with data for ${arrayName}`);
+    return null;
+  } catch (err) {
+    console.error(`Error extracting array from backup files for ${arrayName}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Parses an array string into JavaScript objects with proper error handling.
+ * @param arrayString The array string to parse
+ * @returns Parsed array or null if parsing fails
+ */
+async function parseArrayString(arrayString: string): Promise<any[] | null> {
+  try {
     // Clean up the array string and handle multi-line formatting
     const cleanedArrayString = arrayString
       .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
       .replace(/\/\/.*$/gm, '') // Remove line comments
+      .replace(/,\s*\]/g, ']') // Remove trailing commas
       .trim();
     
     // Use Function constructor to safely parse the array
@@ -274,14 +371,14 @@ export async function extractArrayFromFile(filePath: string, arrayName: string):
     const arr = Function(`"use strict"; return (${cleanedArrayString})`)();
     
     if (Array.isArray(arr)) {
-      console.log(`Successfully extracted ${arr.length} items from ${arrayName}`);
+      console.log(`Successfully parsed ${arr.length} items`);
       return arr;
     }
     
-    console.log(`Extracted data is not an array for ${arrayName}`);
+    console.log(`Parsed data is not an array`);
     return null;
   } catch (err) {
-    console.error(`Error extracting array ${arrayName}:`, err);
+    console.error(`Error parsing array string:`, err);
     return null;
   }
 }

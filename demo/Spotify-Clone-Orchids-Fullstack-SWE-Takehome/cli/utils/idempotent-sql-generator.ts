@@ -506,4 +506,209 @@ WHERE NOT EXISTS (
 
     return impact;
   }
+
+  /**
+   * Generates idempotent seed data insertion SQL
+   * @param tableName Name of the table to insert data into
+   * @param seedData Array of data objects to insert
+   * @returns SQL string with idempotent INSERT statements
+   */
+  async generateIdempotentSeedData(tableName: string, seedData: any[]): Promise<string> {
+    if (!seedData || seedData.length === 0) {
+      return `-- No seed data provided for table: ${tableName}`;
+    }
+
+    const sections: string[] = [];
+    
+    // Header
+    sections.push(`-- Idempotent seed data for table: ${tableName}`);
+    sections.push(`-- Generated at: ${new Date().toISOString()}`);
+    sections.push(`-- Records: ${seedData.length}`);
+    sections.push('');
+
+    // Get column names from first data object
+    const firstItem = seedData[0];
+    const columns = Object.keys(firstItem);
+    
+    // Validate that all objects have the same structure
+    const inconsistentItems = seedData.filter(item => {
+      const itemKeys = Object.keys(item);
+      return itemKeys.length !== columns.length || 
+             !columns.every(col => itemKeys.includes(col));
+    });
+
+    if (inconsistentItems.length > 0) {
+      this.logger.warn(`Found ${inconsistentItems.length} items with inconsistent structure in seed data for ${tableName}`);
+    }
+
+    // Generate batch insert with conflict resolution
+    const batchSize = 50; // Insert in batches to avoid query size limits
+    const batches = this.chunkArray(seedData, batchSize);
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      
+      sections.push(`-- Batch ${batchIndex + 1} of ${batches.length}`);
+      sections.push(`INSERT INTO ${tableName} (${columns.map(col => `"${col}"`).join(', ')})`);
+      sections.push('VALUES');
+      
+      const valueRows = batch.map(item => {
+        const values = columns.map(col => {
+          const value = item[col];
+          return this.formatSQLValue(value);
+        });
+        return `  (${values.join(', ')})`;
+      });
+      
+      sections.push(valueRows.join(',\n'));
+      
+      // Add conflict resolution strategy
+      const conflictStrategy = this.getConflictResolutionStrategy(tableName, columns);
+      sections.push(conflictStrategy);
+      sections.push('');
+    }
+
+    // Add verification query
+    sections.push(`-- Verification: Check inserted records`);
+    sections.push(`-- SELECT COUNT(*) FROM ${tableName} WHERE id IN (${seedData.map(item => this.formatSQLValue(item.id)).join(', ')});`);
+    sections.push('');
+
+    return sections.join('\n');
+  }
+
+  /**
+   * Formats a JavaScript value for SQL insertion
+   * @param value The value to format
+   * @returns SQL-formatted string
+   */
+  private formatSQLValue(value: any): string {
+    if (value === null || value === undefined) {
+      return 'NULL';
+    }
+    
+    if (typeof value === 'string') {
+      // Escape single quotes and wrap in quotes
+      return `'${value.replace(/'/g, "''")}'`;
+    }
+    
+    if (typeof value === 'number') {
+      return value.toString();
+    }
+    
+    if (typeof value === 'boolean') {
+      return value ? 'TRUE' : 'FALSE';
+    }
+    
+    if (value instanceof Date) {
+      return `'${value.toISOString()}'`;
+    }
+    
+    if (typeof value === 'object') {
+      // Handle JSON objects
+      return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
+    }
+    
+    // Default: convert to string and escape
+    return `'${String(value).replace(/'/g, "''")}'`;
+  }
+
+  /**
+   * Gets the appropriate conflict resolution strategy for a table
+   * @param tableName Name of the table
+   * @param columns Array of column names
+   * @returns SQL ON CONFLICT clause
+   */
+  private getConflictResolutionStrategy(tableName: string, columns: string[]): string {
+    // Default: use ID as conflict resolution key
+    const idColumn = columns.find(col => col === 'id') || columns[0];
+    const updateColumns = columns.filter(col => col !== 'id' && col !== 'created_at');
+    
+    if (updateColumns.length === 0) {
+      // If no columns to update, just ignore conflicts
+      return `ON CONFLICT ("${idColumn}") DO NOTHING;`;
+    }
+    
+    // Generate UPDATE SET clause for non-ID columns
+    const updateSet = updateColumns.map(col => `"${col}" = EXCLUDED."${col}"`).join(', ');
+    
+    return `ON CONFLICT ("${idColumn}") DO UPDATE SET ${updateSet};`;
+  }
+
+  /**
+   * Chunks an array into smaller arrays of specified size
+   * @param array Array to chunk
+   * @param size Size of each chunk
+   * @returns Array of chunks
+   */
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  }
+
+  /**
+   * Validates seed data structure and provides warnings
+   * @param seedData Array of data objects to validate
+   * @param tableName Name of the table for context
+   * @returns Validation result with warnings
+   */
+  validateSeedData(seedData: any[], tableName: string): {
+    isValid: boolean;
+    warnings: string[];
+    errors: string[];
+  } {
+    const result = {
+      isValid: true,
+      warnings: [] as string[],
+      errors: [] as string[]
+    };
+
+    if (!seedData || seedData.length === 0) {
+      result.errors.push('No seed data provided');
+      result.isValid = false;
+      return result;
+    }
+
+    // Check for required fields
+    const requiredFields = ['id'];
+    const firstItem = seedData[0];
+    
+    for (const field of requiredFields) {
+      if (!(field in firstItem)) {
+        result.errors.push(`Missing required field: ${field}`);
+        result.isValid = false;
+      }
+    }
+
+    // Check for data consistency
+    const columns = Object.keys(firstItem);
+    const inconsistentItems = seedData.filter((item, index) => {
+      const itemKeys = Object.keys(item);
+      return itemKeys.length !== columns.length || 
+             !columns.every(col => itemKeys.includes(col));
+    });
+
+    if (inconsistentItems.length > 0) {
+      result.warnings.push(`${inconsistentItems.length} items have inconsistent structure`);
+    }
+
+    // Check for duplicate IDs
+    const ids = seedData.map(item => item.id);
+    const uniqueIds = new Set(ids);
+    if (ids.length !== uniqueIds.size) {
+      result.errors.push('Duplicate IDs found in seed data');
+      result.isValid = false;
+    }
+
+    // Check for null/undefined required values
+    const nullIdItems = seedData.filter(item => !item.id);
+    if (nullIdItems.length > 0) {
+      result.errors.push(`${nullIdItems.length} items have null/undefined IDs`);
+      result.isValid = false;
+    }
+
+    return result;
+  }
 } 

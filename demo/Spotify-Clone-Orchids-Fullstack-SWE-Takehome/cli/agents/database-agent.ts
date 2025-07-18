@@ -689,35 +689,66 @@ export class DatabaseAgent {
       const tableName = this.extractTableName(operation.description);
       const columns = this.extractColumns(operation, projectContext);
 
-      // --- Seed Data Extraction Logic ---
+      // --- Enhanced Seed Data Extraction Logic ---
       let seedData: any[] | null = null;
       let includeSeedData = false;
+      
       // Map table names to array names in the frontend
       const tableToArrayMap: Record<string, string> = {
         'recently_played': 'recentlyPlayed',
-        'made_for_you': 'madeForYou',
+        'made_for_you': 'madeForYou', 
         'popular_albums': 'popularAlbums',
       };
+      
       const arrayName = tableToArrayMap[tableName];
       if (arrayName) {
-        // Use the extractArrayFromFile utility from file-manager
-        const { extractArrayFromFile } = require('../utils/file-manager');
-        const frontendFile = 'src/components/spotify-main-content.tsx';
-        const rawSeedData = await extractArrayFromFile(frontendFile, arrayName);
-        if (rawSeedData && Array.isArray(rawSeedData) && rawSeedData.length > 0) {
-          // Transform the raw seed data to match database schema
-          seedData = this.transformSeedData(rawSeedData, tableName);
-          if (seedData && seedData.length > 0) {
-            includeSeedData = true;
-            this.logger.info(`Extracted and transformed ${seedData.length} seed records from ${arrayName} in ${frontendFile}`);
+        this.logger.info(`Attempting to extract seed data for ${tableName} from array: ${arrayName}`);
+        
+        try {
+          // Use the extractArrayFromFile utility from file-manager
+          const { extractArrayFromFile } = require('../utils/file-manager');
+          const frontendFile = 'src/components/spotify-main-content.tsx';
+          
+          this.logger.info(`Extracting array ${arrayName} from ${frontendFile}`);
+          const rawSeedData = await extractArrayFromFile(frontendFile, arrayName);
+          
+          if (rawSeedData && Array.isArray(rawSeedData) && rawSeedData.length > 0) {
+            this.logger.success(`Successfully extracted ${rawSeedData.length} raw items from ${arrayName}`);
+            
+            // Transform the raw seed data to match database schema
+            seedData = this.transformSeedData(rawSeedData, tableName);
+            
+            if (seedData && seedData.length > 0) {
+              // Validate the transformed seed data
+              const validation = this.sqlGenerator.validateSeedData(seedData, tableName);
+              
+              if (validation.isValid) {
+                includeSeedData = true;
+                this.logger.success(`Successfully transformed and validated ${seedData.length} seed records for ${tableName}`);
+                
+                if (validation.warnings.length > 0) {
+                  validation.warnings.forEach(warning => this.logger.warn(`Seed data warning: ${warning}`));
+                }
+              } else {
+                this.logger.error(`Seed data validation failed for ${tableName}:`);
+                validation.errors.forEach(error => this.logger.error(`  - ${error}`));
+                this.logger.warn(`Proceeding without seed data for ${tableName}`);
+              }
+            } else {
+              this.logger.warn(`Failed to transform seed data for ${arrayName} - transformation returned empty or null`);
+            }
           } else {
-            this.logger.warn(`Failed to transform seed data for ${arrayName}`);
+            this.logger.warn(`No seed data found for ${arrayName} in ${frontendFile}`);
+            this.logger.info(`Raw extraction result: ${rawSeedData ? 'not an array or empty' : 'null'}`);
           }
-        } else {
-          this.logger.info(`No seed data found for ${arrayName} in ${frontendFile}`);
+        } catch (error) {
+          this.logger.error(`Error during seed data extraction for ${arrayName}: ${error instanceof Error ? error.message : String(error)}`);
+          this.logger.warn(`Proceeding without seed data for ${tableName}`);
         }
+      } else {
+        this.logger.info(`No seed data mapping defined for table: ${tableName}`);
       }
-      // --- End Seed Data Extraction Logic ---
+      // --- End Enhanced Seed Data Extraction Logic ---
 
       // Generate comprehensive migration with seed data
       const sqlCode = await this.sqlGenerator.generateCompleteMigration(
@@ -843,44 +874,69 @@ export class DatabaseAgent {
   // Transform raw seed data to match database schema
   private transformSeedData(rawData: any[], tableName: string): any[] | null {
     try {
+      this.logger.info(`Transforming ${rawData.length} items for table: ${tableName}`);
+      
+      // Log the first item to understand the structure
+      if (rawData.length > 0) {
+        this.logger.info(`Sample raw data structure: ${JSON.stringify(rawData[0], null, 2)}`);
+      }
+
       switch (tableName) {
         case 'recently_played':
-          return rawData.map(item => ({
-            id: item.id,
-            title: item.title,
-            artist: item.artist,
-            album: item.album,
-            image_url: item.image,
-            duration: item.duration,
-            played_at: new Date().toISOString(),
-            user_id: 'default-user', // Default user ID for seed data
-            created_at: new Date().toISOString()
-          }));
+          return rawData.map((item, index) => {
+            const transformed = {
+              id: item.id || `rp_${index + 1}`,
+              user_id: 'default-user',
+              track_id: item.id || `track_${index + 1}`,
+              track_name: item.title || 'Unknown Track',
+              artist_name: item.artist || 'Unknown Artist',
+              album_name: item.album || 'Unknown Album',
+              played_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // Random time within last 30 days
+              duration_ms: typeof item.duration === 'number' ? item.duration * 1000 : 180000, // Convert to milliseconds
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            this.logger.info(`Transformed recently_played item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
+            return transformed;
+          });
 
         case 'made_for_you':
-          return rawData.map(item => ({
-            id: item.id,
-            title: item.title,
-            description: item.artist, // Using artist field as description
-            image_url: item.image,
-            playlist_type: 'personalized',
-            user_id: 'default-user',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }));
+          return rawData.map((item, index) => {
+            const transformed = {
+              id: item.id || `mfy_${index + 1}`,
+              user_id: 'default-user',
+              title: item.title || 'Unknown Playlist',
+              description: item.artist || 'Personalized playlist just for you',
+              image_url: item.image || null,
+              type: 'personalized',
+              recommendation_score: Math.round(Math.random() * 100) / 100, // Random score between 0-1
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            this.logger.info(`Transformed made_for_you item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
+            return transformed;
+          });
 
         case 'popular_albums':
-          return rawData.map(item => ({
-            id: item.id,
-            title: item.title,
-            artist: item.artist,
-            image_url: item.image,
-            release_date: '2023-01-01', // Default release date
-            duration: item.duration,
-            popularity_score: Math.floor(Math.random() * 100), // Random popularity score
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }));
+          return rawData.map((item, index) => {
+            const transformed = {
+              id: item.id || `pa_${index + 1}`,
+              album_id: item.id || `album_${index + 1}`,
+              title: item.title || 'Unknown Album',
+              artist: item.artist || 'Unknown Artist',
+              image_url: item.image || null,
+              release_date: this.generateRandomReleaseDate(),
+              popularity_score: Math.floor(Math.random() * 100) + 1, // Random score between 1-100
+              genre: this.inferGenreFromArtist(item.artist || ''),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            this.logger.info(`Transformed popular_albums item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
+            return transformed;
+          });
 
         default:
           this.logger.warn(`No transformation defined for table: ${tableName}`);
@@ -888,8 +944,40 @@ export class DatabaseAgent {
       }
     } catch (error) {
       this.logger.error(`Error transforming seed data for ${tableName}: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(`Raw data sample: ${JSON.stringify(rawData.slice(0, 2), null, 2)}`);
       return null;
     }
+  }
+
+  // Helper method to generate random release dates for albums
+  private generateRandomReleaseDate(): string {
+    const start = new Date(2020, 0, 1);
+    const end = new Date();
+    const randomDate = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return randomDate.toISOString().split('T')[0]; // Return just the date part
+  }
+
+  // Helper method to infer genre from artist name (basic heuristic)
+  private inferGenreFromArtist(artistName: string): string {
+    const genreMap: Record<string, string> = {
+      'taylor swift': 'pop',
+      'harry styles': 'pop',
+      'bad bunny': 'reggaeton',
+      'beyoncé': 'r&b',
+      'olivia rodrigo': 'pop',
+      'the weeknd': 'r&b',
+      'billie eilish': 'alternative',
+      'lorde': 'alternative',
+      'clairo': 'indie',
+      'arctic monkeys': 'indie rock',
+      'the strokes': 'indie rock',
+      'tame impala': 'psychedelic rock',
+      'gracie abrams': 'pop',
+      'spotify': 'playlist'
+    };
+
+    const lowerArtist = artistName.toLowerCase();
+    return genreMap[lowerArtist] || 'unknown';
   }
 
   private async executeCreateAPI(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
