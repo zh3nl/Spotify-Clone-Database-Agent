@@ -12,6 +12,15 @@ interface Track {
   duration: number
 }
 
+interface Playlist {
+  id: string
+  title: string
+  artist: string
+  album: string
+  image?: string
+  duration: number
+}
+
 interface MusicCardProps {
   title: string
   artist: string
@@ -80,9 +89,9 @@ interface SpotifyMainContentProps {
 }
 
 export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentProps) {
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>([])
-  const [madeForYou, setMadeForYou] = useState<Track[]>([])
-  const [popularAlbums, setPopularAlbums] = useState<Track[]>([])
+  const [recentlyPlayed, setRecentlyPlayed] = useState<Playlist[]>([])
+  const [madeForYou, setMadeForYou] = useState<Playlist[]>([])
+  const [popularAlbums, setPopularAlbums] = useState<Playlist[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,33 +102,53 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
       
       try {
         // Fetch recently played tracks
-        const recentlyPlayedResponse = await fetch('/api/tracks/recently-played')
+        console.log('🔄 Fetching recently played tracks from /api/recently-played')
+        const recentlyPlayedResponse = await fetch('/api/recently-played')
         if (!recentlyPlayedResponse.ok) {
-          throw new Error('Failed to fetch recently played tracks')
+          throw new Error(`Failed to fetch recently played tracks: ${recentlyPlayedResponse.status} ${recentlyPlayedResponse.statusText}`)
         }
         const recentlyPlayedData = await recentlyPlayedResponse.json()
-        setRecentlyPlayed(recentlyPlayedData)
+        console.log('✅ Recently played data:', recentlyPlayedData)
+        setRecentlyPlayed(Array.isArray(recentlyPlayedData) ? recentlyPlayedData : [])
         
         // Fetch made for you playlists
-        const madeForYouResponse = await fetch('/api/playlists/made-for-you')
-        if (!madeForYouResponse.ok) {
-          throw new Error('Failed to fetch made for you playlists')
+        console.log('🔄 Fetching made for you playlists from /api/playlists/made-for-you')
+        try {
+          const madeForYouResponse = await fetch('/api/playlists/made-for-you')
+          if (madeForYouResponse.ok) {
+            const madeForYouData = await madeForYouResponse.json()
+            console.log('✅ Made for you data:', madeForYouData)
+            setMadeForYou(Array.isArray(madeForYouData) ? madeForYouData : [])
+          } else {
+            console.warn('⚠️ Made for you API not available, using empty array')
+            setMadeForYou([])
+          }
+        } catch (madeForYouError) {
+          console.warn('⚠️ Made for you API error:', madeForYouError)
+          setMadeForYou([])
         }
-        const madeForYouData = await madeForYouResponse.json()
-        setMadeForYou(madeForYouData)
         
         // Fetch popular albums
-        const popularAlbumsResponse = await fetch('/api/albums/popular')
-        if (!popularAlbumsResponse.ok) {
-          throw new Error('Failed to fetch popular albums')
+        console.log('🔄 Fetching popular albums from /api/albums/popular')
+        try {
+          const popularAlbumsResponse = await fetch('/api/albums/popular')
+          if (popularAlbumsResponse.ok) {
+            const popularAlbumsData = await popularAlbumsResponse.json()
+            console.log('✅ Popular albums data:', popularAlbumsData)
+            setPopularAlbums(Array.isArray(popularAlbumsData) ? popularAlbumsData : [])
+          } else {
+            console.warn('⚠️ Popular albums API not available, using empty array')
+            setPopularAlbums([])
+          }
+        } catch (popularError) {
+          console.warn('⚠️ Popular albums API error:', popularError)
+          setPopularAlbums([])
         }
-        const popularAlbumsData = await popularAlbumsResponse.json()
-        setPopularAlbums(popularAlbumsData)
       } catch (err) {
+        console.error('❌ Error fetching data:', err)
         setError(err instanceof Error ? err.message : 'An unknown error occurred')
-        console.error('Error fetching data:', err)
         
-        // Fallback to empty arrays if there's an error
+        // Set empty arrays as fallback
         setRecentlyPlayed([])
         setMadeForYou([])
         setPopularAlbums([])
@@ -161,11 +190,11 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
 
   // Error message component
   const ErrorMessage = ({ message }: { message: string }) => (
-    <div className="p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg my-4">
+    <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md my-4">
       <p>{message}</p>
       <button 
+        className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         onClick={() => window.location.reload()}
-        className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
       >
         Retry
       </button>
@@ -184,36 +213,29 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         </div>
       </div>
 
-      {/* Error display */}
-      {error && <ErrorMessage message={error} />}
-
       {/* Recently Played */}
       <section className="px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Recently played</h2>
         </div>
         
-        {isLoading ? (
+        {error ? (
+          <ErrorMessage message={`Failed to load recently played: ${error}`} />
+        ) : isLoading ? (
           <LoadingSkeleton />
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {recentlyPlayed.length > 0 ? (
-              recentlyPlayed.map((item) => (
-                <div key={item.id} className="flex-shrink-0">
-                  <MusicCard 
-                    title={item.title} 
-                    artist={item.artist} 
-                    image={item.albumArt}
-                    size="small"
-                    onPlay={() => handlePlayTrack(item)}
-                  />
-                </div>
-              ))
-            ) : (
-              <div className="w-full text-center py-8 text-[var(--color-text-secondary)]">
-                No recently played tracks found
+            {recentlyPlayed.map((item) => (
+              <div key={item.id} className="flex-shrink-0">
+                <MusicCard 
+                  title={item.title} 
+                  artist={item.artist} 
+                  image={item.image}
+                  size="small"
+                  onPlay={() => handlePlayTrack(item)}
+                />
               </div>
-            )}
+            ))}
           </div>
         )}
       </section>
@@ -227,10 +249,12 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
           </button>
         </div>
         
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+        {error ? (
+          <ErrorMessage message={`Failed to load made for you playlists: ${error}`} />
+        ) : isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 animate-pulse">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="animate-pulse">
+              <div key={i}>
                 <div className="w-full aspect-square bg-[var(--color-muted)] rounded-lg mb-4"></div>
                 <div className="h-4 w-32 bg-[var(--color-muted)] rounded mb-2"></div>
                 <div className="h-3 w-24 bg-[var(--color-muted)] rounded"></div>
@@ -239,22 +263,16 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {madeForYou.length > 0 ? (
-              madeForYou.map((item) => (
-                <MusicCard 
-                  key={item.id}
-                  title={item.title} 
-                  artist={item.artist}
-                  image={item.albumArt}
-                  size="medium"
-                  onPlay={() => handlePlayTrack(item)}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8 text-[var(--color-text-secondary)]">
-                No personalized playlists found
-              </div>
-            )}
+            {madeForYou.map((item) => (
+              <MusicCard 
+                key={item.id}
+                title={item.title} 
+                artist={item.artist}
+                image={item.image}
+                size="medium"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
           </div>
         )}
       </section>
@@ -268,10 +286,12 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
           </button>
         </div>
         
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
+        {error ? (
+          <ErrorMessage message={`Failed to load popular albums: ${error}`} />
+        ) : isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 animate-pulse">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="animate-pulse">
+              <div key={i}>
                 <div className="w-full aspect-square bg-[var(--color-muted)] rounded-lg mb-4"></div>
                 <div className="h-4 w-32 bg-[var(--color-muted)] rounded mb-2"></div>
                 <div className="h-3 w-24 bg-[var(--color-muted)] rounded"></div>
@@ -280,22 +300,16 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
-            {popularAlbums.length > 0 ? (
-              popularAlbums.map((item) => (
-                <MusicCard 
-                  key={item.id}
-                  title={item.title} 
-                  artist={item.artist}
-                  image={item.albumArt}
-                  size="medium"
-                  onPlay={() => handlePlayTrack(item)}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8 text-[var(--color-text-secondary)]">
-                No popular albums found
-              </div>
-            )}
+            {popularAlbums.map((item) => (
+              <MusicCard 
+                key={item.id}
+                title={item.title} 
+                artist={item.artist}
+                image={item.image}
+                size="medium"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
           </div>
         )}
       </section>

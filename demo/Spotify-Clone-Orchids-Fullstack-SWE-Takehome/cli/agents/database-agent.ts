@@ -702,51 +702,70 @@ export class DatabaseAgent {
       
       const arrayName = tableToArrayMap[tableName];
       if (arrayName) {
-        this.logger.info(`Attempting to extract seed data for ${tableName} from array: ${arrayName}`);
+        this.logger.info(`🎯 Found seed data mapping: ${tableName} → ${arrayName}`);
+        this.logger.info(`📂 Attempting to extract seed data for table "${tableName}" from array "${arrayName}"`);
         
         try {
           // Use the extractArrayFromFile utility from file-manager
           const { extractArrayFromFile } = require('../utils/file-manager');
           const frontendFile = 'src/components/spotify-main-content.tsx';
           
-          this.logger.info(`Extracting array ${arrayName} from ${frontendFile}`);
+          this.logger.info(`🔍 Searching for array "${arrayName}" in file: ${frontendFile}`);
           const rawSeedData = await extractArrayFromFile(frontendFile, arrayName);
           
           if (rawSeedData && Array.isArray(rawSeedData) && rawSeedData.length > 0) {
-            this.logger.success(`Successfully extracted ${rawSeedData.length} raw items from ${arrayName}`);
+            this.logger.success(`🎉 Successfully extracted ${rawSeedData.length} raw items from "${arrayName}"`);
+            this.logger.info(`📋 Sample raw data: ${JSON.stringify(rawSeedData[0], null, 2)}`);
             
             // Transform the raw seed data to match database schema
+            this.logger.info(`🔄 Transforming raw data to match database schema for table: ${tableName}`);
             seedData = this.transformSeedData(rawSeedData, tableName);
             
             if (seedData && seedData.length > 0) {
+              this.logger.success(`✨ Transformation successful: ${seedData.length} records transformed`);
+              this.logger.info(`📊 Sample transformed data: ${JSON.stringify(seedData[0], null, 2)}`);
+              
               // Validate the transformed seed data
+              this.logger.info(`🔍 Validating transformed seed data...`);
               const validation = this.sqlGenerator.validateSeedData(seedData, tableName);
               
               if (validation.isValid) {
                 includeSeedData = true;
-                this.logger.success(`Successfully transformed and validated ${seedData.length} seed records for ${tableName}`);
+                this.logger.success(`✅ Seed data validation passed! Ready to insert ${seedData.length} records into ${tableName}`);
                 
                 if (validation.warnings.length > 0) {
-                  validation.warnings.forEach(warning => this.logger.warn(`Seed data warning: ${warning}`));
+                  this.logger.warn(`⚠️ Validation warnings:`);
+                  validation.warnings.forEach(warning => this.logger.warn(`  • ${warning}`));
                 }
               } else {
-                this.logger.error(`Seed data validation failed for ${tableName}:`);
-                validation.errors.forEach(error => this.logger.error(`  - ${error}`));
-                this.logger.warn(`Proceeding without seed data for ${tableName}`);
+                this.logger.error(`❌ Seed data validation failed for ${tableName}:`);
+                validation.errors.forEach(error => this.logger.error(`  • ${error}`));
+                this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
+                seedData = null;
+                includeSeedData = false;
               }
             } else {
-              this.logger.warn(`Failed to transform seed data for ${arrayName} - transformation returned empty or null`);
+              this.logger.error(`❌ Data transformation failed for "${arrayName}"`);
+              this.logger.error(`   Raw data length: ${rawSeedData.length}, Transformed data: ${seedData ? 'empty array' : 'null'}`);
+              this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
             }
           } else {
-            this.logger.warn(`No seed data found for ${arrayName} in ${frontendFile}`);
-            this.logger.info(`Raw extraction result: ${rawSeedData ? 'not an array or empty' : 'null'}`);
+            this.logger.warn(`⚠️ No valid seed data found for "${arrayName}" in ${frontendFile}`);
+            this.logger.info(`   Raw extraction result: ${rawSeedData ? `${typeof rawSeedData} (length: ${Array.isArray(rawSeedData) ? rawSeedData.length : 'N/A'})` : 'null'}`);
+            this.logger.info(`💡 Tip: Check if the array exists in the file or if it's in a different format`);
           }
         } catch (error) {
-          this.logger.error(`Error during seed data extraction for ${arrayName}: ${error instanceof Error ? error.message : String(error)}`);
-          this.logger.warn(`Proceeding without seed data for ${tableName}`);
+          this.logger.error(`💥 Error during seed data extraction for "${arrayName}"`);
+          this.logger.error(`   Error: ${error instanceof Error ? error.message : String(error)}`);
+          if (error instanceof Error && error.stack) {
+            this.logger.error(`   Stack trace: ${error.stack.split('\n').slice(0, 3).join('\n')}`);
+          }
+          this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
         }
       } else {
-        this.logger.info(`No seed data mapping defined for table: ${tableName}`);
+        this.logger.warn(`⚠️ No seed data mapping defined for table: "${tableName}"`);
+        this.logger.info(`   Available mappings: ${Object.keys(tableToArrayMap).join(', ')}`);
+        this.logger.info(`💡 Consider adding a mapping in tableToArrayMap if seed data is needed`);
       }
       // --- End Enhanced Seed Data Extraction Logic ---
 
@@ -793,21 +812,98 @@ export class DatabaseAgent {
 
   // Helper method to extract table name from operation description
   private extractTableName(description: string): string {
-    // Look for patterns like "create table_name" or "store data in table_name"
-    const tableMatches = description.match(/(?:create|table|store.*in)\s+(\w+)/i);
-    if (tableMatches) {
-      return tableMatches[1];
+    this.logger.info(`🔍 Extracting table name from description: "${description}"`);
+    
+    // Method 1: Extract quoted table names (most reliable)
+    const quotedPatterns = [
+      /'([^']+)'/,           // Single quotes: 'table_name'
+      /"([^"]+)"/,           // Double quotes: "table_name"  
+      /`([^`]+)`/            // Backticks: `table_name`
+    ];
+    
+    for (const pattern of quotedPatterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        const tableName = match[1];
+        this.logger.success(`✅ Extracted table name from quotes: "${tableName}"`);
+        return tableName;
+      }
     }
     
-    // Look for common Spotify table names
-    if (description.toLowerCase().includes('recently played')) return 'recently_played';
-    if (description.toLowerCase().includes('made for you')) return 'made_for_you';
-    if (description.toLowerCase().includes('popular albums')) return 'popular_albums';
-    if (description.toLowerCase().includes('playlist')) return 'user_playlists';
-    if (description.toLowerCase().includes('search')) return 'search_history';
+    // Method 2: Extract after "create", skipping articles and prepositions
+    const createPatterns = [
+      /create\s+(?:a\s+|an\s+|the\s+)?(?:new\s+)?(?:table\s+named\s+)?(\w+)\s+table/i,
+      /create\s+(?:a\s+|an\s+|the\s+)?(\w+)(?:\s+table)?/i,
+      /(?:create|add|make)\s+(?:a\s+|an\s+|the\s+)?(\w+)(?:\s+(?:table|entity|model))?/i
+    ];
     
-    // Default fallback
-    return description.replace(/\s+/g, '_').toLowerCase();
+    for (const pattern of createPatterns) {
+      const match = description.match(pattern);
+      if (match && match[1] && match[1] !== 'table' && match[1] !== 'new') {
+        const tableName = match[1].toLowerCase();
+        this.logger.info(`📋 Extracted table name from create pattern: "${tableName}"`);
+        
+        // Validate it's not a common English word we want to skip
+        const skipWords = ['a', 'an', 'the', 'new', 'table', 'database', 'data', 'to', 'in', 'for', 'with', 'and'];
+        if (!skipWords.includes(tableName)) {
+          this.logger.success(`✅ Validated table name: "${tableName}"`);
+          return tableName;
+        }
+      }
+    }
+    
+    // Method 3: Priority-based keyword matching for Spotify tables
+    const spotifyTableMap = [
+      { keywords: ['recently played', 'recent songs', 'recent tracks'], table: 'recently_played' },
+      { keywords: ['made for you', 'personalized', 'recommendations'], table: 'made_for_you' },
+      { keywords: ['popular albums', 'trending albums', 'popular music'], table: 'popular_albums' },
+      { keywords: ['user playlist', 'playlist', 'user list'], table: 'user_playlists' },
+      { keywords: ['search', 'find songs', 'discovery'], table: 'search_history' },
+      { keywords: ['track', 'song', 'music'], table: 'tracks' },
+      { keywords: ['user', 'account', 'profile'], table: 'users' }
+    ];
+    
+    const lowerDescription = description.toLowerCase();
+    for (const mapping of spotifyTableMap) {
+      for (const keyword of mapping.keywords) {
+        if (lowerDescription.includes(keyword)) {
+          this.logger.success(`🎯 Matched Spotify table by keyword "${keyword}": "${mapping.table}"`);
+          return mapping.table;
+        }
+      }
+    }
+    
+    // Method 4: Extract any word that looks like a table name
+    const wordMatches = description.match(/\b(\w+(?:_\w+)*)\b/g);
+    if (wordMatches) {
+      for (const word of wordMatches) {
+        const lowerWord = word.toLowerCase();
+        // Look for words that contain underscores (likely table names) or end with common table suffixes
+        if (lowerWord.includes('_') || 
+            lowerWord.endsWith('table') || 
+            lowerWord.endsWith('data') || 
+            lowerWord.endsWith('info') ||
+            lowerWord.match(/^(recently|made|popular|user|search|track|song|music|album|playlist)$/)) {
+          
+          const cleanedName = lowerWord.replace(/table$/, '').replace(/data$/, '');
+          if (cleanedName.length > 2 && cleanedName !== 'table' && cleanedName !== 'data') {
+            this.logger.info(`🔤 Extracted potential table name from words: "${cleanedName}"`);
+            return cleanedName;
+          }
+        }
+      }
+    }
+    
+    // Method 5: Fallback - clean the entire description
+    const fallback = description
+      .replace(/[^\w\s]/g, ' ')        // Remove special characters
+      .replace(/\b(?:create|a|an|the|table|in|to|for|with|store|data|supabase)\b/gi, ' ') // Remove common words
+      .replace(/\s+/g, '_')            // Replace spaces with underscores
+      .toLowerCase()
+      .replace(/^_+|_+$/g, '');        // Trim underscores
+    
+    this.logger.warn(`⚠️ Using fallback extraction method: "${fallback}"`);
+    return fallback || 'unknown_table';
   }
 
   // Helper method to extract columns from operation and project context
