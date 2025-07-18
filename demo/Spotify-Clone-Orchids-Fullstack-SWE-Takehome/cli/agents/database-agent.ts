@@ -413,6 +413,7 @@ export class DatabaseAgent {
       }
       
       throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   private extractJSON(text: string): string | null {
