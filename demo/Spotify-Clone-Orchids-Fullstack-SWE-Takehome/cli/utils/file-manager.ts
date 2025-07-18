@@ -235,3 +235,53 @@ export class FileManager {
     }
   }
 } 
+
+/**
+ * Extracts a hardcoded array from a TypeScript file by array variable name.
+ * Enhanced implementation with better regex matching and error handling.
+ * @param filePath Path to the TypeScript file
+ * @param arrayName Name of the array variable to extract
+ * @returns Parsed array as JavaScript objects, or null if not found/parseable
+ */
+export async function extractArrayFromFile(filePath: string, arrayName: string): Promise<any[] | null> {
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const absPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+    const fileContent = fs.readFileSync(absPath, 'utf8');
+    
+    // Enhanced regex to match: const arrayName = [ ... ] with proper bracket matching
+    const arrayRegex = new RegExp(`const\\s+${arrayName}\\s*=\\s*(\\[[\\s\\S]*?\\])(?=\\s*(?:const|let|var|function|export|$))`, 'm');
+    const match = fileContent.match(arrayRegex);
+    
+    if (!match) {
+      console.log(`No match found for array: ${arrayName}`);
+      return null;
+    }
+    
+    const arrayString = match[1];
+    console.log(`Found array string for ${arrayName}: ${arrayString.substring(0, 200)}...`);
+    
+    // Clean up the array string and handle multi-line formatting
+    const cleanedArrayString = arrayString
+      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+      .replace(/\/\/.*$/gm, '') // Remove line comments
+      .trim();
+    
+    // Use Function constructor to safely parse the array
+    // This handles object literals better than JSON.parse
+    const arr = Function(`"use strict"; return (${cleanedArrayString})`)();
+    
+    if (Array.isArray(arr)) {
+      console.log(`Successfully extracted ${arr.length} items from ${arrayName}`);
+      return arr;
+    }
+    
+    console.log(`Extracted data is not an array for ${arrayName}`);
+    return null;
+  } catch (err) {
+    console.error(`Error extracting array ${arrayName}:`, err);
+    return null;
+  }
+}

@@ -26,6 +26,7 @@ export interface SQLGenerationOptions {
   forceRecreate?: boolean;
   existingTables?: string[];
   existingIndexes?: string[];
+  seedData?: any[]; // <-- add this line
 }
 
 export class IdempotentSQLGenerator {
@@ -176,11 +177,11 @@ export class IdempotentSQLGenerator {
   private postProcessSQL(sql: string, tableName: string, systemState: SystemState): string {
     let processedSQL = sql;
 
-    // Remove transaction commands (BEGIN, COMMIT, ROLLBACK, START TRANSACTION)
-    processedSQL = processedSQL.replace(/^[\s]*BEGIN[\s]*;[\s]*$/gmi, '');
-    processedSQL = processedSQL.replace(/^[\s]*COMMIT[\s]*;[\s]*$/gmi, '');
-    processedSQL = processedSQL.replace(/^[\s]*ROLLBACK[\s]*;[\s]*$/gmi, '');
-    processedSQL = processedSQL.replace(/^[\s]*START\s+TRANSACTION[\s]*;[\s]*$/gmi, '');
+    // Remove transaction commands (BEGIN, COMMIT, ROLLBACK, START TRANSACTION) - more robust
+    processedSQL = processedSQL.replace(/^[ \t]*BEGIN\b.*$/gim, '');
+    processedSQL = processedSQL.replace(/^[ \t]*COMMIT\b.*$/gim, '');
+    processedSQL = processedSQL.replace(/^[ \t]*ROLLBACK\b.*$/gim, '');
+    processedSQL = processedSQL.replace(/^[ \t]*START[ \t]+TRANSACTION\b.*$/gim, '');
 
     // Remove transaction-related comments
     processedSQL = processedSQL.replace(/^[\s]*--[\s]*Begin transaction.*$/gmi, '');
@@ -307,24 +308,39 @@ $$ language 'plpgsql';`;
     const insertStatements: string[] = [];
     
     insertStatements.push(`-- Insert seed data for ${tableName} (idempotent)`);
+    insertStatements.push(`-- ${data.length} records to insert`);
+    insertStatements.push('');
     
     for (const row of data) {
       const columns = Object.keys(row).join(', ');
-      const values = Object.values(row).map(val => 
-        typeof val === 'string' ? `'${val}'` : val
-      ).join(', ');
+      const values = Object.values(row).map(val => {
+        if (val === null || val === undefined) {
+          return 'NULL';
+        }
+        if (typeof val === 'string') {
+          // Escape single quotes and handle special characters
+          return `'${val.replace(/'/g, "''")}'`;
+        }
+        if (typeof val === 'boolean') {
+          return val ? 'TRUE' : 'FALSE';
+        }
+        if (val instanceof Date) {
+          return `'${val.toISOString()}'`;
+        }
+        return val;
+      }).join(', ');
 
-      // Create a unique constraint check for idempotency
-      const primaryColumn = Object.keys(row)[0]; // Assume first column is unique
+      // Use 'id' as the primary key for existence check (standard in our schema)
+      const primaryColumn = 'id';
       const primaryValue = typeof row[primaryColumn] === 'string' ? `'${row[primaryColumn]}'` : row[primaryColumn];
 
-      insertStatements.push(`
-INSERT INTO ${tableName} (${columns})
+      insertStatements.push(`INSERT INTO ${tableName} (${columns})
 SELECT ${values}
 WHERE NOT EXISTS (
     SELECT 1 FROM ${tableName} 
     WHERE ${primaryColumn} = ${primaryValue}
 );`);
+      insertStatements.push('');
     }
 
     return insertStatements.join('\n');
@@ -381,8 +397,8 @@ WHERE NOT EXISTS (
     }
 
     // Seed data
-    if (options.includeSeedData && options.includeSeedData) {
-      sections.push(await this.generateIdempotentSeedData(tableName, []));
+    if (options.includeSeedData && options.seedData && options.seedData.length > 0) {
+      sections.push(await this.generateIdempotentSeedData(tableName, options.seedData));
       sections.push('');
     }
 

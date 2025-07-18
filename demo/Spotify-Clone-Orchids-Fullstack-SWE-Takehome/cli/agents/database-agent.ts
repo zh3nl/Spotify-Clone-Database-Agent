@@ -519,16 +519,46 @@ export class DatabaseAgent {
       const tableName = this.extractTableName(operation.description);
       const columns = this.extractColumns(operation, projectContext);
 
-      // Generate idempotent SQL using the specialized generator
-      const sqlCode = await this.sqlGenerator.generateIdempotentTableSQL(
+      // --- Seed Data Extraction Logic ---
+      let seedData: any[] | null = null;
+      let includeSeedData = false;
+      // Map table names to array names in the frontend
+      const tableToArrayMap: Record<string, string> = {
+        'recently_played': 'recentlyPlayed',
+        'made_for_you': 'madeForYou',
+        'popular_albums': 'popularAlbums',
+      };
+      const arrayName = tableToArrayMap[tableName];
+      if (arrayName) {
+        // Use the extractArrayFromFile utility from file-manager
+        const { extractArrayFromFile } = require('../utils/file-manager');
+        const frontendFile = 'src/components/spotify-main-content.tsx';
+        const rawSeedData = await extractArrayFromFile(frontendFile, arrayName);
+        if (rawSeedData && Array.isArray(rawSeedData) && rawSeedData.length > 0) {
+          // Transform the raw seed data to match database schema
+          seedData = this.transformSeedData(rawSeedData, tableName);
+          if (seedData && seedData.length > 0) {
+            includeSeedData = true;
+            this.logger.info(`Extracted and transformed ${seedData.length} seed records from ${arrayName} in ${frontendFile}`);
+          } else {
+            this.logger.warn(`Failed to transform seed data for ${arrayName}`);
+          }
+        } else {
+          this.logger.info(`No seed data found for ${arrayName} in ${frontendFile}`);
+        }
+      }
+      // --- End Seed Data Extraction Logic ---
+
+      // Generate comprehensive migration with seed data
+      const sqlCode = await this.sqlGenerator.generateCompleteMigration(
         operation.description,
         tableName,
         columns,
         {
           includeIndexes: true,
           includePolicies: true,
-          includeSeedData: false,
-          existingTables: projectContext.systemState?.database.connectedTables || []
+          includeSeedData,
+          seedData: includeSeedData ? seedData : undefined
         }
       );
 
@@ -638,6 +668,58 @@ export class DatabaseAgent {
     }
 
     return columns;
+  }
+
+  // Transform raw seed data to match database schema
+  private transformSeedData(rawData: any[], tableName: string): any[] | null {
+    try {
+      switch (tableName) {
+        case 'recently_played':
+          return rawData.map(item => ({
+            id: item.id,
+            title: item.title,
+            artist: item.artist,
+            album: item.album,
+            image_url: item.image,
+            duration: item.duration,
+            played_at: new Date().toISOString(),
+            user_id: 'default-user', // Default user ID for seed data
+            created_at: new Date().toISOString()
+          }));
+
+        case 'made_for_you':
+          return rawData.map(item => ({
+            id: item.id,
+            title: item.title,
+            description: item.artist, // Using artist field as description
+            image_url: item.image,
+            playlist_type: 'personalized',
+            user_id: 'default-user',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }));
+
+        case 'popular_albums':
+          return rawData.map(item => ({
+            id: item.id,
+            title: item.title,
+            artist: item.artist,
+            image_url: item.image,
+            release_date: '2023-01-01', // Default release date
+            duration: item.duration,
+            popularity_score: Math.floor(Math.random() * 100), // Random popularity score
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }));
+
+        default:
+          this.logger.warn(`No transformation defined for table: ${tableName}`);
+          return null;
+      }
+    } catch (error) {
+      this.logger.error(`Error transforming seed data for ${tableName}: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
   }
 
   private async executeCreateAPI(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {

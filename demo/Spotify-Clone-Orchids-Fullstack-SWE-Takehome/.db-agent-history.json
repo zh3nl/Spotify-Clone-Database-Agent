@@ -442,5 +442,82 @@
     "metadata": {
       "dependencies": []
     }
+  },
+  {
+    "operationId": "1752871591840-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with fields for track information and timestamp",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T204645_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_fields_for_track_information_and_timestamp.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:46:45.612Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752871605616-1",
+    "type": "run_migration",
+    "description": "Create TypeScript types for recently played tracks and related database operations",
+    "targetFiles": [
+      "src/types/recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:47:00.914Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752871620916-2",
+    "type": "create_api",
+    "description": "Create API endpoints to fetch, add, and manage recently played tracks",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:47:24.108Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/types/recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752871644111-3",
+    "type": "run_migration",
+    "description": "Create a custom React hook to interact with the recently played tracks API",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:47:35.712Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/types/recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752871655713-4",
+    "type": "update_component",
+    "description": "Update components to use the database for recently played tracks instead of hardcoded data",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:48:16.930Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/hooks/use-recently-played.ts"
+      ]
+    }
   }
 ]
