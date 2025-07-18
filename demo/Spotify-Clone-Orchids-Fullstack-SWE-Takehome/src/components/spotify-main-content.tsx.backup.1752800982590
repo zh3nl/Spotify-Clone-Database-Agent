@@ -111,7 +111,7 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
       setError(null)
       
       try {
-        // Fetch recently played tracks from database
+        // Fetch recently played tracks
         const recentlyPlayedRes = await fetch('/api/spotify/recently-played')
         if (!recentlyPlayedRes.ok) throw new Error('Failed to fetch recently played tracks')
         const recentlyPlayedData = await recentlyPlayedRes.json()
@@ -347,4 +347,4 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
               <div key={i}>
                 <div className="w-full aspect-square bg-[var(--color-muted)] rounded-lg mb-4 animate-pulse"></div>
                 <div className="h-4 w-32 bg-[var(--color-muted)] rounded-md mb-2 animate-pulse"></div>
-                <div className="h-3 w-24 bg-[var(--color-muted)] rounded-md animate-pulse">
+                <div className="h-3 w-24 bg-[var(--color-muted)] rounded-md animate-pulse"></div>

@@ -143,6 +143,8 @@ export class IdempotentSQLGenerator {
     - Add helpful comments explaining each section
     - Use proper PostgreSQL best practices
     - Handle edge cases and potential conflicts
+    - DO NOT include transaction commands (BEGIN, COMMIT, ROLLBACK, START TRANSACTION)
+    - Each statement should be independent and executable separately
 
     ## Idempotent Patterns to Use:
     - CREATE TABLE IF NOT EXISTS
@@ -174,6 +176,17 @@ export class IdempotentSQLGenerator {
   private postProcessSQL(sql: string, tableName: string, systemState: SystemState): string {
     let processedSQL = sql;
 
+    // Remove transaction commands (BEGIN, COMMIT, ROLLBACK, START TRANSACTION)
+    processedSQL = processedSQL.replace(/^[\s]*BEGIN[\s]*;[\s]*$/gmi, '');
+    processedSQL = processedSQL.replace(/^[\s]*COMMIT[\s]*;[\s]*$/gmi, '');
+    processedSQL = processedSQL.replace(/^[\s]*ROLLBACK[\s]*;[\s]*$/gmi, '');
+    processedSQL = processedSQL.replace(/^[\s]*START\s+TRANSACTION[\s]*;[\s]*$/gmi, '');
+
+    // Remove transaction-related comments
+    processedSQL = processedSQL.replace(/^[\s]*--[\s]*Begin transaction.*$/gmi, '');
+    processedSQL = processedSQL.replace(/^[\s]*--[\s]*Commit.*transaction.*$/gmi, '');
+    processedSQL = processedSQL.replace(/^[\s]*--[\s]*End transaction.*$/gmi, '');
+
     // Ensure all CREATE TABLE statements use IF NOT EXISTS
     processedSQL = processedSQL.replace(
       /CREATE TABLE\s+(?!IF NOT EXISTS)(\w+)/gi,
@@ -202,6 +215,9 @@ export class IdempotentSQLGenerator {
       /DROP INDEX\s+(?!IF EXISTS)(\w+)/gi,
       'DROP INDEX IF EXISTS $1'
     );
+
+    // Clean up multiple empty lines
+    processedSQL = processedSQL.replace(/\n\s*\n\s*\n/g, '\n\n');
 
     // Add header if not present
     if (!processedSQL.includes('-- Idempotent Migration')) {
