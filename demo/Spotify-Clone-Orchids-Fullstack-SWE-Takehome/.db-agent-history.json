@@ -210,5 +210,838 @@
         "src/hooks/useRecentlyPlayed.ts"
       ]
     }
+  },
+  {
+    "operationId": "1752800856579-0",
+    "type": "create_table",
+    "description": "Create 'recently_played' table in Supabase to store track play history",
+    "targetFiles": [
+      "migrations/create_recently_played_table.sql",
+      "src/lib/migrations/20250718T010747_create_'recently_played'_table_in_supabase_to_store_track_play_history.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:07:47.691Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752800867701-1",
+    "type": "create_table",
+    "description": "Create 'tracks' table in Supabase to store track information",
+    "targetFiles": [
+      "migrations/create_tracks_table.sql",
+      "src/lib/migrations/20250718T010758_create_'tracks'_table_in_supabase_to_store_track_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:07:58.768Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752800878773-2",
+    "type": "create_api",
+    "description": "Create API endpoint to record when a track is played",
+    "targetFiles": [
+      "src/app/api/tracks/play/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:08:19.779Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752800899783-3",
+    "type": "create_api",
+    "description": "Create API endpoint to fetch recently played tracks",
+    "targetFiles": [
+      "src/app/api/tracks/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:08:33.450Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752800913452-4",
+    "type": "run_migration",
+    "description": "Create TypeScript types for recently played tracks",
+    "targetFiles": [
+      "src/types/music.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:08:41.401Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752800921404-5",
+    "type": "run_migration",
+    "description": "Create React hook for fetching and managing recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:08:53.243Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "react",
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752800933246-6",
+    "type": "update_component",
+    "description": "Update SpotifyMainContent component to display recently played tracks from the database",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:09:42.596Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/hooks/use-recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752800982602-7",
+    "type": "update_component",
+    "description": "Update SpotifyPlayer component to record track plays when a song is played",
+    "targetFiles": [
+      "src/components/spotify-player.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:10:31.259Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/hooks/use-recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752801559628-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history with user_id, track_id, played_at timestamp, and relations to a future tracks table",
+    "targetFiles": [
+      "supabase/migrations/20240101000000_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T011933_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_id,_track_id,_played_at_timestamp,_and_relations_to_a_future_tracks_table.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:19:33.212Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752801573216-1",
+    "type": "create_table",
+    "description": "Create a 'tracks' table in Supabase to store track information based on the existing Track interface",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_tracks_table.sql",
+      "src/lib/migrations/20250718T011947_create_a_'tracks'_table_in_supabase_to_store_track_information_based_on_the_existing_track_interface.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:19:47.721Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752801587723-2",
+    "type": "create_api",
+    "description": "Create API endpoint to record when a user plays a track",
+    "targetFiles": [
+      "src/app/api/recently-played/add/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:19:56.861Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752801596863-3",
+    "type": "create_api",
+    "description": "Create API endpoint to fetch a user's recently played tracks",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:20:10.637Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752801610640-4",
+    "type": "run_migration",
+    "description": "Create a React hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:20:22.644Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "react",
+        "swr"
+      ]
+    }
+  },
+  {
+    "operationId": "1752801622647-5",
+    "type": "update_component",
+    "description": "Update SpotifyPlayer component to record track plays when a track is played",
+    "targetFiles": [
+      "src/components/spotify-player.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:21:11.250Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752801671253-6",
+    "type": "update_component",
+    "description": "Update SpotifyMainContent component to display recently played tracks",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T01:22:00.966Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752871591840-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with fields for track information and timestamp",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T204645_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_fields_for_track_information_and_timestamp.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:46:45.612Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752871605616-1",
+    "type": "run_migration",
+    "description": "Create TypeScript types for recently played tracks and related database operations",
+    "targetFiles": [
+      "src/types/recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:47:00.914Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752871620916-2",
+    "type": "create_api",
+    "description": "Create API endpoints to fetch, add, and manage recently played tracks",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:47:24.108Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/types/recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752871644111-3",
+    "type": "run_migration",
+    "description": "Create a custom React hook to interact with the recently played tracks API",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:47:35.712Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/types/recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752871655713-4",
+    "type": "update_component",
+    "description": "Update components to use the database for recently played tracks instead of hardcoded data",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T20:48:16.930Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "src/hooks/use-recently-played.ts"
+      ]
+    }
+  },
+  {
+    "operationId": "1752874758859-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history",
+    "targetFiles": [
+      "supabase/migrations/20240101000000_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T213918_create_a_'recently_played'_table_in_supabase_to_store_track_play_history.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T21:39:18.863Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752874758867-1",
+    "type": "create_table",
+    "description": "Create a 'tracks' table in Supabase to store track information",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_tracks_table.sql",
+      "src/lib/migrations/20250718T213918_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T21:39:18.869Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752874758872-2",
+    "type": "create_api",
+    "description": "Update the existing /api/tracks/recently-played endpoint to interact with the database",
+    "targetFiles": [
+      "src/app/api/tracks/recently-played/route.ts"
+    ],
+    "success": false,
+    "executedAt": "2025-07-18T21:39:37.215Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752875044052-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history with user references",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T214404_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_references.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T21:44:04.057Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752875044062-1",
+    "type": "run_migration",
+    "description": "Create TypeScript types for recently played tracks",
+    "targetFiles": [
+      "src/types/recently-played.ts"
+    ],
+    "success": false,
+    "executedAt": "2025-07-18T21:44:12.414Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752876000485-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with timestamps",
+    "targetFiles": [
+      "supabase/migrations/20240101000000_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T220000_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:00:00.490Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752876000494-1",
+    "type": "create_table",
+    "description": "Create a 'tracks' table in Supabase to store track information",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_tracks_table.sql",
+      "src/lib/migrations/20250718T220000_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:00:00.500Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752876000503-2",
+    "type": "create_api",
+    "description": "Create API endpoints to record play history and retrieve recently played tracks",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:00:22.687Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752876022689-3",
+    "type": "run_migration",
+    "description": "Create a custom React hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/useRecentlyPlayed.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:00:34.641Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js",
+        "react"
+      ]
+    }
+  },
+  {
+    "operationId": "1752876034644-4",
+    "type": "update_component",
+    "description": "Update SpotifyPlayer component to record track plays when a song is played",
+    "targetFiles": [
+      "src/components/spotify-player.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:01:23.174Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752876083176-5",
+    "type": "update_component",
+    "description": "Update SpotifyMainContent component to display recently played tracks",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:02:04.458Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877503709-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with timestamps",
+    "targetFiles": [
+      "supabase/migrations/20240101000000_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T222503_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:25:03.714Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752877503719-1",
+    "type": "create_table",
+    "description": "Create a 'tracks' table in Supabase to store track information",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_tracks_table.sql",
+      "src/lib/migrations/20250718T222503_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:25:03.723Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752877503725-2",
+    "type": "create_api",
+    "description": "Create API endpoint to record a track play event",
+    "targetFiles": [
+      "src/app/api/recently-played/add/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:25:13.621Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752877513623-3",
+    "type": "create_api",
+    "description": "Create API endpoint to fetch recently played tracks",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:25:26.216Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1752877526219-4",
+    "type": "run_migration",
+    "description": "Create a custom hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/useRecentlyPlayed.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:25:38.626Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "react",
+        "swr"
+      ]
+    }
+  },
+  {
+    "operationId": "1752877538628-5",
+    "type": "update_component",
+    "description": "Update SpotifyPlayer component to record track plays when a song is played",
+    "targetFiles": [
+      "src/components/spotify-player.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:26:26.786Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877586789-6",
+    "type": "update_component",
+    "description": "Update SpotifyMainContent component to display recently played tracks",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:27:09.591Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877804282-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with proper relationships",
+    "targetFiles": [
+      "supabase/migrations/20240101000000_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T223004_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_proper_relationships.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:04.286Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877804292-1",
+    "type": "create_table",
+    "description": "Create a 'users' table in Supabase to store user information",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_users_table.sql",
+      "src/lib/migrations/20250718T223004_create_a_'users'_table_in_supabase_to_store_user_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:04.294Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877804297-2",
+    "type": "create_table",
+    "description": "Create a 'tracks' table in Supabase to store track information",
+    "targetFiles": [
+      "supabase/migrations/20240101000002_create_tracks_table.sql",
+      "src/lib/migrations/20250718T223004_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:04.299Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877804301-3",
+    "type": "run_migration",
+    "description": "Create TypeScript types for database models and API responses",
+    "targetFiles": [
+      "src/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:15.363Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877815366-4",
+    "type": "create_api",
+    "description": "Create API endpoint to fetch recently played tracks for a user",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:27.527Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877827529-5",
+    "type": "create_api",
+    "description": "Create API endpoint to add a track to recently played",
+    "targetFiles": [
+      "src/app/api/recently-played/add/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:39.615Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877839617-6",
+    "type": "run_migration",
+    "description": "Create a custom hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/useRecentlyPlayed.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:30:53.289Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877853292-7",
+    "type": "update_component",
+    "description": "Update SpotifyMainContent component to use the database for recently played tracks",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:31:33.185Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752877893187-8",
+    "type": "run_migration",
+    "description": "Run the database migrations to create the necessary tables",
+    "targetFiles": [
+      "supabase/migrations"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:31:33.187Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878756155-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with timestamps",
+    "targetFiles": [
+      "supabase/migrations/20240101000001_create_recently_played_table.sql",
+      "src/lib/migrations/20250718T224556_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:45:56.174Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878756178-1",
+    "type": "create_table",
+    "description": "Create a 'tracks' table in Supabase to store track information",
+    "targetFiles": [
+      "supabase/migrations/20240101000002_create_tracks_table.sql",
+      "src/lib/migrations/20250718T224556_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:45:56.181Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878756183-2",
+    "type": "create_api",
+    "description": "Create API endpoint to record a track when it's played",
+    "targetFiles": [
+      "src/app/api/recently-played/add/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:46:04.877Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878764879-3",
+    "type": "create_api",
+    "description": "Create API endpoint to fetch recently played tracks",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:46:15.653Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878775655-4",
+    "type": "run_migration",
+    "description": "Create TypeScript types for recently played tracks",
+    "targetFiles": [
+      "src/types/recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:46:24.980Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878784983-5",
+    "type": "run_migration",
+    "description": "Create a custom hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:46:37.328Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878797331-6",
+    "type": "update_component",
+    "description": "Update SpotifyPlayer component to record tracks when played",
+    "targetFiles": [
+      "src/components/spotify-player.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:47:26.831Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752878846835-7",
+    "type": "update_component",
+    "description": "Create a RecentlyPlayed component to display recently played tracks",
+    "targetFiles": [
+      "src/components/recently-played.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-18T22:47:26.836Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
   }
 ]

@@ -575,15 +575,37 @@ export class MigrationExecutor {
         // Clean up the statement
         const cleanStatement = currentStatement.trim();
         if (cleanStatement && !cleanStatement.startsWith('--')) {
-          statements.push(cleanStatement);
+          // Filter out transaction control statements
+          const statementUpper = cleanStatement.toUpperCase();
+          const isTransactionCommand = statementUpper.startsWith('BEGIN') || 
+                                     statementUpper.startsWith('COMMIT') || 
+                                     statementUpper.startsWith('ROLLBACK') ||
+                                     statementUpper.startsWith('START TRANSACTION');
+          
+          if (!isTransactionCommand) {
+            statements.push(cleanStatement);
+          } else {
+            this.logger.info(`Skipping transaction command: ${cleanStatement.substring(0, 50)}...`);
+          }
         }
         currentStatement = '';
       }
     }
     
-    // Add any remaining statement
+    // Add any remaining statement (with transaction filtering)
     if (currentStatement.trim() && !currentStatement.trim().startsWith('--')) {
-      statements.push(currentStatement.trim());
+      const cleanStatement = currentStatement.trim();
+      const statementUpper = cleanStatement.toUpperCase();
+      const isTransactionCommand = statementUpper.startsWith('BEGIN') || 
+                                 statementUpper.startsWith('COMMIT') || 
+                                 statementUpper.startsWith('ROLLBACK') ||
+                                 statementUpper.startsWith('START TRANSACTION');
+      
+      if (!isTransactionCommand) {
+        statements.push(cleanStatement);
+      } else {
+        this.logger.info(`Skipping transaction command: ${cleanStatement.substring(0, 50)}...`);
+      }
     }
     
     return statements;

@@ -120,8 +120,10 @@ export class AIClient {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 4000
+        temperature: 0.1,
+        max_tokens: 4000,
+        // Encourage more structured output
+        top_p: 0.9
       })
     });
 
@@ -198,7 +200,9 @@ export class AIClient {
           { role: 'user', content: userPrompt }
         ],
         max_tokens: 4000,
-        temperature: 0.1
+        temperature: 0.1,
+        // Encourage more structured output
+        top_p: 0.9
       })
     });
 
