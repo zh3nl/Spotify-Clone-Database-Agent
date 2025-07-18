@@ -6,14 +6,20 @@ import { CodeGenerator } from './code-generator';
 import { MigrationExecutor, MigrationResult } from '../utils/migration-executor';
 import { StateAnalyzer } from '../utils/state-analyzer';
 import { IdempotentSQLGenerator } from '../utils/idempotent-sql-generator';
+import { ComponentDataExtractor, DataArray } from '../utils/component-data-extractor';
 
 export interface DatabaseOperation {
-  type: 'create_table' | 'create_api' | 'update_component' | 'install_dependency' | 'run_migration' | 'create_types' | 'create_hooks';
+  type: 'create_table' | 'create_api' | 'install_dependency' | 'run_migration' | 'create_types' | 'create_hooks';
   description: string;
   files: string[];
   dependencies?: string[];
   tableSchema?: any;
   apiEndpoints?: string[];
+  dataPopulation?: {
+    arrayName: string;
+    recordCount: number;
+    sourceFile: string;
+  };
 }
 
 export interface QueryPlan {
@@ -32,6 +38,7 @@ export class DatabaseAgent {
   private migrationExecutor: MigrationExecutor;
   private stateAnalyzer: StateAnalyzer;
   private sqlGenerator: IdempotentSQLGenerator;
+  private componentDataExtractor: ComponentDataExtractor;
 
   constructor() {
     this.logger = new Logger();
@@ -41,6 +48,7 @@ export class DatabaseAgent {
     this.migrationExecutor = new MigrationExecutor();
     this.stateAnalyzer = new StateAnalyzer();
     this.sqlGenerator = new IdempotentSQLGenerator();
+    this.componentDataExtractor = new ComponentDataExtractor();
   }
 
   async executeQuery(query: string, projectContext: ProjectContext): Promise<void> {
@@ -98,117 +106,56 @@ export class DatabaseAgent {
     message: string;
     suggestedOperations?: DatabaseOperation[];
   }> {
+    this.logger.analyzing('Checking for existing features...');
+    
     const queryLower = query.toLowerCase();
     
-    // Check for recently played functionality
-    if (queryLower.includes('recently played') || queryLower.includes('recent songs')) {
-      const recentlyPlayedFeature = projectContext.implementedFeatures.find(f => f.name === 'recently_played');
-      if (recentlyPlayedFeature?.implemented) {
-        return {
-          exists: true,
-          feature: 'recently_played',
-          message: `Recently played functionality is already implemented! 
-            ✅ Table: ${recentlyPlayedFeature.tables.join(', ')}
-            ✅ API: ${recentlyPlayedFeature.apis.join(', ')}
-            ✅ Components: ${recentlyPlayedFeature.components.join(', ')}
-            
-            The recently played songs feature is fully functional. You can access it through the existing API endpoints and components.`,
-          suggestedOperations: []
-        };
-      }
+    // Check if tables already exist
+    const existingTables = projectContext.systemState?.database.connectedTables || [];
+    const suggestedTable = this.extractTableName(query);
+    
+    if (existingTables.includes(suggestedTable)) {
+      return {
+        exists: true,
+        feature: `Table: ${suggestedTable}`,
+        message: `The table '${suggestedTable}' already exists in your database. Consider updating the table structure or adding new columns instead.`,
+        suggestedOperations: []
+      };
     }
-
-    // Check for made for you functionality
-    if (queryLower.includes('made for you') || queryLower.includes('recommendations') || queryLower.includes('personalized')) {
-      const madeForYouFeature = projectContext.implementedFeatures.find(f => f.name === 'made_for_you');
-      if (madeForYouFeature?.implemented) {
-        return {
-          exists: true,
-          feature: 'made_for_you',
-          message: `Made for you functionality is already implemented!
-            ✅ Table: ${madeForYouFeature.tables.join(', ')}
-            ✅ API: ${madeForYouFeature.apis.join(', ')}
-            ✅ Components: ${madeForYouFeature.components.join(', ')}
-            
-            The personalized recommendations feature is fully functional.`,
-          suggestedOperations: []
-        };
-      }
+    
+    // Check if API routes already exist
+    const existingRoutes = projectContext.systemState?.api.implementedRoutes || [];
+    const suggestedRoute = `/api/${suggestedTable}`;
+    
+    if (existingRoutes.includes(suggestedRoute)) {
+      return {
+        exists: true,
+        feature: `API Route: ${suggestedRoute}`,
+        message: `The API route '${suggestedRoute}' already exists. Consider extending it with new endpoints instead.`,
+        suggestedOperations: []
+      };
     }
-
-    // Check for popular albums functionality
-    if (queryLower.includes('popular albums') || queryLower.includes('trending albums') || queryLower.includes('popular music')) {
-      const popularAlbumsFeature = projectContext.implementedFeatures.find(f => f.name === 'popular_albums');
-      if (popularAlbumsFeature?.implemented) {
-        return {
-          exists: true,
-          feature: 'popular_albums',
-          message: `Popular albums functionality is already implemented!
-            ✅ Table: ${popularAlbumsFeature.tables.join(', ')}
-            ✅ API: ${popularAlbumsFeature.apis.join(', ')}
-            ✅ Components: ${popularAlbumsFeature.components.join(', ')}
-            
-            The popular albums feature is fully functional.`,
-          suggestedOperations: []
-        };
-      }
+    
+    // Check implemented features
+    const implementedFeatures = projectContext.implementedFeatures || [];
+    const relatedFeature = implementedFeatures.find(f => 
+      f.name.toLowerCase().includes(queryLower) || 
+      queryLower.includes(f.name.toLowerCase())
+    );
+    
+    if (relatedFeature && relatedFeature.implemented) {
+      return {
+        exists: true,
+        feature: relatedFeature.name,
+        message: `The feature '${relatedFeature.name}' is already implemented. Tables: ${relatedFeature.tables.join(', ')}, APIs: ${relatedFeature.apis.join(', ')}`,
+        suggestedOperations: []
+      };
     }
-
-    // Check for playlist functionality
-    if (queryLower.includes('playlist') || queryLower.includes('user playlist')) {
-      const playlistFeature = projectContext.implementedFeatures.find(f => f.name === 'user_playlists');
-      if (playlistFeature?.implemented) {
-        return {
-          exists: true,
-          feature: 'user_playlists',
-          message: `User playlist functionality is already implemented!
-            ✅ Table: ${playlistFeature.tables.join(', ')}
-            ✅ API: ${playlistFeature.apis.join(', ')}
-            ✅ Components: ${playlistFeature.components.join(', ')}
-            
-            The user playlist management feature is fully functional.`,
-          suggestedOperations: []
-        };
-      }
-    }
-
-    // Check for search functionality
-    if (queryLower.includes('search') || queryLower.includes('find songs') || queryLower.includes('discovery')) {
-      const searchFeature = projectContext.implementedFeatures.find(f => f.name === 'search_functionality');
-      if (searchFeature?.implemented) {
-        return {
-          exists: true,
-          feature: 'search_functionality',
-          message: `Search functionality is already implemented!
-            ✅ Table: ${searchFeature.tables.join(', ')}
-            ✅ API: ${searchFeature.apis.join(', ')}
-            ✅ Components: ${searchFeature.components.join(', ')}
-            
-            The search and discovery feature is fully functional.`,
-          suggestedOperations: []
-        };
-      }
-    }
-
-    // Check for specific table existence
-    const tableMatches = queryLower.match(/table?\s+(\w+)/);
-    if (tableMatches) {
-      const tableName = tableMatches[1];
-      if (projectContext.systemState?.database.connectedTables.includes(tableName)) {
-        return {
-          exists: true,
-          feature: `table_${tableName}`,
-          message: `Table '${tableName}' already exists in the database!
-            
-            The table is already created and ready to use. You can query it through the existing API endpoints or create new ones if needed.`,
-          suggestedOperations: []
-        };
-      }
-    }
-
+    
     return {
       exists: false,
-      message: 'No existing functionality found for this query'
+      message: 'No existing features found. Proceeding with implementation.',
+      suggestedOperations: []
     };
   }
 
@@ -226,6 +173,21 @@ export class DatabaseAgent {
         estimatedTime: 0,
         requirements: []
       };
+    }
+
+    // NEW: Check for available data arrays that match the query
+    const matchedDataArray = await this.componentDataExtractor.matchQueryToDataArray(query);
+    let dataPopulationInfo = '';
+    
+    if (matchedDataArray) {
+      dataPopulationInfo = `\n\n## 🎵 Data Population Available:
+- Matched data array: ${matchedDataArray.name}
+- Source file: ${matchedDataArray.filePath}
+- Records available: ${matchedDataArray.totalRecords}
+- Sample data: ${matchedDataArray.data[0]?.title || 'N/A'}
+- Schema: ${Object.keys(matchedDataArray.schema).join(', ')}
+
+This data will be automatically populated into the created table!`;
     }
 
     const systemPrompt = `You are an expert database agent for a Spotify clone built with Next.js and Supabase. You specialize in analyzing user requests and creating precise execution plans.
@@ -257,6 +219,22 @@ export class DatabaseAgent {
     ## Existing API Routes:
     ${projectContext.existingAPIs.map(api => `- ${api.path} [${api.methods.join(', ')}]${api.hasDatabase ? ' (uses database)' : ''}`).join('\n')}
 
+    ## AUTOMATIC DATA POPULATION:
+    🎯 **NEW FEATURE**: The system can now automatically populate tables with realistic data from React components!
+    
+    Available data arrays:
+    - recentlyPlayed: 6 records (Liked Songs, Discover Weekly, Release Radar, etc.)
+    - madeForYou: 6 records (Discover Weekly, Release Radar, Daily Mix 1-3, On Repeat)
+    - popularAlbums: 8 records (Midnights, Harry's House, Renaissance, etc.)
+    
+    When creating tables that match these patterns, the system will automatically:
+    1. Extract the corresponding data array from React components
+    2. Transform the data to match the database schema
+    3. Generate idempotent INSERT statements
+    4. Include the populated data in the migration file
+    
+    ${dataPopulationInfo}
+
     ## CRITICAL: AVOID DUPLICATE WORK
     - DO NOT create operations for features that are already implemented
     - DO NOT create tables that already exist in the database
@@ -268,12 +246,13 @@ export class DatabaseAgent {
     1. Understanding what database features need to be implemented
     2. Identifying which existing hardcoded data should be moved to database
     3. Planning the migration from static data to dynamic database operations
-    4. Ensuring seamless integration with existing components
+    4. Creating necessary API endpoints for data access
+    5. 🎵 **NEW**: Automatically incorporating data population from React components when available
 
     ## Response Format:
     You MUST return ONLY a valid JSON object with no additional text, explanations, or markdown formatting.
     The JSON must contain exactly these fields:
-    - analysis: string (detailed analysis of what needs to be done)
+    - analysis: string (detailed analysis of what needs to be done, including data population info)
     - operations: array of objects with type, description, files, and dependencies
     - estimatedTime: number (seconds)
     - requirements: array of strings (what needs to be installed/configured)
@@ -281,165 +260,82 @@ export class DatabaseAgent {
     CRITICAL: Return ONLY the JSON object. Do not include any text before or after the JSON.
 
     ## Available Operation Types:
-    - create_table: Create database table with schema
+    - create_table: Create database table with schema (now includes automatic data population!)
     - create_api: Create API endpoints
-    - update_component: Update existing React components
     - install_dependency: Install npm packages
     - run_migration: Run database migrations
     - create_types: Generate TypeScript types
     - create_hooks: Create custom React hooks
 
+    ## IMPORTANT: Component Integration Policy
+    - DO NOT suggest update_component operations
+    - Focus on database and API layer only
+    - Component integration will be handled separately in future development phases
+    - Preserve existing React components unchanged
+
     ## Important Notes:
-    - Always preserve existing UI/UX while adding database functionality
-    - Use the existing data structures as a guide for table schema
     - Create proper TypeScript types for all database operations
-    - Include error handling and loading states in components
-    - Follow Next.js 13+ app directory conventions`;
+    - Include error handling and loading states in API endpoints
+    - Follow Next.js 13+ app directory conventions
+    - 🎵 **NEW**: When creating tables, mention if automatic data population is available
+    - 🎵 **NEW**: Include realistic record counts when data population is available
+    - Component updates will be handled in a separate development phase`;
 
-    const response = await this.aiClient.generateText(systemPrompt, query);
-    
+    const userPrompt = `Query: "${query}"
+
+    Please analyze this query and create a comprehensive execution plan. Pay special attention to:
+    1. Whether this matches any of the available data arrays for automatic population
+    2. What database tables need to be created
+    3. What API endpoints are needed
+    4. How the data will flow from React components to database to API
+    5. What TypeScript types and hooks might be needed
+
+    ${matchedDataArray ? `\n🎵 AUTOMATIC DATA POPULATION DETECTED:
+    - Data array: ${matchedDataArray.name}
+    - Records: ${matchedDataArray.totalRecords}
+    - Source: ${matchedDataArray.filePath}
+    - This data will be automatically populated into the table!` : ''}
+
+    IMPORTANT: Do not suggest component updates - focus only on database and API layer.
+
+    Remember: Return ONLY the JSON object, no other text.`;
+
     try {
-      // Extract JSON more precisely by finding balanced braces
-      this.logger.info('Extracting JSON from AI response...');
-      const jsonString = this.extractJSON(response);
-      if (!jsonString) {
-        this.logger.error('No valid JSON found in AI response');
-        this.logger.codeBlock(response.substring(0, 500) + '...', 'text');
-        throw new Error('No valid JSON found in AI response');
+      const response = await this.aiClient.generateText(systemPrompt, userPrompt);
+      const plan = JSON.parse(response) as QueryPlan;
+      
+      // Enhance operations with data population info
+      if (matchedDataArray) {
+        plan.operations = plan.operations.map(op => {
+          if (op.type === 'create_table') {
+            op.dataPopulation = {
+              arrayName: matchedDataArray.name,
+              recordCount: matchedDataArray.totalRecords,
+              sourceFile: matchedDataArray.filePath
+            };
+          }
+          return op;
+        });
       }
       
-      this.logger.info('JSON extracted successfully, parsing...');
-      const plan = JSON.parse(jsonString);
-      
-      // Validate the plan structure
-      if (!plan.analysis || !plan.operations || !plan.estimatedTime || !plan.requirements) {
-        this.logger.error('Invalid plan structure from AI response');
-        this.logger.codeBlock(jsonString, 'json');
-        throw new Error('Invalid plan structure from AI response');
-      }
-      
-      this.logger.success('AI response parsed successfully');
-      return {
-        query,
-        analysis: plan.analysis,
-        operations: plan.operations,
-        estimatedTime: plan.estimatedTime,
-        requirements: plan.requirements
-      };
+      return plan;
     } catch (error) {
-      this.logger.error('Failed to parse AI response.');
-      this.logger.info(`Response length: ${response.length}`);
-      this.logger.info('Response preview:');
-      this.logger.codeBlock(response.substring(0, 1000) + (response.length > 1000 ? '\n... (truncated)' : ''), 'text');
-      throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  private extractJSON(text: string): string | null {
-    try {
-      // Find the first opening brace
-      const start = text.indexOf('{');
-      if (start === -1) return null;
-
-      // Count braces to find the matching closing brace
-      let braceCount = 0;
-      let end = -1;
-      
-      for (let i = start; i < text.length; i++) {
-        const char = text[i];
-        if (char === '{') {
-          braceCount++;
-        } else if (char === '}') {
-          braceCount--;
-          if (braceCount === 0) {
-            end = i;
-            break;
-          }
-        }
-      }
-      
-      if (end === -1) return null;
-      
-      const jsonString = text.substring(start, end + 1);
-      
-      // Validate that it's actually valid JSON by attempting to parse it
-      JSON.parse(jsonString);
-      
-      return jsonString;
-    } catch (error) {
-      // If JSON parsing fails, try alternative extraction methods
-      return this.fallbackJSONExtraction(text);
-    }
-  }
-
-  private fallbackJSONExtraction(text: string): string | null {
-    try {
-      // Method 1: Look for JSON between code blocks or similar markers
-      const patterns = [
-        /```json\s*(\{[\s\S]*?\})\s*```/i,
-        /```\s*(\{[\s\S]*?\})\s*```/i,
-        /(\{[\s\S]*?\})\s*$/,  // JSON at the end
-        /^(\{[\s\S]*?\})/,     // JSON at the beginning
-      ];
-
-      for (const pattern of patterns) {
-        const match = text.match(pattern);
-        if (match && match[1]) {
-          try {
-            JSON.parse(match[1]);
-            return match[1];
-          } catch {
-            continue;
-          }
-        }
-      }
-
-      // Method 2: Try to find the largest valid JSON object
-      const lines = text.split('\n');
-      let jsonLines: string[] = [];
-      let inJson = false;
-      
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('{')) {
-          inJson = true;
-          jsonLines = [line];
-        } else if (inJson) {
-          jsonLines.push(line);
-          if (trimmed.endsWith('}')) {
-            try {
-              const jsonString = jsonLines.join('\n');
-              JSON.parse(jsonString);
-              return jsonString;
-            } catch {
-              // Continue looking
-            }
-          }
-        }
-      }
-      
-      return null;
-    } catch {
-      return null;
+      this.logger.error('Failed to parse AI response as JSON');
+      throw new Error('Invalid AI response format');
     }
   }
 
   private async validateRequirements(requirements: string[], projectContext: ProjectContext): Promise<void> {
     this.logger.analyzing('Validating requirements...');
-
+    
     for (const requirement of requirements) {
-      this.logger.info(`Checking: ${requirement}`);
-
       if (requirement.includes('supabase') && !projectContext.supabaseConfigured) {
-        this.logger.warn('Supabase not configured. Will set up Supabase configuration.');
-        // Add Supabase setup to operations
+        this.logger.warn(`Requirement not met: ${requirement}`);
+        this.logger.info('Please configure Supabase in your .env.local file');
       }
-
-      if (requirement.includes('npm install')) {
-        const packageName = requirement.replace('npm install ', '');
-        if (!projectContext.dependencies.includes(packageName)) {
-          this.logger.info(`Will install ${packageName}`);
-        }
+      
+      if (requirement.includes('dependency') && !projectContext.dependencies.includes(requirement)) {
+        this.logger.warn(`Dependency not installed: ${requirement}`);
       }
     }
   }
@@ -471,10 +367,6 @@ export class DatabaseAgent {
             break;
           case 'create_api':
             await this.executeCreateAPI(operation, projectContext);
-            success = true;
-            break;
-          case 'update_component':
-            await this.executeUpdateComponent(operation, projectContext);
             success = true;
             break;
           case 'install_dependency':
@@ -509,7 +401,7 @@ export class DatabaseAgent {
   }
 
   private async executeCreateTable(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
-    this.logger.generating('Creating idempotent database table schema...');
+    this.logger.generating('Creating database table with automatic data population...');
 
     try {
       // Initialize the SQL generator
@@ -519,6 +411,38 @@ export class DatabaseAgent {
       const tableName = this.extractTableName(operation.description);
       const columns = this.extractColumns(operation, projectContext);
 
+      // 🎵 DEBUG: Log extracted information
+      this.logger.info(`🔍 DEBUG - Operation description: "${operation.description}"`);
+      this.logger.info(`🔍 DEBUG - Extracted table name: "${tableName}"`);
+      this.logger.info(`🔍 DEBUG - Extracted columns: ${columns.map(col => col.name).join(', ')}`);
+
+      // 🎵 NEW: Check for automatic data population
+      let seedData: any[] = [];
+      let populationInfo = '';
+      
+      if (operation.dataPopulation) {
+        this.logger.info(`🎵 Automatic data population detected: ${operation.dataPopulation.arrayName}`);
+        
+        // Extract data from React components
+        const dataArray = await this.componentDataExtractor.matchQueryToDataArray(operation.description);
+        
+        if (dataArray) {
+          // Transform data for database
+          const transformedData = await this.componentDataExtractor.transformDataForDatabase(dataArray, tableName);
+          seedData = transformedData;
+          
+          populationInfo = `\n-- 🎵 AUTO-POPULATED DATA FROM REACT COMPONENTS
+-- Source: ${dataArray.filePath}
+-- Array: ${dataArray.name}
+-- Records: ${seedData.length}
+-- Transformed for table: ${tableName}
+
+`;
+          
+          this.logger.success(`✅ Prepared ${seedData.length} records from ${dataArray.name} for automatic population`);
+        }
+      }
+
       // Generate idempotent SQL using the specialized generator
       const sqlCode = await this.sqlGenerator.generateIdempotentTableSQL(
         operation.description,
@@ -527,13 +451,20 @@ export class DatabaseAgent {
         {
           includeIndexes: true,
           includePolicies: true,
-          includeSeedData: false,
+          includeSeedData: seedData.length > 0,
           existingTables: projectContext.systemState?.database.connectedTables || []
         }
       );
 
+      // 🎵 NEW: Add seed data if available
+      let enhancedSQLCode = sqlCode;
+      if (seedData.length > 0) {
+        const seedDataSQL = await this.sqlGenerator.generateIdempotentSeedData(tableName, seedData);
+        enhancedSQLCode = populationInfo + sqlCode + '\n\n' + seedDataSQL;
+      }
+
       // Validate the SQL is idempotent
-      const validation = this.sqlGenerator.validateIdempotency(sqlCode);
+      const validation = this.sqlGenerator.validateIdempotency(enhancedSQLCode);
       if (!validation.isIdempotent) {
         this.logger.warn('Generated SQL may not be fully idempotent:');
         validation.issues.forEach(issue => this.logger.warn(`  - ${issue}`));
@@ -547,12 +478,16 @@ export class DatabaseAgent {
       // Ensure migrations directory exists
       await this.fileManager.ensureDirectory('src/lib/migrations');
       
-      await this.fileManager.createFile(migrationFile, sqlCode);
+      await this.fileManager.createFile(migrationFile, enhancedSQLCode);
       
       // Add the migration file to the operation for tracking
       operation.files.push(migrationFile);
       
-      this.logger.success(`Created idempotent migration file: ${migrationFile}`);
+      if (seedData.length > 0) {
+        this.logger.success(`🎉 Created migration file with ${seedData.length} auto-populated records: ${migrationFile}`);
+      } else {
+        this.logger.success(`Created idempotent migration file: ${migrationFile}`);
+      }
       
     } catch (error) {
       this.logger.error(`Failed to create table migration: ${error instanceof Error ? error.message : String(error)}`);
@@ -562,21 +497,37 @@ export class DatabaseAgent {
 
   // Helper method to extract table name from operation description
   private extractTableName(description: string): string {
-    // Look for patterns like "create table_name" or "store data in table_name"
-    const tableMatches = description.match(/(?:create|table|store.*in)\s+(\w+)/i);
-    if (tableMatches) {
-      return tableMatches[1];
-    }
-    
-    // Look for common Spotify table names
+    // First check for common Spotify table names
     if (description.toLowerCase().includes('recently played')) return 'recently_played';
     if (description.toLowerCase().includes('made for you')) return 'made_for_you';
     if (description.toLowerCase().includes('popular albums')) return 'popular_albums';
     if (description.toLowerCase().includes('playlist')) return 'user_playlists';
     if (description.toLowerCase().includes('search')) return 'search_history';
     
-    // Default fallback
-    return description.replace(/\s+/g, '_').toLowerCase();
+    // Look for patterns like "create table_name table" or "table called table_name"
+    const patterns = [
+      /create\s+(?:a\s+)?table\s+(?:called\s+|named\s+)?['""]?(\w+)['""]?/i,
+      /create\s+['""]?(\w+)['""]?\s+table/i,
+      /table\s+(?:called\s+|named\s+)?['""]?(\w+)['""]?/i,
+      /store.*?in\s+(?:a\s+)?table\s+(?:called\s+|named\s+)?['""]?(\w+)['""]?/i,
+      /['""](\w+)['""]?\s+table/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1] && !['a', 'an', 'the', 'in', 'table'].includes(match[1].toLowerCase())) {
+        return match[1].toLowerCase();
+      }
+    }
+    
+    // Default fallback - clean up the description
+    return description
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+      .trim()
+      .split(/\s+/)
+      .slice(0, 3) // Take first 3 words
+      .join('_')
+      .toLowerCase();
   }
 
   // Helper method to extract columns from operation and project context
@@ -590,53 +541,69 @@ export class DatabaseAgent {
     // Add columns based on operation description
     const description = operation.description.toLowerCase();
     
-    if (description.includes('recently played')) {
+    // 🔍 ENHANCED DEBUG: Log the matching process
+    this.logger.info(`🔍 DEBUG - Analyzing description: "${description}"`);
+    this.logger.info(`🔍 DEBUG - Checking patterns:`);
+    this.logger.info(`  - recently played: ${description.includes('recently played')}`);
+    this.logger.info(`  - songs: ${description.includes('songs')}`);
+    this.logger.info(`  - made for you: ${description.includes('made for you')}`);
+    this.logger.info(`  - popular albums: ${description.includes('popular albums')}`);
+    this.logger.info(`  - playlist: ${description.includes('playlist')}`);
+    this.logger.info(`  - search: ${description.includes('search')}`);
+    
+    if (description.includes('recently played') || description.includes('songs')) {
+      this.logger.info(`🔍 DEBUG - MATCHED: recently played/songs pattern`);
       columns.push(
-        { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
-        { name: 'track_id', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'track_name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'artist_name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'album_name', type: 'TEXT', default: '' },
-        { name: 'played_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'NOW()' },
-        { name: 'duration_ms', type: 'INTEGER', default: '' }
+        { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'artist', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'album', type: 'TEXT', default: '' },
+        { name: 'image', type: 'TEXT', default: '' },
+        { name: 'duration', type: 'INTEGER', default: '' }
       );
     } else if (description.includes('made for you')) {
+      this.logger.info(`🔍 DEBUG - MATCHED: made for you pattern`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
+        { name: 'playlist_id', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'description', type: 'TEXT', default: '' },
-        { name: 'image_url', type: 'TEXT', default: '' },
-        { name: 'type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' }
+        { name: 'image', type: 'TEXT', default: '' },
+        { name: 'playlist_type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'duration', type: 'INTEGER', default: '' }
       );
     } else if (description.includes('popular albums')) {
+      this.logger.info(`🔍 DEBUG - MATCHED: popular albums pattern`);
       columns.push(
         { name: 'album_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'artist', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'image_url', type: 'TEXT', default: '' },
-        { name: 'release_date', type: 'DATE', default: '' },
-        { name: 'popularity_score', type: 'INTEGER', default: '' },
-        { name: 'genre', type: 'TEXT', default: '' }
+        { name: 'image', type: 'TEXT', default: '' },
+        { name: 'duration', type: 'INTEGER', default: '' },
+        { name: 'popularity_score', type: 'INTEGER', default: '' }
       );
     } else if (description.includes('playlist')) {
+      this.logger.info(`🔍 DEBUG - MATCHED: playlist pattern`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'description', type: 'TEXT', default: '' },
         { name: 'is_public', type: 'BOOLEAN', default: 'false' },
-        { name: 'image_url', type: 'TEXT', default: '' },
+        { name: 'image', type: 'TEXT', default: '' },
         { name: 'track_count', type: 'INTEGER', default: '0' }
       );
     } else if (description.includes('search')) {
+      this.logger.info(`🔍 DEBUG - MATCHED: search pattern`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'query', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'result_count', type: 'INTEGER', default: '0' },
         { name: 'searched_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'NOW()' }
       );
+    } else {
+      this.logger.info(`🔍 DEBUG - NO PATTERN MATCHED - only basic columns will be added`);
     }
 
+    this.logger.info(`🔍 DEBUG - Final columns: ${columns.map(col => col.name).join(', ')}`);
     return columns;
   }
 
@@ -679,48 +646,41 @@ export class DatabaseAgent {
     }
   }
 
+  // NOTE: Component updates have been moved to a separate development phase
+  // This method is commented out but preserved for future implementation
+  /*
   private async executeUpdateComponent(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
     this.logger.generating('Updating React components...');
 
     for (const file of operation.files) {
-      try {
-        // Read existing component
-        const existingComponent = await this.fileManager.readFile(file);
-        
-        const componentPrompt = `Update this React component to use database instead of hardcoded data:
+      const componentPrompt = `Update React component for: ${operation.description}
 
-        ## Operation: ${operation.description}
-        ## File: ${file}
+      ## File: ${file}
 
-        ## Current Component:
-        ${existingComponent}
+      ## Context:
+      - Existing components: ${projectContext.components.map(c => c.name).join(', ')}
+      - Database tables: ${projectContext.databaseTables.join(', ') || 'none'}
+      - Available APIs: ${projectContext.existingAPIs.map(api => api.path).join(', ')}
 
-        ## Available API Endpoints:
-        ${operation.apiEndpoints?.map(endpoint => `- ${endpoint}`).join('\n') || 'Will be created'}
+      ## Requirements:
+      - Replace hardcoded data with database fetching
+      - Use React hooks for state management
+      - Add loading states
+      - Include error handling
+      - Use TypeScript properly
+      - Maintain existing UI/UX
+      - Add proper TypeScript types
 
-        ## Requirements:
-        - Replace hardcoded data with API calls
-        - Add loading states with proper UI feedback
-        - Add error handling with user-friendly messages
-        - Maintain exact same UI/UX appearance
-        - Use React hooks (useState, useEffect, useCallback)
-        - Add proper TypeScript types
-        - Include proper error boundaries
-        - Add optimistic updates where appropriate
-        - Follow React best practices
+      ## Response Format:
+      Return only the TypeScript/React code for the component, no explanations or markdown formatting.`;
 
-        ## Response Format:
-        Return only the updated TypeScript/React component code, no explanations or markdown formatting.`;
-
-        const updatedComponent = await this.aiClient.generateText(componentPrompt, operation.description);
-        
-        await this.fileManager.updateFile(file, updatedComponent);
-        this.logger.success(`Updated component: ${file}`);
-      } catch (error) {
-        this.logger.error(`Failed to update component ${file}: ${error instanceof Error ? error.message : String(error)}`);
-      }
+      const componentCode = await this.aiClient.generateText(componentPrompt, operation.description);
+      
+      await this.fileManager.createFile(file, componentCode);
+      this.logger.success(`Updated component: ${file}`);
     }
   }
+  */
 
   private async executeCreateTypes(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
     this.logger.generating('Creating TypeScript types...');
@@ -757,20 +717,19 @@ export class DatabaseAgent {
     const hooksPrompt = `Create custom React hooks for: ${operation.description}
 
     ## Context:
-    - API endpoints: ${operation.apiEndpoints?.join(', ') || 'to be created'}
-    - Database operations: ${operation.description}
+    - Database tables: ${projectContext.databaseTables.join(', ') || 'none'}
+    - Available APIs: ${projectContext.existingAPIs.map(api => api.path).join(', ')}
 
     ## Requirements:
-    - Create reusable custom hooks
-    - Include loading and error states
-    - Add proper TypeScript types
-    - Include caching where appropriate
-    - Add refetch functionality
+    - Create reusable React hooks
+    - Include proper state management
+    - Add error handling
+    - Include loading states
+    - Use TypeScript properly
     - Follow React hooks best practices
-    - Include JSDoc comments
 
     ## Response Format:
-    Return only the TypeScript hook code, no explanations or markdown formatting.`;
+    Return only the TypeScript code for the hooks, no explanations or markdown formatting.`;
 
     const hooksCode = await this.aiClient.generateText(hooksPrompt, operation.description);
     
@@ -861,6 +820,15 @@ export class DatabaseAgent {
 
       this.logger.success(`Successfully executed ${successful.length} migration(s)`);
       
+      // 🎵 NEW: Log data population info
+      const totalTablesCreated = successful.reduce((sum, result) => {
+        return sum + (result.tablesCreated?.length || 0);
+      }, 0);
+      
+      if (totalTablesCreated > 0) {
+        this.logger.success(`🎉 Successfully created ${totalTablesCreated} table(s) with automatic data population!`);
+      }
+      
       // Update project context with new tables
       projectContext.databaseTables.push(...allTablesCreated);
 
@@ -943,47 +911,8 @@ ${failedResults.map(result => `-- FAILED: ${result.migration.filename} - ${resul
           }
           break;
           
-        case 'update_component':
-          // Check if component already uses database
-          for (const file of operation.files) {
-            if (projectContext.systemState?.components.usingDatabase.includes(file)) {
-              this.logger.info(`Skipping component update for '${file}' - already uses database`);
-              shouldSkip = true;
-              break;
-            }
-          }
-          break;
-          
-        case 'install_dependency':
-          // Check if dependency already installed
-          if (operation.dependencies) {
-            const newDependencies = operation.dependencies.filter(dep => 
-              !projectContext.dependencies.includes(dep)
-            );
-            if (newDependencies.length === 0) {
-              this.logger.info(`Skipping dependency installation - all dependencies already installed`);
-              shouldSkip = true;
-            } else {
-              // Update operation to only install new dependencies
-              operation.dependencies = newDependencies;
-            }
-          }
-          break;
-          
-        case 'run_migration':
-          // Check if migration files already executed
-          const newMigrationFiles = operation.files.filter(file => {
-            const filename = file.split('/').pop() || file;
-            return !projectContext.systemState?.database.executedMigrations.includes(filename);
-          });
-          
-          if (newMigrationFiles.length === 0) {
-            this.logger.info(`Skipping migration execution - all migrations already executed`);
-            shouldSkip = true;
-          } else {
-            // Update operation to only run new migrations
-            operation.files = newMigrationFiles;
-          }
+        default:
+          // Don't skip other operation types
           break;
       }
       
@@ -995,58 +924,66 @@ ${failedResults.map(result => `-- FAILED: ${result.migration.filename} - ${resul
     return filteredOperations;
   }
 
-  // Convert file path to API path
+  // Helper method to convert file path to API path
   private filePathToAPIPath(filePath: string): string {
-    // Convert src/app/api/route-name/route.ts to /api/route-name
-    const apiMatch = filePath.match(/src\/app\/api\/([^\/]+)/);
-    if (apiMatch) {
-      return `/api/${apiMatch[1]}`;
+    // Convert src/app/api/recently-played/route.ts to /api/recently-played
+    const match = filePath.match(/src\/app\/api\/(.+)\/route\.ts$/);
+    if (match) {
+      return `/api/${match[1]}`;
     }
-    
-    // Convert pages/api/route-name.ts to /api/route-name
-    const pagesMatch = filePath.match(/pages\/api\/(.+)\.ts$/);
-    if (pagesMatch) {
-      return `/api/${pagesMatch[1]}`;
-    }
-    
     return filePath;
   }
 
-  // Record operation in history
-  private async recordOperation(operationId: string, operation: DatabaseOperation, success: boolean, projectContext: ProjectContext): Promise<void> {
-    // Map operation type to history type (filtering to only supported types)
-    const supportedTypes = ['create_table', 'create_api', 'update_component', 'run_migration'];
-    const operationType = supportedTypes.includes(operation.type) ? operation.type as 'create_table' | 'create_api' | 'update_component' | 'run_migration' : 'run_migration';
-    
-    const historyEntry: OperationHistory = {
+  // Helper method to record operations for history tracking
+  private async recordOperation(
+    operationId: string,
+    operation: DatabaseOperation,
+    success: boolean,
+    projectContext: ProjectContext
+  ): Promise<void> {
+    // Map operation type to supported history types
+    const mapOperationType = (type: string): 'create_table' | 'create_api' | 'run_migration' => {
+      switch (type) {
+        case 'create_table':
+          return 'create_table';
+        case 'create_api':
+          return 'create_api';
+        case 'run_migration':
+          return 'run_migration';
+        case 'install_dependency':
+        case 'create_types':
+        case 'create_hooks':
+        default:
+          return 'run_migration'; // Default fallback
+      }
+    };
+
+    // Create operation record
+    const operationRecord: OperationHistory = {
       operationId,
-      type: operationType,
+      type: mapOperationType(operation.type),
       description: operation.description,
       targetFiles: operation.files,
       success,
       executedAt: new Date(),
-      rollbackAvailable: success && ['create_table', 'run_migration'].includes(operation.type),
+      rollbackAvailable: success && operation.type !== 'run_migration',
       metadata: {
-        dependencies: operation.dependencies,
-        tableSchema: operation.tableSchema,
-        apiEndpoints: operation.apiEndpoints
+        dependencies: operation.dependencies || [],
+        dataPopulation: operation.dataPopulation
       }
     };
 
-    // Save to project analyzer (which handles the history file)
-    const projectAnalyzer = new (await import('./project-analyzer')).ProjectAnalyzer(projectContext.projectRoot);
-    await projectAnalyzer.saveOperationHistory(historyEntry);
-  }
+    // Add to project context
+    if (!projectContext.operationHistory) {
+      projectContext.operationHistory = [];
+    }
+    projectContext.operationHistory.push(operationRecord);
 
-  // Helper method to get current status
-  getStatus(): string {
-    return 'Database Agent Ready';
-  }
-
-  // Helper method to cancel current operation
-  async cancelOperation(): Promise<void> {
-    this.logger.warn('Cancelling current operation...');
-    await this.fileManager.rollbackOperations();
-    this.logger.success('Operation cancelled and changes rolled back');
+    // Log operation
+    if (success) {
+      this.logger.success(`✅ ${operation.description}`);
+    } else {
+      this.logger.error(`❌ ${operation.description}`);
+    }
   }
 } 

@@ -2,7 +2,6 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import fs from 'fs/promises';
 import path from 'path';
 import { Logger } from './logger';
-import { ProjectContext } from '../agents/project-analyzer';
 
 export interface DatabaseState {
   tables: string[];

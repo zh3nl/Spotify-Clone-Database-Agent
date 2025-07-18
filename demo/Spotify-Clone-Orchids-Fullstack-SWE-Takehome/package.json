@@ -15,6 +15,8 @@
     "db-agent:migrations:run": "tsx cli/index.ts migrations run",
     "db-agent:migrations:rollback": "tsx cli/index.ts migrations rollback",
     "db-agent:migrations:debug": "tsx cli/index.ts migrations debug",
+    "db-agent:test-extractor": "tsx cli/test-data-extractor.ts",
+    "db-agent:test-phase2": "tsx cli/test-phase2.ts",
     "setup": "npm install && npm run db-agent:examples"
   },
   "dependencies": {

@@ -15,13 +15,13 @@ type AddRecentlyPlayedRequest = z.infer<typeof addRecentlyPlayedSchema>;
 /**
  * Adds a track to the user's recently played list
  * 
- * @route POST /api/recently-played/add
- * @access Private - Requires authentication
+ * @param req - The incoming request object
+ * @returns A response indicating success or failure
  */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     // Parse and validate request body
-    const body = await request.json();
+    const body = await req.json();
     const validatedData = addRecentlyPlayedSchema.safeParse(body);
     
     if (!validatedData.success) {
@@ -47,32 +47,17 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check if track exists
-    const { data: trackData, error: trackError } = await supabase
-      .from('tracks')
-      .select('id')
-      .eq('id', trackId)
-      .single();
-    
-    if (trackError || !trackData) {
-      return NextResponse.json(
-        { error: 'Track not found' },
-        { status: 404 }
-      );
-    }
-    
-    // Add to recently played
-    const { data, error } = await supabase
+    // Add track to recently played
+    const { error } = await supabase
       .from('recently_played')
       .insert({
         user_id: user.id,
         track_id: trackId,
         played_at: playedAt || new Date().toISOString(),
-      })
-      .select();
+      });
     
     if (error) {
-      console.error('Error adding to recently played:', error);
+      console.error('Error adding track to recently played:', error);
       return NextResponse.json(
         { error: 'Failed to add track to recently played' },
         { status: 500 }
@@ -80,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(
-      { message: 'Track added to recently played', data },
+      { success: true, message: 'Track added to recently played' },
       { status: 201 }
     );
     

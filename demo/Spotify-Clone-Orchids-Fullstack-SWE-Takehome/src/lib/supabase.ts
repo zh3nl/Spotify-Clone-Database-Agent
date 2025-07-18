@@ -26,7 +26,7 @@ export type Database = {
           title: string;
           artist: string;
           album: string;
-          image_url: string | null;
+          image: string | null;
           duration: number;
           played_at: string;
           user_id: string | null;
@@ -37,7 +37,7 @@ export type Database = {
           title: string;
           artist: string;
           album: string;
-          image_url?: string | null;
+          image?: string | null;
           duration: number;
           played_at?: string;
           user_id?: string | null;
@@ -48,7 +48,7 @@ export type Database = {
           title?: string;
           artist?: string;
           album?: string;
-          image_url?: string | null;
+          image?: string | null;
           duration?: number;
           played_at?: string;
           user_id?: string | null;
@@ -60,7 +60,7 @@ export type Database = {
           id: string;
           title: string;
           description: string;
-          image_url: string | null;
+          image: string | null;
           playlist_type: string;
           user_id: string | null;
           created_at: string;
@@ -70,7 +70,7 @@ export type Database = {
           id?: string;
           title: string;
           description: string;
-          image_url?: string | null;
+          image?: string | null;
           playlist_type: string;
           user_id?: string | null;
           created_at?: string;
@@ -80,7 +80,7 @@ export type Database = {
           id?: string;
           title?: string;
           description?: string;
-          image_url?: string | null;
+          image?: string | null;
           playlist_type?: string;
           user_id?: string | null;
           created_at?: string;
@@ -92,7 +92,7 @@ export type Database = {
           id: string;
           title: string;
           artist: string;
-          image_url: string | null;
+          image: string | null;
           release_date: string | null;
           duration: number;
           popularity_score: number;
@@ -103,7 +103,7 @@ export type Database = {
           id?: string;
           title: string;
           artist: string;
-          image_url?: string | null;
+          image?: string | null;
           release_date?: string | null;
           duration: number;
           popularity_score?: number;
@@ -114,7 +114,7 @@ export type Database = {
           id?: string;
           title?: string;
           artist?: string;
-          image_url?: string | null;
+          image?: string | null;
           release_date?: string | null;
           duration?: number;
           popularity_score?: number;
