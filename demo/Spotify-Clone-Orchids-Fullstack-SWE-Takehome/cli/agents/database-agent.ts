@@ -270,15 +270,23 @@ export class DatabaseAgent {
     3. Planning the migration from static data to dynamic database operations
     4. Ensuring seamless integration with existing components
 
-    ## Response Format:
-    You MUST return ONLY a valid JSON object with no additional text, explanations, or markdown formatting.
-    The JSON must contain exactly these fields:
-    - analysis: string (detailed analysis of what needs to be done)
-    - operations: array of objects with type, description, files, and dependencies
-    - estimatedTime: number (seconds)
-    - requirements: array of strings (what needs to be installed/configured)
+    ## CRITICAL JSON RESPONSE REQUIREMENTS:
+    You MUST respond with ONLY raw JSON - no markdown, no explanations, no additional text.
     
-    CRITICAL: Return ONLY the JSON object. Do not include any text before or after the JSON.
+    RESPONSE FORMAT:
+    {
+      "analysis": "string - detailed analysis of what needs to be done",
+      "operations": [{
+        "type": "string - operation type",
+        "description": "string - what this operation does",
+        "files": ["string - file paths"],
+        "dependencies": ["string - npm packages or requirements"]
+      }],
+      "estimatedTime": 60,
+      "requirements": ["string - what needs to be installed/configured"]
+    }
+    
+    CRITICAL: Do NOT wrap the JSON in markdown code blocks. Do NOT add any explanatory text before or after the JSON. Return ONLY the raw JSON object.
 
     ## Available Operation Types:
     - create_table: Create database table with schema
@@ -299,26 +307,85 @@ export class DatabaseAgent {
     const response = await this.aiClient.generateText(systemPrompt, query);
     
     try {
-      // Extract JSON more precisely by finding balanced braces
       this.logger.info('Extracting JSON from AI response...');
-      const jsonString = this.extractJSON(response);
+      this.logger.info(`Response length: ${response.length}`);
+      
+      // Try multiple extraction methods
+      let jsonString = this.extractJSON(response);
+      
       if (!jsonString) {
-        this.logger.error('No valid JSON found in AI response');
-        this.logger.codeBlock(response.substring(0, 500) + '...', 'text');
-        throw new Error('No valid JSON found in AI response');
+        this.logger.warn('Primary JSON extraction failed, trying alternative methods...');
+        
+        // Try to find JSON in the response using more aggressive patterns
+        const alternativePatterns = [
+          // Look for JSON after common AI response prefixes
+          /(?:here'?s?|here is|below is|the json|response|plan)\s*:?\s*\n?([\s\S]*)/gi,
+          // Look for JSON after explanatory text
+          /(?:analysis|plan|execution plan|response)\s*:?\s*\n?([\s\S]*)/gi,
+          // Just grab everything after the first mention of JSON-like content
+          /\{[\s\S]*\}/g
+        ];
+        
+        for (const pattern of alternativePatterns) {
+          const matches = response.matchAll(pattern);
+          for (const match of matches) {
+            const candidate = match[1] || match[0];
+            if (candidate) {
+              const extractedJson = this.extractJSON(candidate);
+              if (extractedJson) {
+                jsonString = extractedJson;
+                break;
+              }
+            }
+          }
+          if (jsonString) break;
+        }
       }
       
-      this.logger.info('JSON extracted successfully, parsing...');
+      if (!jsonString) {
+        this.logger.error('No valid JSON found in AI response after all extraction attempts');
+        this.logger.info('Response preview (first 1000 chars):');
+        this.logger.codeBlock(response.substring(0, 1000) + (response.length > 1000 ? '\n... (truncated)' : ''), 'text');
+        
+        // Try one more desperate attempt: look for anything that looks like JSON
+        const desperateMatch = response.match(/\{[\s\S]*\}/g);
+        if (desperateMatch) {
+          for (const candidate of desperateMatch) {
+            try {
+              JSON.parse(candidate);
+              jsonString = candidate;
+              this.logger.warn('Found JSON using desperate extraction method');
+              break;
+            } catch {
+              continue;
+            }
+          }
+        }
+        
+        if (!jsonString) {
+          throw new Error('No valid JSON found in AI response');
+        }
+      }
+      
+      this.logger.success('JSON extracted successfully');
+      this.logger.info(`Extracted JSON length: ${jsonString.length}`);
+      
       const plan = JSON.parse(jsonString);
       
       // Validate the plan structure
-      if (!plan.analysis || !plan.operations || !plan.estimatedTime || !plan.requirements) {
+      if (!plan.analysis || !plan.operations || typeof plan.estimatedTime !== 'number' || !plan.requirements) {
         this.logger.error('Invalid plan structure from AI response');
+        this.logger.error(`Missing fields: ${[
+          !plan.analysis ? 'analysis' : null,
+          !plan.operations ? 'operations' : null,
+          typeof plan.estimatedTime !== 'number' ? 'estimatedTime' : null,
+          !plan.requirements ? 'requirements' : null
+        ].filter(Boolean).join(', ')}`);
         this.logger.codeBlock(jsonString, 'json');
         throw new Error('Invalid plan structure from AI response');
       }
       
-      this.logger.success('AI response parsed successfully');
+      this.logger.success('AI response parsed and validated successfully');
       return {
         query,
         analysis: plan.analysis,
@@ -331,29 +398,94 @@ export class DatabaseAgent {
       this.logger.info(`Response length: ${response.length}`);
       this.logger.info('Response preview:');
       this.logger.codeBlock(response.substring(0, 1000) + (response.length > 1000 ? '\n... (truncated)' : ''), 'text');
+      
+      // Try to provide more specific error guidance
+      if (response.includes('I cannot') || response.includes('I apologize') || response.includes('unable to')) {
+        this.logger.warn('AI response indicates it cannot fulfill the request. This might be due to:');
+        this.logger.warn('1. The request being too complex or ambiguous');
+        this.logger.warn('2. Missing context or information needed to proceed');
+        this.logger.warn('3. The AI model being confused by the system prompt');
+        this.logger.info('Try rephrasing your query or providing more specific details.');
+      }
+      
+      if (response.includes('```') && !response.includes('```json')) {
+        this.logger.warn('AI response contains code blocks but not JSON. The model may be responding with explanatory text instead of pure JSON.');
+      }
+      
       throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : String(error)}`);
-    }
   }
 
   private extractJSON(text: string): string | null {
     try {
-      // Find the first opening brace
+      // Method 1: Try to parse the entire text as JSON (ideal case)
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        try {
+          JSON.parse(trimmed);
+          return trimmed;
+        } catch {
+          // Continue to other methods
+        }
+      }
+
+      // Method 2: Extract JSON from markdown code blocks
+      const codeBlockPatterns = [
+        /```json\s*\n?([\s\S]*?)\n?```/gi,
+        /```\s*\n?([\s\S]*?)\n?```/gi,
+        /`([\s\S]*?)`/gi
+      ];
+
+      for (const pattern of codeBlockPatterns) {
+        const matches = text.matchAll(pattern);
+        for (const match of matches) {
+          const candidate = match[1]?.trim();
+          if (candidate && candidate.startsWith('{') && candidate.endsWith('}')) {
+            try {
+              JSON.parse(candidate);
+              return candidate;
+            } catch {
+              continue;
+            }
+          }
+        }
+      }
+
+      // Method 3: Find JSON by balanced braces (original logic, improved)
       const start = text.indexOf('{');
       if (start === -1) return null;
 
-      // Count braces to find the matching closing brace
       let braceCount = 0;
       let end = -1;
+      let inString = false;
+      let escapeNext = false;
       
       for (let i = start; i < text.length; i++) {
         const char = text[i];
-        if (char === '{') {
-          braceCount++;
-        } else if (char === '}') {
-          braceCount--;
-          if (braceCount === 0) {
-            end = i;
-            break;
+        
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\' && inString) {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+        
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              end = i;
+              break;
+            }
           }
         }
       }
@@ -374,47 +506,84 @@ export class DatabaseAgent {
 
   private fallbackJSONExtraction(text: string): string | null {
     try {
-      // Method 1: Look for JSON between code blocks or similar markers
+      // Method 1: Look for JSON with various delimiters
       const patterns = [
-        /```json\s*(\{[\s\S]*?\})\s*```/i,
-        /```\s*(\{[\s\S]*?\})\s*```/i,
-        /(\{[\s\S]*?\})\s*$/,  // JSON at the end
-        /^(\{[\s\S]*?\})/,     // JSON at the beginning
+        // JSON in code blocks
+        /```json\s*\n?([\s\S]*?)\n?```/gi,
+        /```\s*\n?([\s\S]*?)\n?```/gi,
+        // JSON in backticks
+        /`([\s\S]*?)`/gi,
+        // JSON at the end of text
+        /(\{[\s\S]*?\})\s*$/,
+        // JSON at the beginning of text
+        /^(\{[\s\S]*?\})/,
+        // JSON anywhere in the text
+        /(\{[\s\S]*?\})/g
       ];
 
       for (const pattern of patterns) {
-        const match = text.match(pattern);
-        if (match && match[1]) {
-          try {
-            JSON.parse(match[1]);
-            return match[1];
-          } catch {
-            continue;
+        const matches = text.matchAll(pattern);
+        for (const match of matches) {
+          const candidate = match[1]?.trim();
+          if (candidate && candidate.startsWith('{') && candidate.endsWith('}')) {
+            try {
+              JSON.parse(candidate);
+              return candidate;
+            } catch {
+              continue;
+            }
           }
         }
       }
 
-      // Method 2: Try to find the largest valid JSON object
+      // Method 2: Line-by-line JSON reconstruction
       const lines = text.split('\n');
       let jsonLines: string[] = [];
       let inJson = false;
+      let braceCount = 0;
       
-      for (const line of lines) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         const trimmed = line.trim();
-        if (trimmed.startsWith('{')) {
+        
+        // Start of JSON
+        if (!inJson && trimmed.startsWith('{')) {
           inJson = true;
           jsonLines = [line];
+          braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
         } else if (inJson) {
           jsonLines.push(line);
-          if (trimmed.endsWith('}')) {
+          braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+          
+          // End of JSON
+          if (braceCount === 0) {
             try {
               const jsonString = jsonLines.join('\n');
               JSON.parse(jsonString);
               return jsonString;
             } catch {
-              // Continue looking
+              // Reset and continue looking
+              inJson = false;
+              jsonLines = [];
+              braceCount = 0;
             }
           }
+        }
+      }
+      
+      // Method 3: Try to clean up common AI response artifacts
+      const cleanedText = text
+        .replace(/^[\s\S]*?(?=\{)/m, '') // Remove text before first {
+        .replace(/\}[\s\S]*$/m, '}')      // Remove text after last }
+        .replace(/\n\s*\n/g, '\n')        // Remove double newlines
+        .trim();
+      
+      if (cleanedText.startsWith('{') && cleanedText.endsWith('}')) {
+        try {
+          JSON.parse(cleanedText);
+          return cleanedText;
+        } catch {
+          // Continue to next method
         }
       }
       
