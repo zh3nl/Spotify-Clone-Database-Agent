@@ -1,4 +1,3 @@
-```tsx
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
@@ -386,4 +385,19 @@ export default function SpotifyPlayer({
               >
                 <VolumeIcon className="h-4 w-4" />
               </Button>
-              <div className="w-
+              <div className="w-24">
+                <Slider
+                  value={[localVolume]}
+                  max={100}
+                  step={1}
+                  onValueChange={handleVolumeChange}
+                  className="volume-slider custom-slider"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

@@ -12,15 +12,6 @@ interface Track {
   duration: number
 }
 
-interface Playlist {
-  id: string
-  title: string
-  artist: string
-  album: string
-  image?: string
-  duration: number
-}
-
 interface MusicCardProps {
   title: string
   artist: string
@@ -88,12 +79,184 @@ interface SpotifyMainContentProps {
   onPlayTrack?: (track: Track) => void
 }
 
+// Hardcoded fallback data (preserved from original implementation)
+const FALLBACK_RECENTLY_PLAYED: Track[] = [
+  { 
+    id: "1",
+    title: "Liked Songs", 
+    artist: "320 songs",
+    album: "Your Music",
+    albumArt: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
+    duration: 180
+  },
+  { 
+    id: "2",
+    title: "Discover Weekly", 
+    artist: "Spotify",
+    album: "Weekly Mix",
+    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+    duration: 210
+  },
+  { 
+    id: "3",
+    title: "Release Radar", 
+    artist: "Spotify",
+    album: "New Releases",
+    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+    duration: 195
+  },
+  { 
+    id: "4",
+    title: "Daily Mix 1", 
+    artist: "Spotify",
+    album: "Daily Mix",
+    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+    duration: 225
+  },
+  { 
+    id: "5",
+    title: "Chill Hits", 
+    artist: "Spotify",
+    album: "Chill Collection",
+    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+    duration: 240
+  },
+  { 
+    id: "6",
+    title: "Top 50 - Global", 
+    artist: "Spotify",
+    album: "Global Charts",
+    albumArt: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
+    duration: 205
+  }
+];
+
+const FALLBACK_MADE_FOR_YOU: Track[] = [
+  { 
+    id: "7",
+    title: "Discover Weekly", 
+    artist: "Your weekly mixtape of fresh music",
+    album: "Weekly Discovery",
+    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+    duration: 210
+  },
+  { 
+    id: "8",
+    title: "Release Radar", 
+    artist: "Catch all the latest music from artists you follow",
+    album: "New Music Friday",
+    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+    duration: 195
+  },
+  { 
+    id: "9",
+    title: "Daily Mix 1", 
+    artist: "Billie Eilish, Lorde, Clairo and more",
+    album: "Alternative Mix",
+    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+    duration: 225
+  },
+  { 
+    id: "10",
+    title: "Daily Mix 2", 
+    artist: "Arctic Monkeys, The Strokes, Tame Impala and more",
+    album: "Indie Rock Mix",
+    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+    duration: 240
+  },
+  { 
+    id: "11",
+    title: "Daily Mix 3", 
+    artist: "Taylor Swift, Olivia Rodrigo, Gracie Abrams and more",
+    album: "Pop Mix",
+    albumArt: "https://v3.fal.media/files/rabbit/b11V_uidRMsa2mTr5mCfz_output.png",
+    duration: 190
+  },
+  { 
+    id: "12",
+    title: "On Repeat", 
+    artist: "The songs you can't get enough of",
+    album: "Your Favorites",
+    albumArt: "https://v3.fal.media/files/rabbit/mVegWQYIe0yj8NixTQQG-_output.png",
+    duration: 220
+  }
+];
+
+const FALLBACK_POPULAR_ALBUMS: Track[] = [
+  { 
+    id: "13",
+    title: "Midnights", 
+    artist: "Taylor Swift",
+    album: "Midnights",
+    albumArt: "https://v3.fal.media/files/elephant/C_rLsEbIUdbn6nQ0wz14S_output.png",
+    duration: 275
+  },
+  { 
+    id: "14",
+    title: "Harry's House", 
+    artist: "Harry Styles",
+    album: "Harry's House",
+    albumArt: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
+    duration: 245
+  },
+  { 
+    id: "15",
+    title: "Un Verano Sin Ti", 
+    artist: "Bad Bunny",
+    album: "Un Verano Sin Ti",
+    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+    duration: 265
+  },
+  { 
+    id: "16",
+    title: "Renaissance", 
+    artist: "Beyoncé",
+    album: "Renaissance",
+    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+    duration: 290
+  },
+  { 
+    id: "17",
+    title: "SOUR", 
+    artist: "Olivia Rodrigo",
+    album: "SOUR",
+    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+    duration: 215
+  },
+  { 
+    id: "18",
+    title: "Folklore", 
+    artist: "Taylor Swift",
+    album: "Folklore",
+    albumArt: "https://v3.fal.media/files/rabbit/b11V_uidRMsa2mTr5mCfz_output.png",
+    duration: 285
+  },
+  { 
+    id: "19",
+    title: "Fine Line", 
+    artist: "Harry Styles",
+    album: "Fine Line",
+    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+    duration: 255
+  },
+  { 
+    id: "20",
+    title: "After Hours", 
+    artist: "The Weeknd",
+    album: "After Hours",
+    albumArt: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
+    duration: 270
+  }
+];
+
 export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentProps) {
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Playlist[]>([])
-  const [madeForYou, setMadeForYou] = useState<Playlist[]>([])
-  const [popularAlbums, setPopularAlbums] = useState<Playlist[]>([])
+  // Initialize with fallback data for immediate display, then try to fetch from API
+  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>(FALLBACK_RECENTLY_PLAYED)
+  const [madeForYou, setMadeForYou] = useState<Track[]>(FALLBACK_MADE_FOR_YOU)
+  const [popularAlbums, setPopularAlbums] = useState<Track[]>(FALLBACK_POPULAR_ALBUMS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [dataSource, setDataSource] = useState<'fallback' | 'database'>('fallback')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,57 +264,91 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
       setError(null)
       
       try {
+        // Try to fetch data from database APIs
+        let apiDataAvailable = true;
+        let recentlyPlayedData: Track[] = [];
+        let madeForYouData: Track[] = [];
+        let popularAlbumsData: Track[] = [];
+        
         // Fetch recently played tracks
-        console.log('🔄 Fetching recently played tracks from /api/recently-played')
-        const recentlyPlayedResponse = await fetch('/api/recently-played')
-        if (!recentlyPlayedResponse.ok) {
-          throw new Error(`Failed to fetch recently played tracks: ${recentlyPlayedResponse.status} ${recentlyPlayedResponse.statusText}`)
+        try {
+          const recentlyPlayedResponse = await fetch('/api/tracks/recently-played')
+          if (recentlyPlayedResponse.ok) {
+            const data = await recentlyPlayedResponse.json()
+            if (Array.isArray(data) && data.length > 0) {
+              recentlyPlayedData = data
+            } else {
+              throw new Error('Empty response from recently played API')
+            }
+          } else {
+            throw new Error(`HTTP ${recentlyPlayedResponse.status}: ${recentlyPlayedResponse.statusText}`)
+          }
+        } catch (err) {
+          console.warn('Recently played API failed, using fallback:', err)
+          recentlyPlayedData = FALLBACK_RECENTLY_PLAYED
+          apiDataAvailable = false
         }
-        const recentlyPlayedData = await recentlyPlayedResponse.json()
-        console.log('✅ Recently played data:', recentlyPlayedData)
-        setRecentlyPlayed(Array.isArray(recentlyPlayedData) ? recentlyPlayedData : [])
         
         // Fetch made for you playlists
-        console.log('🔄 Fetching made for you playlists from /api/playlists/made-for-you')
         try {
           const madeForYouResponse = await fetch('/api/playlists/made-for-you')
           if (madeForYouResponse.ok) {
-            const madeForYouData = await madeForYouResponse.json()
-            console.log('✅ Made for you data:', madeForYouData)
-            setMadeForYou(Array.isArray(madeForYouData) ? madeForYouData : [])
+            const data = await madeForYouResponse.json()
+            if (Array.isArray(data) && data.length > 0) {
+              madeForYouData = data
+            } else {
+              throw new Error('Empty response from made for you API')
+            }
           } else {
-            console.warn('⚠️ Made for you API not available, using empty array')
-            setMadeForYou([])
+            throw new Error(`HTTP ${madeForYouResponse.status}: ${madeForYouResponse.statusText}`)
           }
-        } catch (madeForYouError) {
-          console.warn('⚠️ Made for you API error:', madeForYouError)
-          setMadeForYou([])
+        } catch (err) {
+          console.warn('Made for you API failed, using fallback:', err)
+          madeForYouData = FALLBACK_MADE_FOR_YOU
+          apiDataAvailable = false
         }
         
         // Fetch popular albums
-        console.log('🔄 Fetching popular albums from /api/albums/popular')
         try {
           const popularAlbumsResponse = await fetch('/api/albums/popular')
           if (popularAlbumsResponse.ok) {
-            const popularAlbumsData = await popularAlbumsResponse.json()
-            console.log('✅ Popular albums data:', popularAlbumsData)
-            setPopularAlbums(Array.isArray(popularAlbumsData) ? popularAlbumsData : [])
+            const data = await popularAlbumsResponse.json()
+            if (Array.isArray(data) && data.length > 0) {
+              popularAlbumsData = data
+            } else {
+              throw new Error('Empty response from popular albums API')
+            }
           } else {
-            console.warn('⚠️ Popular albums API not available, using empty array')
-            setPopularAlbums([])
+            throw new Error(`HTTP ${popularAlbumsResponse.status}: ${popularAlbumsResponse.statusText}`)
           }
-        } catch (popularError) {
-          console.warn('⚠️ Popular albums API error:', popularError)
-          setPopularAlbums([])
+        } catch (err) {
+          console.warn('Popular albums API failed, using fallback:', err)
+          popularAlbumsData = FALLBACK_POPULAR_ALBUMS
+          apiDataAvailable = false
         }
-      } catch (err) {
-        console.error('❌ Error fetching data:', err)
-        setError(err instanceof Error ? err.message : 'An unknown error occurred')
         
-        // Set empty arrays as fallback
-        setRecentlyPlayed([])
-        setMadeForYou([])
-        setPopularAlbums([])
+        // Update state with the data we managed to get
+        const newDataSource = apiDataAvailable ? 'database' : 'fallback'
+        setRecentlyPlayed(recentlyPlayedData)
+        setMadeForYou(madeForYouData)
+        setPopularAlbums(popularAlbumsData)
+        setDataSource(newDataSource)
+        
+        // Only set error if we're using fallback data
+        if (!apiDataAvailable) {
+          setError(`Using offline data - database connection unavailable`)
+        } else {
+          console.log(`✅ Successfully loaded data from ${newDataSource}`)
+        }
+        
+      } catch (err) {
+        // Final fallback - this shouldn't happen with our granular error handling above
+        console.error('Unexpected error in fetchData:', err)
+        setError('Using offline data due to connection issues')
+        setRecentlyPlayed(FALLBACK_RECENTLY_PLAYED)
+        setMadeForYou(FALLBACK_MADE_FOR_YOU)
+        setPopularAlbums(FALLBACK_POPULAR_ALBUMS)
+        setDataSource('fallback')
       } finally {
         setIsLoading(false)
       }
@@ -160,13 +357,13 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
     fetchData()
   }, [])
 
-  const handlePlayTrack = (item: any) => {
+  const handlePlayTrack = (item: Track) => {
     const track: Track = {
       id: item.id,
       title: item.title,
       artist: item.artist,
       album: item.album,
-      albumArt: item.image || '/api/placeholder/56/56',
+      albumArt: item.albumArt || '/api/placeholder/56/56',
       duration: item.duration
     }
     onPlayTrack?.(track)
@@ -175,13 +372,14 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
   // Loading skeleton component
   const LoadingSkeleton = () => (
     <div className="animate-pulse">
-      <div className="h-8 w-48 bg-[var(--color-muted)] rounded mb-6"></div>
       <div className="flex gap-4 overflow-x-auto pb-4">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="flex-shrink-0">
-            <div className="w-[180px] h-[180px] bg-[var(--color-muted)] rounded-lg mb-4"></div>
-            <div className="h-4 w-32 bg-[var(--color-muted)] rounded mb-2"></div>
-            <div className="h-3 w-24 bg-[var(--color-muted)] rounded"></div>
+          <div key={i} className="flex-shrink-0 w-[180px]">
+            <div className="p-4">
+              <div className="w-[180px] h-[180px] bg-gray-700 rounded-lg mb-4"></div>
+              <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+            </div>
           </div>
         ))}
       </div>
@@ -190,13 +388,13 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
 
   // Error message component
   const ErrorMessage = ({ message }: { message: string }) => (
-    <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md my-4">
-      <p>{message}</p>
+    <div className="p-6 bg-red-900/20 border border-red-700 rounded-lg text-center">
+      <p className="text-red-400">{message}</p>
       <button 
-        className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         onClick={() => window.location.reload()}
+        className="mt-4 px-4 py-2 bg-[var(--color-primary)] text-black rounded-full text-sm font-medium"
       >
-        Retry
+        Try Again
       </button>
     </div>
   )
@@ -220,9 +418,11 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         </div>
         
         {error ? (
-          <ErrorMessage message={`Failed to load recently played: ${error}`} />
+          <ErrorMessage message={`Failed to load recently played tracks: ${error}`} />
         ) : isLoading ? (
           <LoadingSkeleton />
+        ) : recentlyPlayed.length === 0 ? (
+          <p className="text-[var(--color-text-secondary)]">No recently played tracks found.</p>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {recentlyPlayed.map((item) => (
@@ -230,7 +430,7 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
                 <MusicCard 
                   title={item.title} 
                   artist={item.artist} 
-                  image={item.image}
+                  image={item.albumArt}
                   size="small"
                   onPlay={() => handlePlayTrack(item)}
                 />
@@ -250,17 +450,19 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         </div>
         
         {error ? (
-          <ErrorMessage message={`Failed to load made for you playlists: ${error}`} />
+          <ErrorMessage message={`Failed to load personalized playlists: ${error}`} />
         ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 animate-pulse">
             {[...Array(6)].map((_, i) => (
-              <div key={i}>
-                <div className="w-full aspect-square bg-[var(--color-muted)] rounded-lg mb-4"></div>
-                <div className="h-4 w-32 bg-[var(--color-muted)] rounded mb-2"></div>
-                <div className="h-3 w-24 bg-[var(--color-muted)] rounded"></div>
+              <div key={i} className="p-4">
+                <div className="w-full aspect-square bg-gray-700 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-700 rounded w-1/2"></div>
               </div>
             ))}
           </div>
+        ) : madeForYou.length === 0 ? (
+          <p className="text-[var(--color-text-secondary)]">No personalized playlists available.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             {madeForYou.map((item) => (
@@ -268,7 +470,7 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
                 key={item.id}
                 title={item.title} 
                 artist={item.artist}
-                image={item.image}
+                image={item.albumArt}
                 size="medium"
                 onPlay={() => handlePlayTrack(item)}
               />
@@ -291,13 +493,15 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 animate-pulse">
             {[...Array(8)].map((_, i) => (
-              <div key={i}>
-                <div className="w-full aspect-square bg-[var(--color-muted)] rounded-lg mb-4"></div>
-                <div className="h-4 w-32 bg-[var(--color-muted)] rounded mb-2"></div>
-                <div className="h-3 w-24 bg-[var(--color-muted)] rounded"></div>
+              <div key={i} className="p-4">
+                <div className="w-full aspect-square bg-gray-700 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-700 rounded w-1/2"></div>
               </div>
             ))}
           </div>
+        ) : popularAlbums.length === 0 ? (
+          <p className="text-[var(--color-text-secondary)]">No popular albums available.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
             {popularAlbums.map((item) => (
@@ -305,7 +509,7 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
                 key={item.id}
                 title={item.title} 
                 artist={item.artist}
-                image={item.image}
+                image={item.albumArt}
                 size="medium"
                 onPlay={() => handlePlayTrack(item)}
               />
