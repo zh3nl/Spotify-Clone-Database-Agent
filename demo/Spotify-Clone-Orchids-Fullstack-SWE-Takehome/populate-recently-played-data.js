@@ -152,16 +152,10 @@ class RecentlyPlayedDataPopulator {
       return `  (${values.join(', ')})`;
     }).join(',\n');
 
-    // Generate conflict resolution columns (exclude created_at, use track_id for conflicts)
-    const conflictColumns = columns
-      .filter(col => !['created_at'].includes(col))
-      .map(col => `"${col}" = EXCLUDED."${col}"`)
-      .join(', ');
-
     return `INSERT INTO ${tableName} (${columnsList})
 VALUES
 ${valuesList}
-ON CONFLICT ("user_id", "track_id") DO UPDATE SET ${conflictColumns};`;
+ON CONFLICT ("id") DO NOTHING;`;
   }
 
   /**

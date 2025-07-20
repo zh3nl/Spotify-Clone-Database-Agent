@@ -1173,7 +1173,7 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
       case 'playlists':
         return 'id';
       case 'recently_played':
-        return 'user_id, track_id';
+        return 'id';
       case 'tracks':
         return 'id';
       case 'users':
