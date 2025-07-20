@@ -26,8 +26,8 @@ export {
 // Common hook utilities and types
 export interface BaseHookState<T> {
   data: T[];
-  loading: boolean;
-  error: Error | null;
+  isLoading: boolean;
+  error: string | null;
   refetch: () => Promise<void>;
 }
 

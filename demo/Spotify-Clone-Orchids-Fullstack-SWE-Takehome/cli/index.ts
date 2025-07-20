@@ -32,7 +32,7 @@ program
   .alias('i')
   .description('Start interactive mode for database queries')
   .action(async () => {
-    console.log(chalk.blue.bold('🎵 Spotify Clone Database Agent'));
+    console.log(chalk.blue.bold(' Spotify Clone Database Agent'));
     console.log(chalk.gray('Ready to help you implement database features!\n'));
 
     const agent = new DatabaseAgent();
@@ -99,7 +99,7 @@ program
   .alias('q')
   .description('Execute a database query directly')
   .action(async (query: string) => {
-    console.log(chalk.blue.bold('🎵 Spotify Clone Database Agent'));
+    console.log(chalk.blue.bold(' Spotify Clone Database Agent'));
     
     const agent = new DatabaseAgent();
     const analyzer = new ProjectAnalyzer();
@@ -124,21 +124,21 @@ program
   .alias('s')
   .description('Show current project status and database configuration')
   .action(async () => {
-    console.log(chalk.blue.bold('🎵 Spotify Clone Database Agent - Status'));
+    console.log(chalk.blue.bold(' Spotify Clone Database Agent - Status'));
     
     const analyzer = new ProjectAnalyzer();
     const migrationExecutor = new MigrationExecutor();
     
     try {
       const projectContext = await analyzer.analyzeProject();
-      console.log(chalk.green('\n✅ Project Status:'));
+      console.log(chalk.green('\n Project Status:'));
       console.log(`- Components found: ${projectContext.components.length}`);
       console.log(`- Current data structures: ${projectContext.currentDataStructures.length}`);
       console.log(`- Existing APIs: ${projectContext.existingAPIs.length}`);
       console.log(`- Database tables: ${projectContext.databaseSchema.length}`);
       
       if (projectContext.supabaseConfigured) {
-        console.log(chalk.green('- Supabase: Configured ✅'));
+        console.log(chalk.green('- Supabase: Configured '));
         
         // Try to get migration status
         try {
@@ -151,11 +151,9 @@ program
             console.log(chalk.yellow(`- Run 'db-agent migrations run' to execute pending migrations`));
           }
         } catch (error) {
-          console.log(chalk.yellow('- Migration system: Not fully configured ⚠️'));
-          console.log(chalk.gray('  Run cli/utils/supabase-functions.sql in your Supabase dashboard'));
         }
       } else {
-        console.log(chalk.yellow('- Supabase: Not configured ⚠️'));
+        console.log(chalk.yellow('- Supabase: Not configured '));
       }
     } catch (error) {
       logger.error(`Error checking status: ${error instanceof Error ? error.message : String(error)}`);
@@ -180,7 +178,7 @@ program
           await migrationExecutor.initialize();
           const status = await migrationExecutor.getMigrationStatus();
           
-          console.log(chalk.green('\n✅ Executed Migrations:'));
+          console.log(chalk.green('\n Executed Migrations:'));
           if (status.executed.length === 0) {
             console.log(chalk.gray('  No migrations executed yet'));
           } else {
@@ -190,19 +188,19 @@ program
             });
           }
           
-          console.log(chalk.yellow('\n⏳ Pending Migrations:'));
+          console.log(chalk.yellow('\n Pending Migrations:'));
           if (status.pending.length === 0) {
             console.log(chalk.gray('  No pending migrations'));
           } else {
             status.pending.forEach(filename => {
-              console.log(`  • ${filename}`);
+              console.log(` ${filename}`);
             });
             console.log(chalk.cyan(`\nRun 'db-agent migrations run' to execute pending migrations`));
           }
           
         } catch (error) {
           logger.error(`Migration status check failed: ${error instanceof Error ? error.message : String(error)}`);
-          console.log(chalk.yellow('\n⚠️  Setup Required:'));
+          console.log(chalk.yellow('\n  Setup Required:'));
           console.log('1. Ensure Supabase is configured with proper environment variables');
           console.log('2. Run cli/utils/supabase-functions.sql in your Supabase SQL editor');
           console.log('3. Set SUPABASE_SERVICE_ROLE_KEY for full functionality');
@@ -214,7 +212,7 @@ program
       .description('Execute pending migrations')
       .option('-f, --force', 'Force execution even if some validations fail')
       .action(async (options) => {
-        console.log(chalk.blue.bold('🚀 Executing Migrations'));
+        console.log(chalk.blue.bold(' Executing Migrations'));
         
         const migrationExecutor = new MigrationExecutor();
         
@@ -223,7 +221,7 @@ program
           const status = await migrationExecutor.getMigrationStatus();
           
           if (status.pending.length === 0) {
-            console.log(chalk.green('✅ No pending migrations to execute'));
+            console.log(chalk.green(' No pending migrations to execute'));
             return;
           }
           
@@ -261,9 +259,9 @@ program
           const failed = results.filter(r => !r.success).length;
           
           if (failed === 0) {
-            console.log(chalk.green(`\n🎉 Successfully executed ${successful} migration(s)`));
+            console.log(chalk.green(`\n Successfully executed ${successful} migration(s)`));
           } else {
-            console.log(chalk.red(`\n❌ ${failed} migration(s) failed, ${successful} succeeded`));
+            console.log(chalk.red(`\n ${failed} migration(s) failed, ${successful} succeeded`));
             process.exit(1);
           }
           
@@ -278,7 +276,7 @@ program
       .description('Rollback the last migration')
       .argument('<filename>', 'Migration filename to rollback')
       .action(async (filename) => {
-        console.log(chalk.blue.bold(`🔄 Rolling back migration: ${filename}`));
+        console.log(chalk.blue.bold(` Rolling back migration: ${filename}`));
         
         const migrationExecutor = new MigrationExecutor();
         
@@ -287,9 +285,9 @@ program
           const success = await migrationExecutor.rollbackMigration(filename);
           
           if (success) {
-            console.log(chalk.green('✅ Migration rolled back successfully'));
+            console.log(chalk.green(' Migration rolled back successfully'));
           } else {
-            console.log(chalk.red('❌ Rollback failed'));
+            console.log(chalk.red(' Rollback failed'));
             process.exit(1);
           }
           
@@ -304,7 +302,7 @@ program
       .description('Debug migration parsing without executing')
       .argument('<filename>', 'Migration filename to debug')
       .action(async (filename) => {
-        console.log(chalk.blue.bold(`🔍 Debugging migration: ${filename}`));
+        console.log(chalk.blue.bold(` Debugging migration: ${filename}`));
         
         const migrationExecutor = new MigrationExecutor();
         
@@ -331,25 +329,25 @@ program
           
           // Read and parse the migration file
           const migrationSql = await fs.readFile(migrationPath, 'utf8');
-          console.log(chalk.gray(`\n📄 Migration file: ${migrationPath}`));
-          console.log(chalk.gray(`📊 File size: ${migrationSql.length} characters`));
+          console.log(chalk.gray(`\n Migration file: ${migrationPath}`));
+          console.log(chalk.gray(` File size: ${migrationSql.length} characters`));
           
           // Parse without executing
           const { statements, tablesCreated, rollbackSql } = await (migrationExecutor as any).parseMigrationSql(migrationSql);
           
-          console.log(chalk.green(`\n✅ Parsing Results:`));
+          console.log(chalk.green(`\n Parsing Results:`));
           console.log(`- Statements parsed: ${statements.length}`);
           console.log(`- Tables to create: ${tablesCreated.join(', ') || 'none'}`);
           console.log(`- Rollback SQL generated: ${rollbackSql ? 'Yes' : 'No'}`);
           
-          console.log(chalk.yellow(`\n📋 Parsed Statements:`));
+          console.log(chalk.yellow(`\n Parsed Statements:`));
           statements.forEach((stmt: string, i: number) => {
             const preview = stmt.substring(0, 100).replace(/\n/g, ' ');
             console.log(`${i + 1}. ${preview}${stmt.length > 100 ? '...' : ''}`);
           });
           
           if (rollbackSql) {
-            console.log(chalk.cyan(`\n🔄 Generated Rollback SQL:`));
+            console.log(chalk.cyan(`\n Generated Rollback SQL:`));
             console.log(rollbackSql);
           }
           
