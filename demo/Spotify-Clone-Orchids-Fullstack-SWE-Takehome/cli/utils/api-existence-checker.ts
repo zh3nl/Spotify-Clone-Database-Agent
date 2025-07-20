@@ -26,7 +26,7 @@ export class APIExistenceChecker {
    * Performs comprehensive existence and completeness check
    */
   async checkAPIExistence(config: APIConfiguration): Promise<ExistenceCheckResult> {
-    this.logger.info(`🔍 Checking existence for: ${config.filePath}`);
+    this.logger.info(` Checking existence for: ${config.filePath}`);
 
     const fullPath = path.resolve(process.cwd(), config.filePath);
     
@@ -61,12 +61,12 @@ export class APIExistenceChecker {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         // File doesn't exist
         const result = this.createNotExistsResult();
-        this.logger.info(`📄 File does not exist: ${config.filePath}`);
+        this.logger.info(` File does not exist: ${config.filePath}`);
         return result;
       }
 
       // Other error (permission, etc.)
-      this.logger.error(`❌ Error checking file existence: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(` Error checking file existence: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -243,30 +243,27 @@ export class APIExistenceChecker {
    */
   private logExistenceResult(config: APIConfiguration, result: ExistenceCheckResult): void {
     if (!result.exists) {
-      this.logger.info(`📄 API file not found: ${config.filePath}`);
-      this.logger.info(`💡 Will create new API route`);
+      this.logger.info(` API file not found: ${config.filePath}`);
+      this.logger.info(` Will create new API route`);
       return;
     }
 
-    this.logger.info(`📄 API file exists: ${config.filePath}`);
-    this.logger.info(`📊 File size: ${result.fileSize} bytes`);
-    this.logger.info(`📅 Last modified: ${result.lastModified?.toISOString()}`);
+    this.logger.info(` API file exists: ${config.filePath}`);
+    this.logger.info(` File size: ${result.fileSize} bytes`);
+    this.logger.info(` Last modified: ${result.lastModified?.toISOString()}`);
 
     if (result.shouldSkip) {
-      this.logger.success(`✅ API is complete and functional - will skip creation`);
+      this.logger.success(` API is complete and functional - will skip creation`);
     } else if (result.shouldUpdate) {
-      this.logger.warn(`⚠️ API exists but may need updates:`);
+      this.logger.warn(` API exists but may need updates:`);
       if (result.missingMethods.length > 0) {
-        this.logger.warn(`   Missing methods: ${result.missingMethods.join(', ')}`);
+        this.logger.warn(` Missing methods: ${result.missingMethods.join(', ')}`);
       }
       if (!result.isComplete) {
-        this.logger.warn(`   Implementation appears incomplete`);
+        this.logger.warn(` Implementation appears incomplete`);
       }
     }
 
-    if (this.logger.isDebugEnabled()) {
-      this.logger.debug(`🔍 Analysis Details:\n${result.analysisDetails}`);
-    }
   }
 
   /**
@@ -277,11 +274,11 @@ export class APIExistenceChecker {
     
     try {
       await fs.access(dirPath);
-      this.logger.info(`📁 Directory exists: ${dirPath}`);
+      this.logger.info(` Directory exists: ${dirPath}`);
     } catch (error) {
-      this.logger.info(`📁 Creating directory: ${dirPath}`);
+      this.logger.info(` Creating directory: ${dirPath}`);
       await fs.mkdir(dirPath, { recursive: true });
-      this.logger.success(`✅ Directory created successfully`);
+      this.logger.success(` Directory created successfully`);
     }
   }
 
@@ -298,12 +295,12 @@ export class APIExistenceChecker {
       const backupPath = `${fullPath}.backup.${timestamp}`;
       
       await fs.copyFile(fullPath, backupPath);
-      this.logger.success(`💾 Backup created: ${backupPath}`);
+      this.logger.success(` Backup created: ${backupPath}`);
       
       return backupPath;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        this.logger.warn(`⚠️ Failed to create backup: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(` Failed to create backup: ${error instanceof Error ? error.message : String(error)}`);
       }
       return null;
     }

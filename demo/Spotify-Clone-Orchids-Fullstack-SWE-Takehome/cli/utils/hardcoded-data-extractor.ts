@@ -39,7 +39,6 @@ export class HardcodedDataExtractor {
    * Extracts hardcoded data arrays from component files
    */
   async extractFromComponents(projectRoot: string): Promise<ExtractedDataSet> {
-    this.logger.info('🔍 Extracting hardcoded data from components...');
     
     const mainContentPath = path.join(projectRoot, 'src/components/spotify-main-content.tsx');
     
@@ -52,7 +51,7 @@ export class HardcodedDataExtractor {
         popularAlbums: this.extractPopularAlbumsData(content)
       };
 
-      this.logger.success(`📊 Extracted data: ${extracted.recentlyPlayed.length} recently played, ${extracted.madeForYou.length} made for you, ${extracted.popularAlbums.length} popular albums`);
+      this.logger.success(` Extracted data: ${extracted.recentlyPlayed.length} recently played, ${extracted.madeForYou.length} made for you, ${extracted.popularAlbums.length} popular albums`);
       
       return extracted;
     } catch (error) {
@@ -170,7 +169,7 @@ export class HardcodedDataExtractor {
    * Returns default data if extraction fails
    */
   private getDefaultData(): ExtractedDataSet {
-    this.logger.info('🔄 Using default fallback data');
+    this.logger.info(' Using default fallback data');
     
     return {
       recentlyPlayed: [
@@ -238,17 +237,17 @@ export class HardcodedDataExtractor {
     const description = operationDescription.toLowerCase();
 
     if (description.includes('recently played') || description.includes('recently_played')) {
-      this.logger.info(`🎵 Selected recently played data (${allData.recentlyPlayed.length} items)`);
+      this.logger.info(` Selected recently played data (${allData.recentlyPlayed.length} items)`);
       return allData.recentlyPlayed;
     } else if (description.includes('made for you') || description.includes('made_for_you') || description.includes('playlist')) {
-      this.logger.info(`🎧 Selected made for you data (${allData.madeForYou.length} items)`);
+      this.logger.info(` Selected made for you data (${allData.madeForYou.length} items)`);
       return allData.madeForYou;
     } else if (description.includes('albums') || description.includes('popular')) {
-      this.logger.info(`💿 Selected popular albums data (${allData.popularAlbums.length} items)`);
+      this.logger.info(` Selected popular albums data (${allData.popularAlbums.length} items)`);
       return allData.popularAlbums;
     }
 
-    this.logger.warn(`⚠️ No matching data found for description: "${operationDescription}"`);
+    this.logger.warn(` No matching data found for description: "${operationDescription}"`);
     return [];
   }
 
@@ -256,7 +255,7 @@ export class HardcodedDataExtractor {
    * Extracts multi-table data with availability flags for database agent integration
    */
   async extractMultiTableData(projectRoot: string): Promise<MultiTableDataResult> {
-    this.logger.info('🔍 Extracting multi-table data with availability detection...');
+    this.logger.info(' Extracting multi-table data with availability detection...');
     
     const allData = await this.extractFromComponents(projectRoot);
     
@@ -269,7 +268,7 @@ export class HardcodedDataExtractor {
       popularAlbums: allData.popularAlbums
     };
 
-    this.logger.success(`📊 Multi-table extraction complete: recently_played=${result.hasRecentlyPlayed}, playlists=${result.hasMadeForYou}, albums=${result.hasPopularAlbums}`);
+    this.logger.success(` Multi-table extraction complete: recently_played=${result.hasRecentlyPlayed}, playlists=${result.hasMadeForYou}, albums=${result.hasPopularAlbums}`);
     
     return result;
   }

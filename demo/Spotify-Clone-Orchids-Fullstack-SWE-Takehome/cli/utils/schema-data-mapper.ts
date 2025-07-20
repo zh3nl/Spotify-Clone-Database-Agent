@@ -41,7 +41,6 @@ export class SchemaDataMapper {
     multiTableData: MultiTableDataResult,
     operationDescription: string
   ): MultiTableMappingResult {
-    this.logger.info(`🗃️ Multi-table mapping for: "${operationDescription}"`);
     
     const result: MultiTableMappingResult = {
       allMappings: []
@@ -49,26 +48,26 @@ export class SchemaDataMapper {
 
     // Map recently played data if present
     if (multiTableData.hasRecentlyPlayed && multiTableData.recentlyPlayed.length > 0) {
-      this.logger.info(`🎵 Mapping ${multiTableData.recentlyPlayed.length} recently played items`);
+      this.logger.info(` Mapping ${multiTableData.recentlyPlayed.length} recently played items`);
       result.recentlyPlayed = this.mapToRecentlyPlayedSchema(multiTableData.recentlyPlayed, 'recently_played');
       result.allMappings.push(result.recentlyPlayed);
     }
 
     // Map playlist data if present
     if (multiTableData.hasMadeForYou && multiTableData.madeForYou.length > 0) {
-      this.logger.info(`🎧 Mapping ${multiTableData.madeForYou.length} made for you items`);
+      this.logger.info(` Mapping ${multiTableData.madeForYou.length} made for you items`);
       result.playlists = this.mapToPlaylistSchema(multiTableData.madeForYou, 'playlists');
       result.allMappings.push(result.playlists);
     }
 
     // Map album data if present
     if (multiTableData.hasPopularAlbums && multiTableData.popularAlbums.length > 0) {
-      this.logger.info(`💿 Mapping ${multiTableData.popularAlbums.length} popular album items`);
+      this.logger.info(` Mapping ${multiTableData.popularAlbums.length} popular album items`);
       result.albums = this.mapToAlbumsSchema(multiTableData.popularAlbums, 'albums');
       result.allMappings.push(result.albums);
     }
 
-    this.logger.success(`✅ Multi-table mapping complete: ${result.allMappings.length} table(s) mapped`);
+    this.logger.success(` Multi-table mapping complete: ${result.allMappings.length} table(s) mapped`);
     return result;
   }
 
@@ -81,7 +80,7 @@ export class SchemaDataMapper {
     operationDescription: string,
     tableName: string
   ): MappingResult {
-    this.logger.info(`🗃️ Mapping ${data.length} items to ${tableName} schema`);
+    this.logger.info(` Mapping ${data.length} items to ${tableName} schema`);
     
     const description = operationDescription.toLowerCase();
     
@@ -93,7 +92,7 @@ export class SchemaDataMapper {
       return this.mapToAlbumsSchema(data, tableName);
     }
 
-    this.logger.warn(`⚠️ Unknown schema mapping for: ${operationDescription}`);
+    this.logger.warn(` Unknown schema mapping for: ${operationDescription}`);
     return {
       tableName,
       records: [],
@@ -105,7 +104,7 @@ export class SchemaDataMapper {
    * Maps data to recently_played table schema (FIXED: Separate UUID primary key from track identifier)
    */
   private mapToRecentlyPlayedSchema(data: ExtractedDataItem[], tableName: string): MappingResult {
-    this.logger.info('🎵 Mapping to recently_played schema');
+    this.logger.info(' Mapping to recently_played schema');
     
     const records = data.map((item, index) => ({
       // id field will be auto-generated as UUID by database - DO NOT include in mapping
@@ -134,7 +133,7 @@ export class SchemaDataMapper {
    * Maps data to playlists table schema (for made for you)
    */
   private mapToPlaylistSchema(data: ExtractedDataItem[], tableName: string): MappingResult {
-    this.logger.info('🎧 Mapping to playlists schema');
+    this.logger.info(' Mapping to playlists schema');
     
     const records = data.map(item => ({
       id: this.generateUUID(item.id),
@@ -161,7 +160,7 @@ export class SchemaDataMapper {
    * Maps data to albums table schema
    */
   private mapToAlbumsSchema(data: ExtractedDataItem[], tableName: string): MappingResult {
-    this.logger.info('💿 Mapping to albums schema');
+    this.logger.info(' Mapping to albums schema');
     
     const records = data.map(item => ({
       id: this.generateUUID(item.id),

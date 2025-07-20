@@ -44,9 +44,8 @@ export class APIRouteOrchestrator {
     tableName: string,
     options: APICreationOptions = {}
   ): Promise<APICreationResult> {
-    this.logger.section('🚀 API Route Auto-Generation');
-    this.logger.info(`📝 Operation: "${operationDescription}"`);
-    this.logger.info(`🗃️ Table: ${tableName}`);
+    this.logger.section(' API Route Auto-Generation');
+    this.logger.info(` Table: ${tableName}`);
 
     try {
       // Phase 1: Resolve API Configuration
@@ -56,7 +55,7 @@ export class APIRouteOrchestrator {
         return this.createNoConfigResult(operationDescription);
       }
 
-      this.logger.info(`🎯 Resolved API configuration:`);
+      this.logger.info(` Resolved API configuration:`);
       this.logger.info(this.configResolver.getConfigInfo(config));
 
       // Phase 2: Check Existence
@@ -64,7 +63,6 @@ export class APIRouteOrchestrator {
 
       // Phase 3: Decide Action
       const action = this.decideAction(existenceCheck, options);
-      this.logger.info(`🤔 Decision: ${action}`);
 
       switch (action) {
         case 'skip':
@@ -81,7 +79,7 @@ export class APIRouteOrchestrator {
       }
 
     } catch (error) {
-      this.logger.error(`❌ API creation failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(` API creation failed: ${error instanceof Error ? error.message : String(error)}`);
       return this.createErrorResult(operationDescription, error);
     }
   }
@@ -109,7 +107,7 @@ export class APIRouteOrchestrator {
       return 'update';
     }
 
-    return 'skip'; // Default to skip if uncertain
+    return 'skip'; 
   }
 
   /**
@@ -120,7 +118,7 @@ export class APIRouteOrchestrator {
     existenceCheck: ExistenceCheckResult,
     options: APICreationOptions
   ): Promise<APICreationResult> {
-    this.logger.info(`🔨 Creating new API route: ${config.endpoint}`);
+    this.logger.info(` Creating new API route: ${config.endpoint}`);
 
     if (options.dryRun) {
       return this.createDryRunResult(config, 'create');
@@ -137,7 +135,7 @@ export class APIRouteOrchestrator {
       const fullPath = path.resolve(process.cwd(), config.filePath);
       await fs.writeFile(fullPath, apiCode, 'utf-8');
 
-      this.logger.success(`✅ API route created successfully: ${config.filePath}`);
+      this.logger.success(` API route created successfully: ${config.filePath}`);
       
       return {
         success: true,
@@ -152,7 +150,7 @@ export class APIRouteOrchestrator {
       };
 
     } catch (error) {
-      this.logger.error(`❌ Failed to create API file: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(` Failed to create API file: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -165,8 +163,8 @@ export class APIRouteOrchestrator {
     existenceCheck: ExistenceCheckResult,
     options: APICreationOptions
   ): Promise<APICreationResult> {
-    this.logger.warn(`⚠️ Updating existing API route: ${config.endpoint}`);
-    this.logger.warn(`   Reason: ${existenceCheck.analysisDetails.split('\n')[0]}`);
+    this.logger.warn(` Updating existing API route: ${config.endpoint}`);
+    this.logger.warn(` Reason: ${existenceCheck.analysisDetails.split('\n')[0]}`);
 
     if (options.dryRun) {
       return this.createDryRunResult(config, 'update');
@@ -187,7 +185,7 @@ export class APIRouteOrchestrator {
       const fullPath = path.resolve(process.cwd(), config.filePath);
       await fs.writeFile(fullPath, apiCode, 'utf-8');
 
-      this.logger.success(`✅ API route updated successfully: ${config.filePath}`);
+      this.logger.success(` API route updated successfully: ${config.filePath}`);
       
       return {
         success: true,
@@ -202,7 +200,7 @@ export class APIRouteOrchestrator {
       };
 
     } catch (error) {
-      this.logger.error(`❌ Failed to update API file: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(` Failed to update API file: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -211,8 +209,8 @@ export class APIRouteOrchestrator {
    * Creates result objects for different scenarios
    */
   private createNoConfigResult(operationDescription: string): APICreationResult {
-    this.logger.info(`ℹ️ No API configuration found for: "${operationDescription}"`);
-    this.logger.info(`💡 This operation doesn't require an API route`);
+    this.logger.info(` No API configuration found for: "${operationDescription}"`);
+    this.logger.info(` This operation doesn't require an API route`);
 
     return {
       success: true,
@@ -231,9 +229,9 @@ export class APIRouteOrchestrator {
     config: APIConfiguration,
     existenceCheck: ExistenceCheckResult
   ): APICreationResult {
-    this.logger.success(`✅ API route already exists and is complete: ${config.endpoint}`);
-    this.logger.info(`📁 File: ${config.filePath}`);
-    this.logger.info(`📊 Size: ${existenceCheck.fileSize} bytes, Modified: ${existenceCheck.lastModified?.toISOString()}`);
+    this.logger.success(` API route already exists and is complete: ${config.endpoint}`);
+    this.logger.info(` File: ${config.filePath}`);
+    this.logger.info(` Size: ${existenceCheck.fileSize} bytes, Modified: ${existenceCheck.lastModified?.toISOString()}`);
 
     return {
       success: true,
@@ -249,7 +247,7 @@ export class APIRouteOrchestrator {
   }
 
   private createDryRunResult(config: APIConfiguration, action: 'create' | 'update'): APICreationResult {
-    this.logger.info(`🔍 DRY RUN: Would ${action} API route: ${config.endpoint}`);
+    this.logger.info(` DRY RUN: Would ${action} API route: ${config.endpoint}`);
     
     return {
       success: true,
@@ -317,9 +315,9 @@ export class APIRouteOrchestrator {
     const isValid = issues.length === 0;
     
     if (isValid) {
-      this.logger.success('✅ API Route Orchestrator system validation passed');
+      this.logger.success(' API Route Orchestrator system validation passed');
     } else {
-      this.logger.error('❌ API Route Orchestrator system validation failed:');
+      this.logger.error(' API Route Orchestrator system validation failed:');
       issues.forEach(issue => this.logger.error(`  • ${issue}`));
     }
 

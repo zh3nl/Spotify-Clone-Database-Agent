@@ -18,7 +18,7 @@ export class APITemplateEngine {
    * Generates complete API route code from configuration
    */
   generateAPICode(config: APIConfiguration): string {
-    this.logger.info(`🏗️ Generating API code for: ${config.endpoint}`);
+    this.logger.info(` Generating API code for: ${config.endpoint}`);
 
     const context: TemplateContext = {
       config,
@@ -28,8 +28,8 @@ export class APITemplateEngine {
 
     const code = this.buildAPICode(context);
     
-    this.logger.success(`✨ Generated ${code.length} characters of API code`);
-    this.logger.info(`📝 Includes: ${config.methods.join(', ')} methods`);
+    this.logger.success(` Generated ${code.length} characters of API code`);
+    this.logger.info(` Includes: ${config.methods.join(', ')} methods`);
     
     return code;
   }

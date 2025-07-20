@@ -5,30 +5,30 @@ export class Logger {
 
   // Basic logging methods
   info(message: string): void {
-    console.log(chalk.blue('ℹ'), message);
+    console.log(chalk.blue(''), message);
   }
 
   success(message: string): void {
-    console.log(chalk.green('✅'), message);
+    console.log(chalk.green(''), message);
   }
 
   error(message: string): void {
-    console.log(chalk.red('❌'), message);
+    console.log(chalk.red(''), message);
   }
 
   warn(message: string): void {
-    console.log(chalk.yellow('⚠️'), message);
+    console.log(chalk.yellow(''), message);
   }
 
   // Spinner methods for long-running operations (simplified)
   startSpinner(text: string): void {
     this.spinnerText = text;
-    console.log(chalk.blue('⏳'), text);
+    console.log(chalk.blue(''), text);
   }
 
   updateSpinner(text: string): void {
     this.spinnerText = text;
-    console.log(chalk.blue('⏳'), text);
+    console.log(chalk.blue(''), text);
   }
 
   stopSpinner(): void {
@@ -37,29 +37,29 @@ export class Logger {
 
   // Special methods for agent activities
   thinking(message: string): void {
-    console.log(chalk.magenta('🤔'), chalk.italic(`Agent thinking: ${message}`));
+    console.log(chalk.magenta(''), chalk.italic(`Agent thinking: ${message}`));
   }
 
   analyzing(message: string): void {
-    console.log(chalk.cyan('🔍'), chalk.italic(`Analyzing: ${message}`));
+    console.log(chalk.cyan(''), chalk.italic(`Analyzing: ${message}`));
   }
 
   generating(message: string): void {
-    console.log(chalk.yellow('⚡'), chalk.italic(`Generating: ${message}`));
+    console.log(chalk.yellow(''), chalk.italic(`Generating: ${message}`));
   }
 
   writing(filename: string): void {
-    console.log(chalk.green('📝'), chalk.italic(`Writing file: ${filename}`));
+    console.log(chalk.green(''), chalk.italic(`Writing file: ${filename}`));
   }
 
   executing(command: string): void {
-    console.log(chalk.blue('🔧'), chalk.italic(`Executing: ${command}`));
+    console.log(chalk.blue(''), chalk.italic(`Executing: ${command}`));
   }
 
   // Progress tracking
   progress(current: number, total: number, message: string): void {
     const percentage = Math.round((current / total) * 100);
-    const progressBar = '█'.repeat(Math.round(percentage / 5)) + '░'.repeat(20 - Math.round(percentage / 5));
+    const progressBar = ''.repeat(Math.round(percentage / 5)) + ''.repeat(20 - Math.round(percentage / 5));
     console.log(chalk.cyan(`[${progressBar}] ${percentage}%`), message);
   }
 

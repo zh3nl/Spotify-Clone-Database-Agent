@@ -260,7 +260,6 @@ DB_AGENT_LOG_LEVEL=info
     currentPackageJson: any,
     options: CodeGenerationOptions = {}
   ): Promise<string> {
-    this.logger.generating('Package.json updates');
 
     const updatedPackageJson = {
       ...currentPackageJson,
@@ -281,7 +280,6 @@ DB_AGENT_LOG_LEVEL=info
     projectContext: ProjectContext,
     options: CodeGenerationOptions = {}
   ): Promise<string> {
-    this.logger.generating('README documentation');
 
     const prompt = `Generate a comprehensive README.md file for a Spotify clone project with the following context:
     - Components: ${projectContext.components.length}

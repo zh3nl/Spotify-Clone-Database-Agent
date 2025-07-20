@@ -35,7 +35,7 @@ export class APIConfigResolver {
    * Resolves operation description to API configuration
    */
   resolveAPIConfig(operationDescription: string, tableName: string): APIConfiguration | null {
-    this.logger.info(`🔍 Resolving API config for: "${operationDescription}" (table: ${tableName})`);
+    this.logger.info(` Resolving API config for: "${operationDescription}" (table: ${tableName})`);
     
     const description = operationDescription.toLowerCase();
     
@@ -50,7 +50,7 @@ export class APIConfigResolver {
         methods: ['GET', 'POST'],
         description: 'Recently played tracks API with track history functionality'
       };
-      this.logger.success(`🎵 Resolved to Recently Played API configuration`);
+      this.logger.success(` Resolved to Recently Played API configuration`);
       return config;
     }
 
@@ -65,7 +65,7 @@ export class APIConfigResolver {
         methods: ['GET', 'POST', 'DELETE'],
         description: 'Made for you playlists API with playlist management functionality'
       };
-      this.logger.success(`🎧 Resolved to Made For You Playlists API configuration`);
+      this.logger.success(` Resolved to Made For You Playlists API configuration`);
       return config;
     }
 
@@ -80,12 +80,12 @@ export class APIConfigResolver {
         methods: ['GET', 'POST', 'DELETE'],
         description: 'Popular albums API with album management functionality'
       };
-      this.logger.success(`💿 Resolved to Popular Albums API configuration`);
+      this.logger.success(` Resolved to Popular Albums API configuration`);
       return config;
     }
 
-    this.logger.warn(`⚠️ No API configuration found for: "${operationDescription}"`);
-    this.logger.info(`💡 Supported patterns: recently played, made for you/playlists, popular albums`);
+    this.logger.warn(` No API configuration found for: "${operationDescription}"`);
+    this.logger.info(` Supported patterns: recently played, made for you/playlists, popular albums`);
     return null;
   }
 
