@@ -121,7 +121,7 @@ export class AIClient {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 4000,
+        max_tokens: 10000,
         // Encourage more structured output
         top_p: 0.9
       })
@@ -199,7 +199,7 @@ export class AIClient {
         messages: [
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 4000,
+        max_tokens: 10000,
         temperature: 0.1,
         // Encourage more structured output
         top_p: 0.9

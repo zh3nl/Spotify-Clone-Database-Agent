@@ -29,20 +29,28 @@ export class CodeGenerator {
 
     const prompt = `Generate a Next.js API route file for ${routeName} with the following methods: ${methods.join(', ')}.
 
+    ## CRITICAL DATABASE CONSTRAINTS:
+    - ONLY query confirmed existing tables (no assumptions about relationships)
+    - DO NOT use JOIN operations without explicit confirmation
+    - Validate table existence before any .from() calls
+    - If unsure about table structure, query single tables only
+
     Table schema: ${JSON.stringify(tableSchema, null, 2)}
 
     Requirements:
     - Use TypeScript
     - Include proper error handling
     - Use Supabase client for database operations
+    - Query only the tables confirmed to exist
     - Include input validation
     - Follow Next.js 13+ app directory structure
     - Include JSDoc comments
+    - Avoid complex table relationships unless explicitly confirmed
 
     Return only the TypeScript code for the route file.`;
 
     return await this.aiClient.generateText(
-      'You are an expert Next.js developer creating API routes for a Spotify clone.',
+      'You are an expert Next.js developer creating API routes for a Spotify clone. Focus on simple, safe database queries that avoid relationships unless explicitly confirmed.',
       prompt
     );
   }

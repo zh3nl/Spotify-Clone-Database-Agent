@@ -7,8 +7,22 @@ export async function GET(request: NextRequest) {
     
     const { data: playlists, error } = await supabase
       .from('playlists')
-      .select('*')
-      .eq('type', 'personalized')
+      .select(`
+        id,
+        title,
+        description,
+        image_url,
+        created_at,
+        playlist_type,
+        user_id,
+        songs (
+          id,
+          title,
+          artist,
+          duration
+        )
+      `)
+      .eq('playlist_type', 'made-for-you')
       .order('created_at', { ascending: false })
       .limit(parseInt(limit));
 
@@ -20,11 +34,19 @@ export async function GET(request: NextRequest) {
     const transformedData = playlists?.map(playlist => ({
       id: playlist.id,
       title: playlist.title,
-      artist: playlist.description || 'Personalized playlist', // Map description to artist field for frontend compatibility
-      album: playlist.type || 'Playlist', // Map type to album field for frontend compatibility
-      albumArt: playlist.image_url,
-      duration: 200, // Default duration for playlists
-      playlistType: playlist.type
+      description: playlist.description,
+      imageUrl: playlist.image_url,
+      type: playlist.playlist_type,
+      songCount: playlist.songs?.length || 0,
+      totalDuration: playlist.songs?.reduce((acc, song) => acc + (song.duration || 0), 0) || 0,
+      createdAt: playlist.created_at,
+      userId: playlist.user_id,
+      songs: playlist.songs?.map(song => ({
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        duration: song.duration
+      }))
     })) || [];
 
     return NextResponse.json(transformedData);

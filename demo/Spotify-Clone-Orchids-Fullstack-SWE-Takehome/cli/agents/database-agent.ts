@@ -1941,10 +1941,23 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
   private async executeCreateAPI(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
     this.logger.generating('Creating API endpoints...');
 
+    // Get existing tables to prevent relationship errors
+    const existingTables = await this.getExistingTablesList();
+    const tableSchemas = await this.getTableSchemasInfo(existingTables);
+
     for (const file of operation.files) {
       const apiPrompt = `Create a Next.js API route for: ${operation.description}
 
       ## File: ${file}
+
+      ## CRITICAL DATABASE CONSTRAINTS:
+      - ONLY query these existing tables: ${existingTables.join(', ')}
+      - DO NOT assume relationships between tables unless explicitly confirmed
+      - DO NOT query non-existent tables or use JOIN operations without verification
+      - Validate table existence before any .from() calls
+
+      ## Available Table Schemas:
+      ${tableSchemas}
 
       ## Context:
       - Existing API routes: ${projectContext.existingAPIs.map(api => `${api.path} [${api.methods.join(', ')}]`).join(', ')}
@@ -1955,6 +1968,7 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
       - Use Next.js 13+ app directory structure
       - Include GET, POST, PUT, DELETE methods as appropriate
       - Use Supabase client from '@/lib/supabase'
+      - Query ONLY the confirmed existing tables listed above
       - Include proper TypeScript types
       - Add comprehensive error handling
       - Include input validation using Zod
@@ -2586,6 +2600,86 @@ ${script}
       
     } catch (error) {
       this.logger.warn(`⚠️ Failed to save population script: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Get list of existing tables from Supabase to prevent relationship errors
+   */
+  private async getExistingTablesList(): Promise<string[]> {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        this.logger.warn('Supabase credentials not available, returning empty table list');
+        return [];
+      }
+
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_schema', 'public')
+        .neq('table_name', 'migrations');
+
+      if (error) {
+        this.logger.warn(`Could not fetch existing tables: ${error.message}`);
+        return ['recently_played', 'playlists', 'albums']; // Fallback to known tables
+      }
+
+      const tableNames = data?.map(t => t.table_name) || [];
+      this.logger.info(`📋 Found existing tables: ${tableNames.join(', ')}`);
+      return tableNames;
+      
+    } catch (error) {
+      this.logger.warn(`Error fetching table list: ${error instanceof Error ? error.message : String(error)}`);
+      return ['recently_played', 'playlists', 'albums']; // Fallback to known tables
+    }
+  }
+
+  /**
+   * Get schema information for existing tables
+   */
+  private async getTableSchemasInfo(tableNames: string[]): Promise<string> {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey || tableNames.length === 0) {
+        return 'No table schemas available';
+      }
+
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const schemas: string[] = [];
+      
+      for (const tableName of tableNames) {
+        try {
+          const { data, error } = await supabase
+            .from('information_schema.columns')
+            .select('column_name, data_type, is_nullable')
+            .eq('table_name', tableName)
+            .eq('table_schema', 'public');
+
+          if (!error && data) {
+            const columns = data.map(col => `${col.column_name}: ${col.data_type}${col.is_nullable === 'NO' ? ' NOT NULL' : ''}`);
+            schemas.push(`Table ${tableName}: ${columns.join(', ')}`);
+          }
+        } catch (err) {
+          // Skip this table if schema fetch fails
+          continue;
+        }
+      }
+      
+      return schemas.length > 0 ? schemas.join('\n') : 'Schema information not available';
+      
+    } catch (error) {
+      this.logger.warn(`Error fetching table schemas: ${error instanceof Error ? error.message : String(error)}`);
+      return 'Schema information not available';
     }
   }
 } 

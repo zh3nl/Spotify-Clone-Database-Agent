@@ -66,7 +66,7 @@ export function useRecentlyPlayedTracks(
       setLoading(true);
       setError(null);
       
-      const response = await axios.get<RecentTrack[]>('/api/tracks/recently-played', {
+      const response = await axios.get<RecentTrack[]>('/api/recently-played', {
         params: { limit }
       });
       

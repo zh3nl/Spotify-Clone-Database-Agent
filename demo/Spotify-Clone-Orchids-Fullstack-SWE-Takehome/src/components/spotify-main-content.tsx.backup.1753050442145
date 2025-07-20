@@ -349,33 +349,4 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
                 size="small"
                 onPlay={() => handlePlayTrack(item)}
               />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Popular albums section */}
-      <section>
-        <h2 className="text-2xl font-bold mb-6">Popular Albums</h2>
-        {albumsLoading ? (
-          <LoadingSkeleton />
-        ) : albumsError ? (
-          <ErrorMessage message={albumsError || 'Unknown error'} />
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {(popularAlbums || FALLBACK_POPULAR_ALBUMS).map((item: any) => (
-              <MusicCard
-                key={item.id}
-                title={item.title}
-                artist={item.artist}
-                image={item.albumArt}
-                size="small"
-                onPlay={() => handlePlayTrack(item)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
-  )
-}
+            )
