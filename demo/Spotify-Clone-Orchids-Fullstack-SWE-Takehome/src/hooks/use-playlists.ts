@@ -18,9 +18,9 @@ export interface MadeForYouPlaylist {
  * Response state for the made-for-you playlists hook
  */
 interface UseMadeForYouPlaylistsState {
-  playlists: MadeForYouPlaylist[];
-  loading: boolean;
-  error: Error | null;
+  data: MadeForYouPlaylist[];
+  isLoading: boolean;
+  error: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -56,7 +56,7 @@ export function useMadeForYouPlaylists(
   
   const [playlists, setPlaylists] = useState<MadeForYouPlaylist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   // Cache key for localStorage
   const cacheKey = `made-for-you-playlists-${limit}-${playlistType || 'all'}`;
@@ -95,7 +95,8 @@ export function useMadeForYouPlaylists(
         timestamp: Date.now()
       }));
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch made-for-you playlists'));
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch made-for-you playlists';
+      setError(errorMessage);
       
       // Try to load from cache if API request fails
       const cachedData = localStorage.getItem(cacheKey);
@@ -148,7 +149,7 @@ export function useMadeForYouPlaylists(
     };
   }, [fetchPlaylists, autoRefresh, refreshInterval, cacheKey]);
   
-  return { playlists, loading, error, refetch: fetchPlaylists };
+  return { data: playlists, isLoading: loading, error, refetch: fetchPlaylists };
 }
 
 /**
@@ -162,7 +163,7 @@ export function usePlaylistsByType(playlistType: string) {
  * Hook to get a single playlist by ID
  */
 export function usePlaylist(playlistId: string) {
-  const { playlists, loading, error } = useMadeForYouPlaylists();
+  const { data: playlists, isLoading: loading, error } = useMadeForYouPlaylists();
   
   const playlist = playlists.find(p => p.id === playlistId);
   

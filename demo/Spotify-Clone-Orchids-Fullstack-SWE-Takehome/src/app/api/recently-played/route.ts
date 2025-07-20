@@ -24,13 +24,16 @@ export async function GET(request: NextRequest) {
     
     // Transform data to match frontend expectations
     const transformedData = data?.map(item => ({
-      id: item.id,
+      id: item.track_id || item.id, // Use track_id for component compatibility, fallback to UUID for backward compatibility
       title: item.title,
       artist: item.artist,
       album: item.album,
       albumArt: item.image_url,
       duration: item.duration,
-      playedAt: item.played_at
+      playedAt: item.played_at,
+      // Include both IDs for debugging and flexibility
+      dbId: item.id, // UUID primary key
+      trackId: item.track_id // Business identifier
     })) || [];
     
     return NextResponse.json(transformedData);
@@ -56,13 +59,14 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('recently_played')
       .insert({
+        track_id: body.id || `track_${Date.now()}`, // Use provided ID or generate one
         title: body.title,
         artist: body.artist,
         album: body.album,
         image_url: body.albumArt,
         duration: body.duration,
         played_at: new Date().toISOString(),
-        user_id: 'default-user'
+        user_id: '00000000-0000-0000-0000-000000000001' // Use proper UUID format
       })
       .select()
       .single();
