@@ -1338,10 +1338,10 @@ ON CONFLICT (id) DO NOTHING;`;
     return genreMap[lowerArtist] || 'unknown';
   }
 
-  // PHASE 3: Migration conflict detection system
+  // PHASE 3: Migration conflict detection system (FIXED)
   private async detectMigrationConflicts(tableName: string, description: string): Promise<{
     hasConflicts: boolean;
-    existingMigrations: Array<{ filename: string; description: string; schema?: string }>;
+    existingMigrations: Array<{ filename: string; description: string; schema?: string; columnCount: number; isComplete: boolean }>;
     shouldSkip: boolean;
   }> {
     const fs = require('fs');
@@ -1351,6 +1351,7 @@ ON CONFLICT (id) DO NOTHING;`;
       const migrationsDir = path.join(process.cwd(), 'src/lib/migrations');
       
       if (!fs.existsSync(migrationsDir)) {
+        this.logger.info('No migrations directory found - proceeding with table creation');
         return { hasConflicts: false, existingMigrations: [], shouldSkip: false };
       }
       
@@ -1362,6 +1363,13 @@ ON CONFLICT (id) DO NOTHING;`;
       
       for (const filename of migrationFiles) {
         const filePath = path.join(migrationsDir, filename);
+        
+        // CRITICAL FIX: Only process files that actually exist on disk
+        if (!fs.existsSync(filePath)) {
+          this.logger.warn(`⚠️ Migration file listed in state but doesn't exist: ${filename}`);
+          continue;
+        }
+        
         const content = fs.readFileSync(filePath, 'utf8');
         
         // Check if this migration creates the same table
@@ -1372,24 +1380,31 @@ ON CONFLICT (id) DO NOTHING;`;
           const descMatch = content.match(/-- Description: (.+)/i);
           const extractedDesc = descMatch ? descMatch[1].trim() : 'No description';
           
-          // Get basic schema info (column count)
-          const columnMatches = content.match(/^\s*\w+\s+\w+/gm);
-          const columnCount = columnMatches ? columnMatches.length : 0;
+          // ENHANCED: Analyze schema completeness
+          const schemaAnalysis = this.analyzeSchemaCompleteness(content, tableName, description);
           
           conflictingMigrations.push({
             filename,
             description: extractedDesc,
-            schema: `${columnCount} columns detected`
+            schema: `${schemaAnalysis.columnCount} columns (${schemaAnalysis.isComplete ? 'complete' : 'incomplete'})`,
+            columnCount: schemaAnalysis.columnCount,
+            isComplete: schemaAnalysis.isComplete
           });
+          
+          this.logger.info(`📋 Found existing migration: ${filename}`);
+          this.logger.info(`   - Columns: ${schemaAnalysis.columnCount}`);
+          this.logger.info(`   - Complete: ${schemaAnalysis.isComplete ? 'Yes' : 'No'}`);
+          this.logger.info(`   - Description: ${extractedDesc}`);
         }
       }
       
       if (conflictingMigrations.length === 0) {
+        this.logger.info('✅ No existing migrations found for this table - proceeding with creation');
         return { hasConflicts: false, existingMigrations: [], shouldSkip: false };
       }
       
-      // Analyze if we should skip this migration
-      const shouldSkip = this.shouldSkipMigration(conflictingMigrations, description);
+      // ENHANCED: Analyze if we should skip based on schema quality
+      const shouldSkip = this.shouldSkipMigrationEnhanced(conflictingMigrations, description);
       
       return {
         hasConflicts: true,
@@ -1399,34 +1414,101 @@ ON CONFLICT (id) DO NOTHING;`;
       
     } catch (error) {
       this.logger.warn(`Error detecting migration conflicts: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.info('Proceeding with table creation due to conflict detection error');
       return { hasConflicts: false, existingMigrations: [], shouldSkip: false };
     }
   }
   
-  // Determine if we should skip creating a new migration
-  private shouldSkipMigration(existingMigrations: Array<{ filename: string; description: string; schema?: string }>, newDescription: string): boolean {
-    // If there are multiple existing migrations, assume the latest one is complete
-    if (existingMigrations.length >= 2) {
-      this.logger.info('Multiple migrations detected - using most recent');
+  // ENHANCED: Determine if we should skip creating a new migration based on schema quality
+  private shouldSkipMigrationEnhanced(existingMigrations: Array<{ filename: string; description: string; schema?: string; columnCount: number; isComplete: boolean }>, newDescription: string): boolean {
+    // Check if any existing migration has a complete schema
+    const completeSchema = existingMigrations.find(migration => migration.isComplete);
+    
+    if (completeSchema) {
+      this.logger.info(`✅ Found complete schema in: ${completeSchema.filename}`);
+      this.logger.info(`   - ${completeSchema.columnCount} columns detected`);
       return true;
     }
     
-    // Check if existing migration seems complete based on keywords
-    const existingDesc = existingMigrations[0]?.description.toLowerCase() || '';
-    const newDesc = newDescription.toLowerCase();
-    
-    // If existing migration contains same key terms, likely complete
-    if (newDesc.includes('popular albums') && existingDesc.includes('popular albums')) {
-      return true;
-    }
-    if (newDesc.includes('made for you') && existingDesc.includes('made for you')) {
-      return true;
-    }
-    if (newDesc.includes('recently played') && existingDesc.includes('recently played')) {
-      return true;
-    }
+    // If all existing schemas are incomplete, don't skip - create a new complete one
+    this.logger.warn(`❌ All existing migrations have incomplete schemas:`);
+    existingMigrations.forEach(migration => {
+      this.logger.warn(`   - ${migration.filename}: ${migration.columnCount} columns`);
+    });
+    this.logger.info(`🔄 Creating new migration with complete schema`);
     
     return false;
+  }
+  
+  // ENHANCED: Analyze schema completeness of existing migrations
+  private analyzeSchemaCompleteness(migrationContent: string, tableName: string, newDescription: string): {
+    columnCount: number;
+    isComplete: boolean;
+  } {
+    // Count columns in the CREATE TABLE statement
+    const createTableMatch = migrationContent.match(new RegExp(`CREATE TABLE IF NOT EXISTS ${tableName}\\s*\\(([^;]+)\\)`, 's'));
+    
+    if (!createTableMatch) {
+      return { columnCount: 0, isComplete: false };
+    }
+    
+    const tableDefinition = createTableMatch[1];
+    
+    // Count actual columns (exclude comments and empty lines)
+    const columnLines = tableDefinition
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => 
+        line && 
+        !line.startsWith('--') && 
+        !line.startsWith('/*') && 
+        line.includes(' ') &&
+        !line.match(/^(PRIMARY|FOREIGN|CHECK|UNIQUE)\s+KEY/i)
+      );
+    
+    const columnCount = columnLines.length;
+    
+    // Define minimum expected columns for different table types
+    const expectedMinimums = {
+      'popular albums': 7,  // id, created_at, updated_at + title, artist, image_url, duration, release_date, popularity_score
+      'made for you': 7,    // id, created_at, updated_at + title, description, image_url, playlist_type
+      'recently played': 8, // id, created_at, updated_at + title, artist, album, image_url, duration, played_at
+      'album': 7,           // general albums
+      'playlist': 7         // general playlists
+    };
+    
+    const descLower = newDescription.toLowerCase();
+    let expectedMin = 3; // Default minimum (just the basic columns)
+    
+    // Find the expected minimum based on description
+    for (const [key, min] of Object.entries(expectedMinimums)) {
+      if (descLower.includes(key)) {
+        expectedMin = min;
+        break;
+      }
+    }
+    
+    // Check for specific required columns based on table type
+    let hasRequiredColumns = true;
+    
+    if (descLower.includes('popular albums') || descLower.includes('album')) {
+      const hasTitle = /\btitle\b/i.test(tableDefinition);
+      const hasArtist = /\bartist\b/i.test(tableDefinition);
+      hasRequiredColumns = hasTitle && hasArtist;
+    } else if (descLower.includes('made for you') || descLower.includes('playlist')) {
+      const hasTitle = /\btitle\b/i.test(tableDefinition);
+      const hasDescription = /\bdescription\b/i.test(tableDefinition);
+      hasRequiredColumns = hasTitle && hasDescription;
+    } else if (descLower.includes('recently played')) {
+      const hasTitle = /\btitle\b/i.test(tableDefinition);
+      const hasArtist = /\bartist\b/i.test(tableDefinition);
+      hasRequiredColumns = hasTitle && hasArtist;
+    }
+    
+    // Schema is complete if it meets minimum count AND has required columns
+    const isComplete = columnCount >= expectedMin && hasRequiredColumns;
+    
+    return { columnCount, isComplete };
   }
   
   // PHASE 3: Table name validation system
