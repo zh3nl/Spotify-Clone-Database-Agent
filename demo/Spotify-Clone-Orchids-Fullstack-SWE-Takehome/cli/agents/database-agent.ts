@@ -114,7 +114,7 @@ export class DatabaseAgent {
     const queryLower = query.toLowerCase();
     
     // Check for recently played functionality
-    if (queryLower.includes('recently played') || queryLower.includes('recent songs')) {
+    if (queryLower.includes('recently played') || queryLower.includes('recent songs') || queryLower.includes('recently_played')) {
       const recentlyPlayedFeature = projectContext.implementedFeatures.find(f => f.name === 'recently_played');
       if (recentlyPlayedFeature?.implemented) {
         return {
@@ -1386,7 +1386,7 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
     const lowerDesc = description.toLowerCase();
     const detectedTypes: string[] = [];
     
-    if (lowerDesc.includes('recently played')) {
+    if (lowerDesc.includes('recently played') || lowerDesc.includes('recently_played')) {
       detectedTypes.push('recently_played');
     }
     if (lowerDesc.includes('made for you') || lowerDesc.includes('playlist')) {
@@ -1414,7 +1414,7 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
     
     this.logger.info(`📊 Extracting columns for operation: "${operation.description}"`);
     
-    if (description.includes('recently played')) {
+    if (description.includes('recently played') || description.includes('recently_played')) {
       this.logger.info(`⏮️ Detected 'recently played' - adding track history schema`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: `'${DEFAULT_USER_UUID}'` },

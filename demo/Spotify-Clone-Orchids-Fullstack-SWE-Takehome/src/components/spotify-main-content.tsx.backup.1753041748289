@@ -1,4 +1,3 @@
-```tsx
 "use client"
 
 import { Play, User } from "lucide-react"
@@ -350,3 +349,4 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
                 size="small"
                 onPlay={() => handlePlayTrack(item)}
               />
+            )

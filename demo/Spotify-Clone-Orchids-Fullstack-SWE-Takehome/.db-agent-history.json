@@ -636,5 +636,647 @@
     "metadata": {
       "dependencies": []
     }
+  },
+  {
+    "operationId": "1753037771674-0",
+    "type": "create_table",
+    "description": "Create 'albums' table to store album information including title, artist, cover image, and release date",
+    "targetFiles": [
+      "src/lib/supabase/migrations/albums.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:56:11.678Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037771686-1",
+    "type": "create_table",
+    "description": "Create 'playlists' table to store playlist information including title, description, cover image, and creator",
+    "targetFiles": [
+      "src/lib/supabase/migrations/playlists.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:56:11.690Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037771694-2",
+    "type": "run_migration",
+    "description": "Create TypeScript types for albums and playlists database models",
+    "targetFiles": [
+      "src/lib/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:57:04.778Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037824780-3",
+    "type": "update_component",
+    "description": "Update API route for popular albums to fetch from database instead of using hardcoded data",
+    "targetFiles": [
+      "src/app/api/albums/popular/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:57:16.390Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753037836392-4",
+    "type": "update_component",
+    "description": "Update API route for made-for-you playlists to fetch from database instead of using hardcoded data",
+    "targetFiles": [
+      "src/app/api/playlists/made-for-you/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:57:34.924Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753037854926-5",
+    "type": "run_migration",
+    "description": "Create custom hooks for fetching albums and playlists data",
+    "targetFiles": [
+      "src/hooks/use-albums.ts",
+      "src/hooks/use-playlists.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:57:34.928Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "swr",
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753037898863-0",
+    "type": "create_table",
+    "description": "Create 'albums' table to store album information including title, artist, cover image, release date, and popularity metrics",
+    "targetFiles": [
+      "src/lib/supabase/migrations/albums.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:58:18.865Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037898867-1",
+    "type": "create_table",
+    "description": "Create 'playlists' table to store playlist information including title, description, cover image, and creator",
+    "targetFiles": [
+      "src/lib/supabase/migrations/playlists.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:58:18.869Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037898871-2",
+    "type": "create_table",
+    "description": "Create 'tracks' table to store track information that can be associated with albums and playlists",
+    "targetFiles": [
+      "src/lib/supabase/migrations/tracks.sql",
+      "src/lib/migrations/20250720T185819_create_'tracks'_table_to_store_track_information_that_can_be_associated_with_albums_and_playlists_playlists.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:58:20.955Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037900957-3",
+    "type": "create_table",
+    "description": "Create 'playlist_tracks' junction table to associate tracks with playlists",
+    "targetFiles": [
+      "src/lib/supabase/migrations/playlist_tracks.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:58:20.961Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037900963-4",
+    "type": "run_migration",
+    "description": "Create TypeScript types for database tables and responses",
+    "targetFiles": [
+      "src/lib/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:59:18.918Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037958920-5",
+    "type": "update_component",
+    "description": "Update API route for popular albums to fetch from database instead of using hardcoded data",
+    "targetFiles": [
+      "src/app/api/albums/popular/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:59:28.427Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037968429-6",
+    "type": "update_component",
+    "description": "Update API route for made-for-you playlists to fetch from database instead of using hardcoded data",
+    "targetFiles": [
+      "src/app/api/playlists/made-for-you/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:59:46.991Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753037986993-7",
+    "type": "run_migration",
+    "description": "Create custom hooks for fetching albums and playlists data",
+    "targetFiles": [
+      "src/hooks/use-albums.ts",
+      "src/hooks/use-playlists.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T18:59:46.995Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038054816-0",
+    "type": "create_table",
+    "description": "Create 'albums' table to store album information including title, artist, cover image, release date, and popularity metrics",
+    "targetFiles": [
+      "src/lib/supabase/migrations/albums.sql",
+      "src/lib/migrations/20250720T190055_create_'albums'_table_to_store_album_information_including_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:00:57.450Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038057453-1",
+    "type": "create_table",
+    "description": "Create 'playlists' table to store playlist information including title, description, cover image, and creator",
+    "targetFiles": [
+      "src/lib/supabase/migrations/playlists.sql",
+      "src/lib/migrations/20250720T190057_create_'playlists'_table_to_store_playlist_information_including_title,_description,_cover_image,_and_creator_playlists.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:00:59.121Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038059123-2",
+    "type": "create_table",
+    "description": "Create 'tracks' table to store track information that can be associated with albums and playlists",
+    "targetFiles": [
+      "src/lib/supabase/migrations/tracks.sql",
+      "src/lib/migrations/20250720T190059_create_'tracks'_table_to_store_track_information_that_can_be_associated_with_albums_and_playlists_playlists.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:01:00.377Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038060379-3",
+    "type": "create_table",
+    "description": "Create 'playlist_tracks' junction table to associate tracks with playlists",
+    "targetFiles": [
+      "src/lib/supabase/migrations/playlist_tracks.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:01:00.382Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038060384-4",
+    "type": "run_migration",
+    "description": "Create TypeScript types for database tables and API responses",
+    "targetFiles": [
+      "src/lib/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:01:56.130Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038116133-5",
+    "type": "update_component",
+    "description": "Update API route for popular albums to fetch from database instead of hardcoded data",
+    "targetFiles": [
+      "src/app/api/albums/popular/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:02:10.200Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038130202-6",
+    "type": "update_component",
+    "description": "Update API route for made-for-you playlists to fetch from database instead of hardcoded data",
+    "targetFiles": [
+      "src/app/api/playlists/made-for-you/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:02:37.560Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038157562-7",
+    "type": "run_migration",
+    "description": "Create custom hooks for fetching albums and playlists data",
+    "targetFiles": [
+      "src/hooks/use-albums.ts",
+      "src/hooks/use-playlists.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:02:37.564Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038157566-8",
+    "type": "run_migration",
+    "description": "Run database migrations to create the tables and seed initial data",
+    "targetFiles": [
+      "src/lib/supabase/seed-data.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:02:37.567Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038460163-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history with user association",
+    "targetFiles": [
+      "src/lib/supabase/migrations/recently_played.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:07:40.164Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753038819842-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history with user association",
+    "targetFiles": [
+      "src/lib/supabase/migrations/recently_played.sql",
+      "src/lib/migrations/20250720T191340_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association_recently_played.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:13:41.107Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753038821111-1",
+    "type": "update_component",
+    "description": "Update the API routes to interact with the newly created 'recently_played' table",
+    "targetFiles": [
+      "src/app/api/recently-played/route.ts",
+      "src/app/api/tracks/recently-played/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:14:02.926Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038842930-2",
+    "type": "run_migration",
+    "description": "Create TypeScript types for the recently played tracks database schema",
+    "targetFiles": [
+      "src/lib/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:14:56.131Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753038896133-3",
+    "type": "run_migration",
+    "description": "Create a custom React hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:14:56.135Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "swr"
+      ]
+    }
+  },
+  {
+    "operationId": "1753038896137-4",
+    "type": "update_component",
+    "description": "Update the main content component to use the database for recently played tracks",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T19:15:53.120Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753041640059-0",
+    "type": "create_table",
+    "description": "Create a recently_played table in Supabase to store track history with user association",
+    "targetFiles": [
+      "src/lib/database/schema.sql",
+      "src/lib/migrations/20250720T200040_create_a_recently_played_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:00:41.416Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753041641426-1",
+    "type": "run_migration",
+    "description": "Create TypeScript types for the recently played tracks database operations",
+    "targetFiles": [
+      "src/lib/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:01:33.692Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753041693694-2",
+    "type": "run_migration",
+    "description": "Create a custom hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:01:33.696Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js",
+        "react"
+      ]
+    }
+  },
+  {
+    "operationId": "1753041693697-3",
+    "type": "update_component",
+    "description": "Update components that display recently played tracks to use the database",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:02:28.292Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753042599802-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks with timestamps",
+    "targetFiles": [
+      "src/lib/supabase/migrations/recently_played.sql",
+      "src/lib/migrations/20250720T201640_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps_recently_played.sql"
+    ],
+    "success": false,
+    "executedAt": "2025-07-20T20:16:41.486Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753042663637-0",
+    "type": "create_table",
+    "description": "Create a recently_played table in Supabase to store track history with user association",
+    "targetFiles": [
+      "src/lib/database/schema.sql",
+      "src/lib/migrations/20250720T201743_create_a_recently_played_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:17:44.951Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753042664956-1",
+    "type": "run_migration",
+    "description": "Create TypeScript types for the recently played tracks database operations",
+    "targetFiles": [
+      "src/lib/types/database.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:18:30.485Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753042710488-2",
+    "type": "run_migration",
+    "description": "Create a custom hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:18:30.490Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js",
+        "react"
+      ]
+    }
+  },
+  {
+    "operationId": "1753042710491-3",
+    "type": "update_component",
+    "description": "Update components to use the database-backed recently played tracks",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:19:25.093Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753042950754-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history with user association",
+    "targetFiles": [
+      "src/lib/supabase/migrations/recently_played.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:22:30.759Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
+  },
+  {
+    "operationId": "1753043016222-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store track play history with user association",
+    "targetFiles": [
+      "src/lib/supabase/migrations/recently_played.sql",
+      "src/lib/migrations/20250720T202336_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association_recently_played.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:23:37.401Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753043017406-1",
+    "type": "run_migration",
+    "description": "Create TypeScript types for recently played tracks database operations",
+    "targetFiles": [
+      "src/lib/types/recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:24:27.357Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753043067360-2",
+    "type": "run_migration",
+    "description": "Create a React hook to fetch and manage recently played tracks",
+    "targetFiles": [
+      "src/hooks/use-recently-played.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:24:27.362Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1753043067364-3",
+    "type": "update_component",
+    "description": "Update components to use the recently played tracks from the database",
+    "targetFiles": [
+      "src/components/spotify-main-content.tsx"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T20:25:24.424Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
   }
 ]

@@ -5,34 +5,55 @@ export async function GET(request: NextRequest) {
   try {
     const limit = request.nextUrl.searchParams.get('limit') || '20';
     
-    // Fetch made for you playlists (simplified for demo - no auth required)
-    const { data, error } = await supabase
+    const { data: playlists, error } = await supabase
       .from('playlists')
-      .select('*')
+      .select(`
+        id,
+        title,
+        description,
+        image_url,
+        created_at,
+        playlist_type,
+        user_id,
+        songs (
+          id,
+          title,
+          artist,
+          duration
+        )
+      `)
+      .eq('playlist_type', 'made-for-you')
       .order('created_at', { ascending: false })
       .limit(parseInt(limit));
 
     if (error) {
-      console.error('Error fetching made for you playlists:', error);
+      console.error('Error fetching made-for-you playlists:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Transform data to match frontend expectations  
-    const transformedData = data?.map(item => ({
-      id: item.id,
-      title: item.title,
-      artist: item.description, // Using description as artist field for compatibility
-      album: item.title, // Use title as album for playlists
-      albumArt: item.image_url,
-      duration: 200, // Default duration for playlists
-      playlistType: item.playlist_type
+    const transformedData = playlists?.map(playlist => ({
+      id: playlist.id,
+      title: playlist.title,
+      description: playlist.description,
+      imageUrl: playlist.image_url,
+      type: playlist.playlist_type,
+      songCount: playlist.songs?.length || 0,
+      totalDuration: playlist.songs?.reduce((acc, song) => acc + (song.duration || 0), 0) || 0,
+      createdAt: playlist.created_at,
+      userId: playlist.user_id,
+      songs: playlist.songs?.map(song => ({
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        duration: song.duration
+      }))
     })) || [];
 
     return NextResponse.json(transformedData);
   } catch (error) {
     console.error('Unexpected error in GET /api/playlists/made-for-you:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Failed to fetch made-for-you playlists' },
       { status: 500 }
     );
   }
@@ -42,29 +63,48 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // For demo purposes, insert the playlist data directly
-    const { data, error } = await supabase
+    const { data: playlist, error: playlistError } = await supabase
       .from('playlists')
       .insert({
         title: body.title,
         description: body.description,
-        image_url: body.albumArt,
-        playlist_type: body.playlistType || 'personalized',
-        user_id: 'default-user'
+        image_url: body.imageUrl,
+        playlist_type: 'made-for-you',
+        user_id: body.userId || 'system'
       })
       .select()
       .single();
 
-    if (error) {
-      console.error('Error inserting made for you playlist:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (playlistError) {
+      console.error('Error creating playlist:', playlistError);
+      return NextResponse.json({ error: playlistError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    if (body.songs?.length > 0) {
+      const songsToInsert = body.songs.map(song => ({
+        playlist_id: playlist.id,
+        title: song.title,
+        artist: song.artist,
+        duration: song.duration
+      }));
+
+      const { error: songsError } = await supabase
+        .from('songs')
+        .insert(songsToInsert);
+
+      if (songsError) {
+        console.error('Error adding songs to playlist:', songsError);
+        // Rollback playlist creation
+        await supabase.from('playlists').delete().eq('id', playlist.id);
+        return NextResponse.json({ error: songsError.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json(playlist, { status: 201 });
   } catch (error) {
     console.error('Unexpected error in POST /api/playlists/made-for-you:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Failed to create made-for-you playlist' },
       { status: 500 }
     );
   }
@@ -81,21 +121,33 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    // Delete associated songs first
+    const { error: songsError } = await supabase
+      .from('songs')
+      .delete()
+      .eq('playlist_id', playlistId);
+
+    if (songsError) {
+      console.error('Error deleting playlist songs:', songsError);
+      return NextResponse.json({ error: songsError.message }, { status: 500 });
+    }
+
+    // Delete the playlist
+    const { error: playlistError } = await supabase
       .from('playlists')
       .delete()
       .eq('id', playlistId);
 
-    if (error) {
-      console.error('Error deleting made for you playlist:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (playlistError) {
+      console.error('Error deleting playlist:', playlistError);
+      return NextResponse.json({ error: playlistError.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Unexpected error in DELETE /api/playlists/made-for-you:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Failed to delete made-for-you playlist' },
       { status: 500 }
     );
   }

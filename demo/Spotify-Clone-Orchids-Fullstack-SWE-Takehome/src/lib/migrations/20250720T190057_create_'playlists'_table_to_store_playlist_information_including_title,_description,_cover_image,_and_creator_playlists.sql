@@ -1,7 +1,7 @@
 -- =====================================================
 -- IDEMPOTENT MIGRATION: playlists
--- Description: Create 'playlists' table to store playlist information including id, title, description, cover image URL, creator, and creation date
--- Generated: 2025-07-20T18:43:27.329Z
+-- Description: Create 'playlists' table to store playlist information including title, description, cover image, and creator
+-- Generated: 2025-07-20T19:00:57.617Z
 -- Safe to run multiple times
 -- =====================================================
 

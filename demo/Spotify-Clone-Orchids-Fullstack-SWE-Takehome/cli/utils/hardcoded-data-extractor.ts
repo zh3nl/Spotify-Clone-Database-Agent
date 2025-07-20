@@ -19,6 +19,15 @@ export interface ExtractedDataSet {
   popularAlbums: ExtractedDataItem[];
 }
 
+export interface MultiTableDataResult {
+  hasRecentlyPlayed: boolean;
+  recentlyPlayed: ExtractedDataItem[];
+  hasMadeForYou: boolean;
+  madeForYou: ExtractedDataItem[];
+  hasPopularAlbums: boolean;
+  popularAlbums: ExtractedDataItem[];
+}
+
 export class HardcodedDataExtractor {
   private logger: Logger;
 
@@ -228,10 +237,10 @@ export class HardcodedDataExtractor {
     const allData = await this.extractFromComponents(projectRoot);
     const description = operationDescription.toLowerCase();
 
-    if (description.includes('recently played')) {
+    if (description.includes('recently played') || description.includes('recently_played')) {
       this.logger.info(`🎵 Selected recently played data (${allData.recentlyPlayed.length} items)`);
       return allData.recentlyPlayed;
-    } else if (description.includes('made for you') || description.includes('playlist')) {
+    } else if (description.includes('made for you') || description.includes('made_for_you') || description.includes('playlist')) {
       this.logger.info(`🎧 Selected made for you data (${allData.madeForYou.length} items)`);
       return allData.madeForYou;
     } else if (description.includes('albums') || description.includes('popular')) {
@@ -241,5 +250,27 @@ export class HardcodedDataExtractor {
 
     this.logger.warn(`⚠️ No matching data found for description: "${operationDescription}"`);
     return [];
+  }
+
+  /**
+   * Extracts multi-table data with availability flags for database agent integration
+   */
+  async extractMultiTableData(projectRoot: string): Promise<MultiTableDataResult> {
+    this.logger.info('🔍 Extracting multi-table data with availability detection...');
+    
+    const allData = await this.extractFromComponents(projectRoot);
+    
+    const result: MultiTableDataResult = {
+      hasRecentlyPlayed: allData.recentlyPlayed.length > 0,
+      recentlyPlayed: allData.recentlyPlayed,
+      hasMadeForYou: allData.madeForYou.length > 0,
+      madeForYou: allData.madeForYou,
+      hasPopularAlbums: allData.popularAlbums.length > 0,
+      popularAlbums: allData.popularAlbums
+    };
+
+    this.logger.success(`📊 Multi-table extraction complete: recently_played=${result.hasRecentlyPlayed}, playlists=${result.hasMadeForYou}, albums=${result.hasPopularAlbums}`);
+    
+    return result;
   }
 }

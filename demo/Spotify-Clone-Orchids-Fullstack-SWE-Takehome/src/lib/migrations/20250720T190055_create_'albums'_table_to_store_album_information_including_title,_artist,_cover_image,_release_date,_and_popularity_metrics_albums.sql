@@ -1,7 +1,7 @@
 -- =====================================================
 -- IDEMPOTENT MIGRATION: albums
--- Description: Create 'albums' table to store album information including id, title, artist, cover image URL, release date, and popularity score
--- Generated: 2025-07-20T18:43:25.632Z
+-- Description: Create 'albums' table to store album information including title, artist, cover image, release date, and popularity metrics
+-- Generated: 2025-07-20T19:00:55.059Z
 -- Safe to run multiple times
 -- =====================================================
 
