@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-18T22:45:37.354Z",
+  "timestamp": "2025-07-20T00:17:55.301Z",
   "state": {
     "database": {
       "tables": [],
@@ -9,13 +9,59 @@
       "migrationsExecuted": [
         "20250718T223004_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_proper_relationships.sql",
         "20250718T223004_create_a_'tracks'_table_in_supabase_to_store_track_information.sql",
-        "20250718T223004_create_a_'users'_table_in_supabase_to_store_user_information.sql"
+        "20250718T223004_create_a_'users'_table_in_supabase_to_store_user_information.sql",
+        "20250718T224556_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps.sql",
+        "20250718T224556_create_a_'tracks'_table_in_supabase_to_store_track_information.sql",
+        "20250719T165909_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_proper_relationships.sql",
+        "20250719T234230_create_'albums'_table_to_store_popular_albums_data.sql",
+        "20250719T234230_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
+        "20250720T000431_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
+        "20250720T000714_create_'albums'_table_to_store_popular_albums_data.sql",
+        "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql"
       ],
-      "lastChecked": "2025-07-18T22:45:36.385Z"
+      "lastChecked": "2025-07-20T00:17:54.314Z"
     },
     "api": {
-      "routes": [],
-      "lastChecked": "2025-07-18T22:45:36.857Z"
+      "routes": [
+        {
+          "path": "/api/albums\\popular",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-20T00:12:05.505Z"
+        },
+        {
+          "path": "/api/playlists\\made-for-you",
+          "methods": [
+            "GET",
+            "POST",
+            "DELETE"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-20T00:15:41.980Z"
+        },
+        {
+          "path": "/api/recently-played",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-19T17:08:25.115Z"
+        },
+        {
+          "path": "/api/tracks\\recently-played",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-19T17:08:58.386Z"
+        }
+      ],
+      "lastChecked": "2025-07-20T00:17:54.784Z"
     },
     "components": {
       "components": [
@@ -730,13 +776,13 @@
         {
           "path": "src\\components\\spotify-main-content.tsx",
           "hasDatabase": false,
-          "lastModified": "2025-07-18T22:40:39.379Z",
+          "lastModified": "2025-07-20T00:06:07.868Z",
           "hardcodedDataRemoved": false
         },
         {
           "path": "src\\components\\spotify-player.tsx",
           "hasDatabase": true,
-          "lastModified": "2025-07-18T22:26:26.786Z",
+          "lastModified": "2025-07-19T17:19:48.737Z",
           "hardcodedDataRemoved": true
         },
         {
@@ -1496,10 +1542,50 @@
           "hardcodedDataRemoved": false
         }
       ],
-      "lastChecked": "2025-07-18T22:45:36.859Z"
+      "lastChecked": "2025-07-20T00:17:54.786Z"
     },
     "migrations": {
       "executedMigrations": [
+        {
+          "filename": "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
+          "description": "create 'playlists' table to store 'made for you' playlists",
+          "executedAt": "2025-07-20T00:07:16.903Z"
+        },
+        {
+          "filename": "20250720T000714_create_'albums'_table_to_store_popular_albums_data.sql",
+          "description": "create 'albums' table to store popular albums data",
+          "executedAt": "2025-07-20T00:07:15.865Z"
+        },
+        {
+          "filename": "20250720T000431_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
+          "description": "create a 'recently played' table in supabase to store track play history with user association",
+          "executedAt": "2025-07-20T00:04:32.609Z"
+        },
+        {
+          "filename": "20250719T234230_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
+          "description": "create 'playlists' table to store 'made for you' playlists",
+          "executedAt": "2025-07-19T23:43:54.367Z"
+        },
+        {
+          "filename": "20250719T234230_create_'albums'_table_to_store_popular_albums_data.sql",
+          "description": "create 'albums' table to store popular albums data",
+          "executedAt": "2025-07-19T23:43:53.383Z"
+        },
+        {
+          "filename": "20250719T165909_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_proper_relationships.sql",
+          "description": "create a 'recently played' table in supabase to store user's recently played tracks with proper relationships",
+          "executedAt": "2025-07-19T17:21:45.691Z"
+        },
+        {
+          "filename": "20250718T224556_create_a_'tracks'_table_in_supabase_to_store_track_information.sql",
+          "description": "create a 'tracks' table in supabase to store track information",
+          "executedAt": "2025-07-18T22:47:55.224Z"
+        },
+        {
+          "filename": "20250718T224556_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps.sql",
+          "description": "create a 'recently played' table in supabase to store user's recently played tracks with timestamps",
+          "executedAt": "2025-07-18T22:47:54.385Z"
+        },
         {
           "filename": "20250718T223004_create_a_'users'_table_in_supabase_to_store_user_information.sql",
           "description": "create a 'users' table in supabase to store user information",
@@ -1517,43 +1603,47 @@
         }
       ],
       "pendingMigrations": [],
-      "lastChecked": "2025-07-18T22:45:36.927Z"
+      "lastChecked": "2025-07-20T00:17:54.857Z"
     },
     "features": {
       "recently_played": {
-        "implemented": false,
-        "tables": [],
-        "apis": [],
+        "implemented": true,
+        "tables": [
+          "recently_played"
+        ],
+        "apis": [
+          "/api/recently-played"
+        ],
         "components": [],
-        "implementedAt": "2025-07-18T22:45:37.072Z"
+        "implementedAt": "2025-07-20T00:17:55.013Z"
       },
       "made_for_you": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-18T22:45:37.152Z"
+        "implementedAt": "2025-07-20T00:17:55.108Z"
       },
       "popular_albums": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-18T22:45:37.238Z"
+        "implementedAt": "2025-07-20T00:17:55.183Z"
       },
       "user_playlists": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-18T22:45:37.291Z"
+        "implementedAt": "2025-07-20T00:17:55.245Z"
       },
       "search_functionality": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-18T22:45:37.354Z"
+        "implementedAt": "2025-07-20T00:17:55.301Z"
       }
     }
   }

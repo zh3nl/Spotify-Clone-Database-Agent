@@ -1,8 +1,7 @@
-```tsx
 "use client"
 
 import { Play, User } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { 
   useRecentlyPlayedTracks, 
   usePopularAlbums, 
@@ -85,7 +84,7 @@ interface SpotifyMainContentProps {
   onPlayTrack?: (track: Track) => void
 }
 
-// Fallback data in case API fails
+// Hardcoded fallback data (preserved from original implementation)
 const FALLBACK_RECENTLY_PLAYED: Track[] = [
   { 
     id: "1",
@@ -256,61 +255,38 @@ const FALLBACK_POPULAR_ALBUMS: Track[] = [
 ];
 
 export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentProps) {
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>([]);
-  const [popularAlbums, setPopularAlbums] = useState<Track[]>([]);
-  const [madeForYou, setMadeForYou] = useState<Track[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use custom hooks for data fetching with built-in fallback handling
+  const { 
+    tracks: recentlyPlayed, 
+    loading: recentlyPlayedLoading, 
+    error: recentlyPlayedError 
+  } = useRecentlyPlayedTracks({ limit: 12, autoRefresh: true })
+  
+  const { 
+    albums: popularAlbums, 
+    loading: popularAlbumsLoading, 
+    error: popularAlbumsError 
+  } = usePopularAlbums({ limit: 12, autoRefresh: true })
+  
+  const { 
+    playlists: madeForYou, 
+    loading: madeForYouLoading, 
+    error: madeForYouError 
+  } = useMadeForYouPlaylists({ limit: 12, autoRefresh: true })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // Fetch recently played tracks from database
-        const recentlyPlayedResponse = await fetch('/api/tracks/recently-played?limit=12');
-        if (!recentlyPlayedResponse.ok) {
-          throw new Error('Failed to fetch recently played tracks');
-        }
-        const recentlyPlayedData = await recentlyPlayedResponse.json();
-        setRecentlyPlayed(recentlyPlayedData.length > 0 ? recentlyPlayedData : FALLBACK_RECENTLY_PLAYED);
-        
-        // Fetch popular albums from database
-        const popularAlbumsResponse = await fetch('/api/albums/popular?limit=12');
-        if (!popularAlbumsResponse.ok) {
-          throw new Error('Failed to fetch popular albums');
-        }
-        const popularAlbumsData = await popularAlbumsResponse.json();
-        setPopularAlbums(popularAlbumsData.length > 0 ? popularAlbumsData : FALLBACK_POPULAR_ALBUMS);
-        
-        // Fetch made for you playlists from database
-        const madeForYouResponse = await fetch('/api/playlists/made-for-you?limit=12');
-        if (!madeForYouResponse.ok) {
-          throw new Error('Failed to fetch made for you playlists');
-        }
-        const madeForYouData = await madeForYouResponse.json();
-        setMadeForYou(madeForYouData.length > 0 ? madeForYouData : FALLBACK_MADE_FOR_YOU);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Unable to load data from server, using cached data');
-        
-        // Use fallback data if API calls fail
-        setRecentlyPlayed(FALLBACK_RECENTLY_PLAYED);
-        setPopularAlbums(FALLBACK_POPULAR_ALBUMS);
-        setMadeForYou(FALLBACK_MADE_FOR_YOU);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Combine loading states
+  const isLoading = recentlyPlayedLoading || popularAlbumsLoading || madeForYouLoading
+  
+  // Combine error states (only show if all hooks have errors)
+  const hasErrors = recentlyPlayedError && popularAlbumsError && madeForYouError
+  const error = hasErrors ? 'Unable to load data from server, using cached data' : null
+  
+  // Provide fallback data if hooks return empty arrays
+  const recentlyPlayedData = recentlyPlayed.length > 0 ? recentlyPlayed : FALLBACK_RECENTLY_PLAYED
+  const popularAlbumsData = popularAlbums.length > 0 ? popularAlbums : FALLBACK_POPULAR_ALBUMS  
+  const madeForYouData = madeForYou.length > 0 ? madeForYou : FALLBACK_MADE_FOR_YOU
 
-    fetchData();
-    
-    // Set up auto-refresh every 5 minutes
-    const refreshInterval = setInterval(fetchData, 5 * 60 * 1000);
-    
-    return () => clearInterval(refreshInterval);
-  }, []);
+  // Data is now loaded automatically by custom hooks - no manual fetching needed
 
   const handlePlayTrack = (item: Track) => {
     const track: Track = {
@@ -347,4 +323,25 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
       <p className="text-red-400">{message}</p>
       <button 
         onClick={() => window.location.reload()}
-        className="mt-4 px-4 py-2 bg
+        className="mt-4 px-4 py-2 bg-[var(--color-primary)] text-black rounded-full text-sm font-medium"
+      >
+        Try Again
+      </button>
+    </div>
+  )
+
+  return (
+    <div className="bg-[var(--color-background-primary)] text-[var(--color-text-primary)] min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 pb-0">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Good afternoon</h1>
+        </div>
+        <div className="w-8 h-8 bg-[var(--color-muted)] rounded-full flex items-center justify-center">
+          <User className="w-4 h-4 text-[var(--color-text-secondary)]" />
+        </div>
+      </div>
+
+      {/* Recently Played */}
+      <section className="px-6 py-8">
+        <div className="flex items-center justify-between mb
