@@ -7,7 +7,14 @@
 
 -- Create table recently_played (idempotent)
 CREATE TABLE IF NOT EXISTS recently_played (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    artist TEXT NOT NULL,
+    album TEXT,
+    image_url TEXT,
+    duration INTEGER NOT NULL,
+    played_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    user_id TEXT DEFAULT 'default-user',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -256,61 +256,14 @@ const FALLBACK_POPULAR_ALBUMS: Track[] = [
 ];
 
 export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentProps) {
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>([]);
-  const [popularAlbums, setPopularAlbums] = useState<Track[]>([]);
-  const [madeForYou, setMadeForYou] = useState<Track[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use the custom hooks to fetch data
+  const { data: recentlyPlayed, isLoading: recentlyPlayedLoading, error: recentlyPlayedError } = useRecentlyPlayedTracks(12);
+  const { data: popularAlbums, isLoading: albumsLoading, error: albumsError } = usePopularAlbums(12);
+  const { data: madeForYou, isLoading: playlistsLoading, error: playlistsError } = useMadeForYouPlaylists(12);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // Fetch recently played tracks from database
-        const recentlyPlayedResponse = await fetch('/api/tracks/recently-played?limit=12');
-        if (!recentlyPlayedResponse.ok) {
-          throw new Error('Failed to fetch recently played tracks');
-        }
-        const recentlyPlayedData = await recentlyPlayedResponse.json();
-        setRecentlyPlayed(recentlyPlayedData.length > 0 ? recentlyPlayedData : FALLBACK_RECENTLY_PLAYED);
-        
-        // Fetch popular albums from database
-        const popularAlbumsResponse = await fetch('/api/albums/popular?limit=12');
-        if (!popularAlbumsResponse.ok) {
-          throw new Error('Failed to fetch popular albums');
-        }
-        const popularAlbumsData = await popularAlbumsResponse.json();
-        setPopularAlbums(popularAlbumsData.length > 0 ? popularAlbumsData : FALLBACK_POPULAR_ALBUMS);
-        
-        // Fetch made for you playlists from database
-        const madeForYouResponse = await fetch('/api/playlists/made-for-you?limit=12');
-        if (!madeForYouResponse.ok) {
-          throw new Error('Failed to fetch made for you playlists');
-        }
-        const madeForYouData = await madeForYouResponse.json();
-        setMadeForYou(madeForYouData.length > 0 ? madeForYouData : FALLBACK_MADE_FOR_YOU);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Unable to load data from server, using cached data');
-        
-        // Use fallback data if API calls fail
-        setRecentlyPlayed(FALLBACK_RECENTLY_PLAYED);
-        setPopularAlbums(FALLBACK_POPULAR_ALBUMS);
-        setMadeForYou(FALLBACK_MADE_FOR_YOU);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-    
-    // Set up auto-refresh every 5 minutes
-    const refreshInterval = setInterval(fetchData, 5 * 60 * 1000);
-    
-    return () => clearInterval(refreshInterval);
-  }, []);
+  // Determine overall loading and error states
+  const isLoading = recentlyPlayedLoading || albumsLoading || playlistsLoading;
+  const hasError = recentlyPlayedError || albumsError || playlistsError;
 
   const handlePlayTrack = (item: Track) => {
     const track: Track = {
@@ -347,4 +300,91 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
       <p className="text-red-400">{message}</p>
       <button 
         onClick={() => window.location.reload()}
-        className="mt-4 px-4 py-2 bg
+        className="mt-4 px-4 py-2 bg-red-700 hover:bg-red-600 rounded-md text-white text-sm"
+      >
+        Retry
+      </button>
+    </div>
+  )
+
+  return (
+    <div className="p-6 space-y-8">
+      {/* Recently played section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">Recently Played</h2>
+        {recentlyPlayedLoading ? (
+          <LoadingSkeleton />
+        ) : recentlyPlayedError ? (
+          <ErrorMessage message={recentlyPlayedError} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {(recentlyPlayed || FALLBACK_RECENTLY_PLAYED).map((item) => (
+              <MusicCard
+                key={item.id}
+                title={item.title}
+                artist={item.artist}
+                image={item.albumArt}
+                size="small"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Made for you section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">Made For You</h2>
+        {playlistsLoading ? (
+          <LoadingSkeleton />
+        ) : playlistsError ? (
+          <ErrorMessage message={playlistsError} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {(madeForYou || FALLBACK_MADE_FOR_YOU).map((item) => (
+              <MusicCard
+                key={item.id}
+                title={item.title}
+                artist={item.artist}
+                image={item.albumArt}
+                size="small"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Popular albums section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">Popular Albums</h2>
+        {albumsLoading ? (
+          <LoadingSkeleton />
+        ) : albumsError ? (
+          <ErrorMessage message={albumsError} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {(popularAlbums || FALLBACK_POPULAR_ALBUMS).map((item) => (
+              <MusicCard
+                key={item.id}
+                title={item.title}
+                artist={item.artist}
+                image={item.albumArt}
+                size="small"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Global error message if all sections failed */}
+      {hasError && recentlyPlayedError && albumsError && playlistsError && (
+        <div className="mt-8">
+          <ErrorMessage message="Unable to load data from server. Please check your connection and try again." />
+        </div>
+      )}
+    </div>
+  )
+}
+```
