@@ -102,13 +102,14 @@ export class SchemaDataMapper {
   }
 
   /**
-   * Maps data to recently_played table schema (FIXED: Use actual database fields)
+   * Maps data to recently_played table schema (FIXED: Separate UUID primary key from track identifier)
    */
   private mapToRecentlyPlayedSchema(data: ExtractedDataItem[], tableName: string): MappingResult {
     this.logger.info('🎵 Mapping to recently_played schema');
     
     const records = data.map((item, index) => ({
-      id: item.id || `track_${index + 1}`,
+      // id field will be auto-generated as UUID by database - DO NOT include in mapping
+      track_id: item.id || `track_${index + 1}`, // Use component ID as business identifier
       user_id: DEFAULT_USER_UUID,
       title: item.title,
       artist: item.artist,
@@ -116,7 +117,8 @@ export class SchemaDataMapper {
       image_url: item.albumArt || item.image || '',
       played_at: this.generateRecentTimestamp(index),
       duration: item.duration || 180, // Duration in seconds (not milliseconds)
-      created_at: { __sqlFunction: true, expression: 'NOW()' }
+      created_at: { __sqlFunction: true, expression: 'NOW()' },
+      updated_at: { __sqlFunction: true, expression: 'NOW()' }
     }));
 
     const insertSql = this.generateInsertSQL(tableName, records);

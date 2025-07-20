@@ -112,13 +112,14 @@ class RecentlyPlayedDataPopulator {
   }
 
   /**
-   * Map extracted data to recently_played database schema
+   * Map extracted data to recently_played database schema (FIXED: Use track_id instead of primary key)
    */
   mapToRecentlyPlayedSchema(extractedData) {
     console.log('🗃️ Mapping to recently_played database schema...');
     
     const records = extractedData.map((item, index) => ({
-      id: item.id,
+      // Do NOT include 'id' field - it will be auto-generated as UUID by database
+      track_id: item.id, // Use component ID as business identifier
       user_id: DEFAULT_USER_UUID,
       title: item.title,
       artist: item.artist,
@@ -151,16 +152,16 @@ class RecentlyPlayedDataPopulator {
       return `  (${values.join(', ')})`;
     }).join(',\n');
 
-    // Generate conflict resolution columns (exclude id and created_at)
+    // Generate conflict resolution columns (exclude created_at, use track_id for conflicts)
     const conflictColumns = columns
-      .filter(col => !['id', 'created_at'].includes(col))
+      .filter(col => !['created_at'].includes(col))
       .map(col => `"${col}" = EXCLUDED."${col}"`)
       .join(', ');
 
     return `INSERT INTO ${tableName} (${columnsList})
 VALUES
 ${valuesList}
-ON CONFLICT ("id") DO UPDATE SET ${conflictColumns};`;
+ON CONFLICT ("user_id", "track_id") DO UPDATE SET ${conflictColumns};`;
   }
 
   /**
