@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-20T20:57:18.458Z",
+  "timestamp": "2025-07-20T21:44:02.303Z",
   "state": {
     "database": {
       "tables": [],
@@ -80,9 +80,10 @@
         "20250720T201640_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_timestamps_recently_played.sql",
         "20250720T201743_create_a_recently_played_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql",
         "20250720T202336_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association_recently_played.sql",
-        "20250720T204909_create_a_'recently_played'_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql"
+        "20250720T204909_create_a_'recently_played'_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql",
+        "20250720T205740_create_a_recently_played_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql"
       ],
-      "lastChecked": "2025-07-20T20:57:17.424Z"
+      "lastChecked": "2025-07-20T21:44:01.250Z"
     },
     "api": {
       "routes": [
@@ -115,7 +116,7 @@
           "lastModified": "2025-07-20T20:41:49.955Z"
         }
       ],
-      "lastChecked": "2025-07-20T20:57:18.009Z"
+      "lastChecked": "2025-07-20T21:44:01.722Z"
     },
     "components": {
       "components": [
@@ -1596,10 +1597,15 @@
           "hardcodedDataRemoved": false
         }
       ],
-      "lastChecked": "2025-07-20T20:57:18.013Z"
+      "lastChecked": "2025-07-20T21:44:01.725Z"
     },
     "migrations": {
       "executedMigrations": [
+        {
+          "filename": "20250720T205740_create_a_recently_played_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql",
+          "description": "create a recently played table in supabase to store track history with user association recently played",
+          "executedAt": "2025-07-20T20:57:41.052Z"
+        },
         {
           "filename": "20250720T204909_create_a_'recently_played'_table_in_supabase_to_store_track_history_with_user_association_recently_played.sql",
           "description": "create a 'recently played' table in supabase to store track history with user association recently played",
@@ -1972,47 +1978,43 @@
         }
       ],
       "pendingMigrations": [],
-      "lastChecked": "2025-07-20T20:57:18.077Z"
+      "lastChecked": "2025-07-20T21:44:01.789Z"
     },
     "features": {
       "recently_played": {
-        "implemented": true,
-        "tables": [
-          "recently_played"
-        ],
-        "apis": [
-          "/api/recently-played"
-        ],
+        "implemented": false,
+        "tables": [],
+        "apis": [],
         "components": [],
-        "implementedAt": "2025-07-20T20:57:18.213Z"
+        "implementedAt": "2025-07-20T21:44:01.958Z"
       },
       "made_for_you": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-20T20:57:18.268Z"
+        "implementedAt": "2025-07-20T21:44:02.047Z"
       },
       "popular_albums": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-20T20:57:18.326Z"
+        "implementedAt": "2025-07-20T21:44:02.148Z"
       },
       "user_playlists": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-20T20:57:18.376Z"
+        "implementedAt": "2025-07-20T21:44:02.202Z"
       },
       "search_functionality": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-        "implementedAt": "2025-07-20T20:57:18.457Z"
+        "implementedAt": "2025-07-20T21:44:02.302Z"
       }
     }
   }

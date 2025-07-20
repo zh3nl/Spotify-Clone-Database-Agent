@@ -1433,5 +1433,22 @@
         "@supabase/supabase-js"
       ]
     }
+  },
+  {
+    "operationId": "1753047861794-0",
+    "type": "create_table",
+    "description": "Create a 'recently_played' table in Supabase to store user's recently played tracks",
+    "targetFiles": [
+      "src/lib/database/schema.sql",
+      "src/lib/migrations/20250720T214422_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_recently_played.sql"
+    ],
+    "success": false,
+    "executedAt": "2025-07-20T21:44:22.961Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "@supabase/supabase-js"
+      ]
+    }
   }
 ]
