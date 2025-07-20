@@ -2,7 +2,12 @@
 "use client"
 
 import { Play, User } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
+import { 
+  useRecentlyPlayedTracks, 
+  usePopularAlbums, 
+  useMadeForYouPlaylists 
+} from "@/hooks"
 
 interface Track {
   id: string
@@ -10,24 +15,6 @@ interface Track {
   artist: string
   album: string
   albumArt: string
-  duration: number
-}
-
-interface Album {
-  id: string
-  title: string
-  artist: string
-  image: string
-  album: string
-  duration: number
-}
-
-interface Playlist {
-  id: string
-  title: string
-  artist: string
-  image: string
-  album: string
   duration: number
 }
 
@@ -98,253 +85,306 @@ interface SpotifyMainContentProps {
   onPlayTrack?: (track: Track) => void
 }
 
+// Fallback data in case API fails
+const FALLBACK_RECENTLY_PLAYED: Track[] = [
+  { 
+    id: "1",
+    title: "Liked Songs", 
+    artist: "320 songs",
+    album: "Your Music",
+    albumArt: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
+    duration: 180
+  },
+  { 
+    id: "2",
+    title: "Discover Weekly", 
+    artist: "Spotify",
+    album: "Weekly Mix",
+    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+    duration: 210
+  },
+  { 
+    id: "3",
+    title: "Release Radar", 
+    artist: "Spotify",
+    album: "New Releases",
+    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+    duration: 195
+  },
+  { 
+    id: "4",
+    title: "Daily Mix 1", 
+    artist: "Spotify",
+    album: "Daily Mix",
+    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+    duration: 225
+  },
+  { 
+    id: "5",
+    title: "Chill Hits", 
+    artist: "Spotify",
+    album: "Chill Collection",
+    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+    duration: 240
+  },
+  { 
+    id: "6",
+    title: "Top 50 - Global", 
+    artist: "Spotify",
+    album: "Global Charts",
+    albumArt: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
+    duration: 205
+  }
+];
+
+const FALLBACK_MADE_FOR_YOU: Track[] = [
+  { 
+    id: "7",
+    title: "Discover Weekly", 
+    artist: "Your weekly mixtape of fresh music",
+    album: "Weekly Discovery",
+    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+    duration: 210
+  },
+  { 
+    id: "8",
+    title: "Release Radar", 
+    artist: "Catch all the latest music from artists you follow",
+    album: "New Music Friday",
+    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+    duration: 195
+  },
+  { 
+    id: "9",
+    title: "Daily Mix 1", 
+    artist: "Billie Eilish, Lorde, Clairo and more",
+    album: "Alternative Mix",
+    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+    duration: 225
+  },
+  { 
+    id: "10",
+    title: "Daily Mix 2", 
+    artist: "Arctic Monkeys, The Strokes, Tame Impala and more",
+    album: "Indie Rock Mix",
+    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+    duration: 240
+  },
+  { 
+    id: "11",
+    title: "Daily Mix 3", 
+    artist: "Taylor Swift, Olivia Rodrigo, Gracie Abrams and more",
+    album: "Pop Mix",
+    albumArt: "https://v3.fal.media/files/rabbit/b11V_uidRMsa2mTr5mCfz_output.png",
+    duration: 190
+  },
+  { 
+    id: "12",
+    title: "On Repeat", 
+    artist: "The songs you can't get enough of",
+    album: "Your Favorites",
+    albumArt: "https://v3.fal.media/files/rabbit/mVegWQYIe0yj8NixTQQG-_output.png",
+    duration: 220
+  }
+];
+
+const FALLBACK_POPULAR_ALBUMS: Track[] = [
+  { 
+    id: "13",
+    title: "Midnights", 
+    artist: "Taylor Swift",
+    album: "Midnights",
+    albumArt: "https://v3.fal.media/files/elephant/C_rLsEbIUdbn6nQ0wz14S_output.png",
+    duration: 275
+  },
+  { 
+    id: "14",
+    title: "Harry's House", 
+    artist: "Harry Styles",
+    album: "Harry's House",
+    albumArt: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
+    duration: 245
+  },
+  { 
+    id: "15",
+    title: "Un Verano Sin Ti", 
+    artist: "Bad Bunny",
+    album: "Un Verano Sin Ti",
+    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+    duration: 265
+  },
+  { 
+    id: "16",
+    title: "Renaissance", 
+    artist: "Beyoncé",
+    album: "Renaissance",
+    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+    duration: 290
+  },
+  { 
+    id: "17",
+    title: "SOUR", 
+    artist: "Olivia Rodrigo",
+    album: "SOUR",
+    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+    duration: 215
+  },
+  { 
+    id: "18",
+    title: "Folklore", 
+    artist: "Taylor Swift",
+    album: "Folklore",
+    albumArt: "https://v3.fal.media/files/rabbit/b11V_uidRMsa2mTr5mCfz_output.png",
+    duration: 285
+  },
+  { 
+    id: "19",
+    title: "Fine Line", 
+    artist: "Harry Styles",
+    album: "Fine Line",
+    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+    duration: 255
+  },
+  { 
+    id: "20",
+    title: "After Hours", 
+    artist: "The Weeknd",
+    album: "After Hours",
+    albumArt: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
+    duration: 270
+  }
+];
+
 export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentProps) {
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Playlist[]>([])
-  const [madeForYou, setMadeForYou] = useState<Playlist[]>([])
-  const [popularAlbums, setPopularAlbums] = useState<Album[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Use the custom hooks to fetch data
+  const { data: recentlyPlayed, isLoading: recentlyPlayedLoading, error: recentlyPlayedError } = useRecentlyPlayedTracks(12);
+  const { data: popularAlbums, isLoading: albumsLoading, error: albumsError } = usePopularAlbums(12);
+  const { data: madeForYou, isLoading: playlistsLoading, error: playlistsError } = useMadeForYouPlaylists(12);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      setError(null)
-      
-      try {
-        // Fetch recently played tracks
-        const recentlyPlayedRes = await fetch('/api/spotify/recently-played')
-        if (!recentlyPlayedRes.ok) throw new Error('Failed to fetch recently played tracks')
-        const recentlyPlayedData = await recentlyPlayedRes.json()
-        setRecentlyPlayed(recentlyPlayedData)
-        
-        // Fetch made for you playlists
-        const madeForYouRes = await fetch('/api/spotify/made-for-you')
-        if (!madeForYouRes.ok) throw new Error('Failed to fetch made for you playlists')
-        const madeForYouData = await madeForYouRes.json()
-        setMadeForYou(madeForYouData)
-        
-        // Fetch popular albums
-        const popularAlbumsRes = await fetch('/api/spotify/popular-albums')
-        if (!popularAlbumsRes.ok) throw new Error('Failed to fetch popular albums')
-        const popularAlbumsData = await popularAlbumsRes.json()
-        setPopularAlbums(popularAlbumsData)
-      } catch (err) {
-        console.error('Error fetching data:', err)
-        setError(err instanceof Error ? err.message : 'An unknown error occurred')
-        
-        // Fallback data in case of error
-        setRecentlyPlayed([
-          { 
-            id: "1",
-            title: "Liked Songs", 
-            artist: "320 songs",
-            album: "Your Music",
-            image: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
-            duration: 180
-          },
-          { 
-            id: "2",
-            title: "Discover Weekly", 
-            artist: "Spotify",
-            album: "Weekly Mix",
-            image: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
-            duration: 210
-          },
-          { 
-            id: "3",
-            title: "Release Radar", 
-            artist: "Spotify",
-            album: "New Releases",
-            image: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
-            duration: 195
-          },
-          { 
-            id: "4",
-            title: "Daily Mix 1", 
-            artist: "Spotify",
-            album: "Daily Mix",
-            image: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
-            duration: 225
-          },
-          { 
-            id: "5",
-            title: "Chill Hits", 
-            artist: "Spotify",
-            album: "Chill Collection",
-            image: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
-            duration: 240
-          },
-          { 
-            id: "6",
-            title: "Top 50 - Global", 
-            artist: "Spotify",
-            album: "Global Charts",
-            image: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
-            duration: 205
-          }
-        ])
-        
-        setMadeForYou([
-          { 
-            id: "7",
-            title: "Discover Weekly", 
-            artist: "Your weekly mixtape of fresh music",
-            album: "Weekly Discovery",
-            image: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
-            duration: 210
-          },
-          { 
-            id: "8",
-            title: "Release Radar", 
-            artist: "Catch all the latest music from artists you follow",
-            album: "New Music Friday",
-            image: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
-            duration: 195
-          },
-          { 
-            id: "9",
-            title: "Daily Mix 1", 
-            artist: "Billie Eilish, Lorde, Clairo and more",
-            album: "Alternative Mix",
-            image: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
-            duration: 225
-          },
-          { 
-            id: "10",
-            title: "Daily Mix 2", 
-            artist: "Arctic Monkeys, The Strokes, Tame Impala and more",
-            album: "Indie Rock Mix",
-            image: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
-            duration: 240
-          },
-          { 
-            id: "11",
-            title: "Daily Mix 3", 
-            artist: "Taylor Swift, Olivia Rodrigo, Gracie Abrams and more",
-            album: "Pop Mix",
-            image: "https://v3.fal.media/files/rabbit/b11V_uidRMsa2mTr5mCfz_output.png",
-            duration: 190
-          },
-          { 
-            id: "12",
-            title: "On Repeat", 
-            artist: "The songs you can't get enough of",
-            album: "Your Favorites",
-            image: "https://v3.fal.media/files/rabbit/mVegWQYIe0yj8NixTQQG-_output.png",
-            duration: 220
-          }
-        ])
-        
-        setPopularAlbums([
-          { 
-            id: "13",
-            title: "Midnights", 
-            artist: "Taylor Swift",
-            album: "Midnights",
-            image: "https://v3.fal.media/files/elephant/C_rLsEbIUdbn6nQ0wz14S_output.png",
-            duration: 275
-          },
-          { 
-            id: "14",
-            title: "Harry's House", 
-            artist: "Harry Styles",
-            album: "Harry's House",
-            image: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
-            duration: 245
-          },
-          { 
-            id: "15",
-            title: "Un Verano Sin Ti", 
-            artist: "Bad Bunny",
-            album: "Un Verano Sin Ti",
-            image: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
-            duration: 265
-          },
-          { 
-            id: "16",
-            title: "Renaissance", 
-            artist: "Beyoncé",
-            album: "Renaissance",
-            image: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
-            duration: 290
-          },
-          { 
-            id: "17",
-            title: "SOUR", 
-            artist: "Olivia Rodrigo",
-            album: "SOUR",
-            image: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
-            duration: 215
-          },
-          { 
-            id: "18",
-            title: "Folklore", 
-            artist: "Taylor Swift",
-            album: "Folklore",
-            image: "https://v3.fal.media/files/rabbit/b11V_uidRMsa2mTr5mCfz_output.png",
-            duration: 285
-          },
-          { 
-            id: "19",
-            title: "Fine Line", 
-            artist: "Harry Styles",
-            album: "Fine Line",
-            image: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
-            duration: 255
-          },
-          { 
-            id: "20",
-            title: "After Hours", 
-            artist: "The Weeknd",
-            album: "After Hours",
-            image: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
-            duration: 270
-          }
-        ])
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  // Determine overall loading and error states
+  const isLoading = recentlyPlayedLoading || albumsLoading || playlistsLoading;
+  const hasError = recentlyPlayedError || albumsError || playlistsError;
 
-    fetchData()
-  }, [])
-
-  const handlePlayTrack = (item: any) => {
+  const handlePlayTrack = (item: Track) => {
     const track: Track = {
       id: item.id,
       title: item.title,
       artist: item.artist,
       album: item.album,
-      albumArt: item.image || '/api/placeholder/56/56',
+      albumArt: item.albumArt || '/api/placeholder/56/56',
       duration: item.duration
     }
     onPlayTrack?.(track)
   }
 
-  // Loading skeleton
-  if (isLoading) {
-    return (
-      <div className="bg-[var(--color-background-primary)] text-[var(--color-text-primary)] min-h-screen p-6">
-        <div className="h-8 w-48 bg-[var(--color-muted)] rounded-md mb-8 animate-pulse"></div>
-        
-        <div className="mb-8">
-          <div className="h-6 w-36 bg-[var(--color-muted)] rounded-md mb-6 animate-pulse"></div>
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex-shrink-0">
-                <div className="w-[180px] h-[180px] bg-[var(--color-muted)] rounded-lg mb-4 animate-pulse"></div>
-                <div className="h-4 w-32 bg-[var(--color-muted)] rounded-md mb-2 animate-pulse"></div>
-                <div className="h-3 w-24 bg-[var(--color-muted)] rounded-md animate-pulse"></div>
-              </div>
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="flex-shrink-0 w-[180px]">
+            <div className="p-4">
+              <div className="w-[180px] h-[180px] bg-gray-700 rounded-lg mb-4"></div>
+              <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  // Error message component
+  const ErrorMessage = ({ message }: { message: string }) => (
+    <div className="p-6 bg-red-900/20 border border-red-700 rounded-lg text-center">
+      <p className="text-red-400">{message}</p>
+      <button 
+        onClick={() => window.location.reload()}
+        className="mt-4 px-4 py-2 bg-red-700 hover:bg-red-600 rounded-md text-white text-sm"
+      >
+        Retry
+      </button>
+    </div>
+  )
+
+  return (
+    <div className="p-6 space-y-8">
+      {/* Recently played section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">Recently Played</h2>
+        {recentlyPlayedLoading ? (
+          <LoadingSkeleton />
+        ) : recentlyPlayedError ? (
+          <ErrorMessage message={recentlyPlayedError} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {(recentlyPlayed || FALLBACK_RECENTLY_PLAYED).map((item) => (
+              <MusicCard
+                key={item.id}
+                title={item.title}
+                artist={item.artist}
+                image={item.albumArt}
+                size="small"
+                onPlay={() => handlePlayTrack(item)}
+              />
             ))}
           </div>
+        )}
+      </section>
+
+      {/* Made for you section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">Made For You</h2>
+        {playlistsLoading ? (
+          <LoadingSkeleton />
+        ) : playlistsError ? (
+          <ErrorMessage message={playlistsError} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {(madeForYou || FALLBACK_MADE_FOR_YOU).map((item) => (
+              <MusicCard
+                key={item.id}
+                title={item.title}
+                artist={item.artist}
+                image={item.albumArt}
+                size="small"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Popular albums section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6">Popular Albums</h2>
+        {albumsLoading ? (
+          <LoadingSkeleton />
+        ) : albumsError ? (
+          <ErrorMessage message={albumsError} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {(popularAlbums || FALLBACK_POPULAR_ALBUMS).map((item) => (
+              <MusicCard
+                key={item.id}
+                title={item.title}
+                artist={item.artist}
+                image={item.albumArt}
+                size="small"
+                onPlay={() => handlePlayTrack(item)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Global error message if all sections failed */}
+      {hasError && recentlyPlayedError && albumsError && playlistsError && (
+        <div className="mt-8">
+          <ErrorMessage message="Unable to load data from server. Please check your connection and try again." />
         </div>
-        
-        <div className="mb-8">
-          <div className="h-6 w-36 bg-[var(--color-muted)] rounded-md mb-6 animate-pulse"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i}>
-                <div className="w-full aspect-square bg-[var(--color-muted)] rounded-lg mb-4 animate-pulse"></div>
-                <div className="h-4 w-32 bg-[var(--color-muted)] rounded-md mb-2 animate-pulse"></div>
-                <div className="h-3 w-24 bg-[var(--color-muted)] rounded-md animate-pulse"></div>
+      )}
+    </div>
+  )
+}
+```

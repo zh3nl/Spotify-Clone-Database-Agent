@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "timestamp": "2025-07-20T01:38:26.677Z",
+=======
+  "timestamp": "2025-07-20T00:17:55.301Z",
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
   "state": {
     "database": {
       "tables": [],
@@ -17,6 +21,7 @@
         "20250719T234230_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
         "20250720T000431_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
         "20250720T000714_create_'albums'_table_to_store_popular_albums_data.sql",
+<<<<<<< HEAD
         "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
         "20250720T001818_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
         "20250720T002707_create_'albums'_table_in_supabase_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics.sql",
@@ -25,27 +30,64 @@
         "20250720T012849_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql"
       ],
       "lastChecked": "2025-07-20T01:38:25.628Z"
+=======
+        "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql"
+      ],
+      "lastChecked": "2025-07-20T00:17:54.314Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
     },
     "api": {
       "routes": [
         {
-          "path": "/api/recently-played\\add",
+          "path": "/api/albums\\popular",
           "methods": [
+            "GET",
             "POST"
           ],
           "exists": true,
+<<<<<<< HEAD
           "lastModified": "2025-07-20T01:38:16.428Z"
+=======
+          "lastModified": "2025-07-20T00:12:05.505Z"
+        },
+        {
+          "path": "/api/playlists\\made-for-you",
+          "methods": [
+            "GET",
+            "POST",
+            "DELETE"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-20T00:15:41.980Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
         },
         {
           "path": "/api/recently-played",
           "methods": [
-            "GET"
+            "GET",
+            "POST"
           ],
           "exists": true,
+<<<<<<< HEAD
           "lastModified": "2025-07-20T01:38:16.429Z"
         }
       ],
       "lastChecked": "2025-07-20T01:38:26.128Z"
+=======
+          "lastModified": "2025-07-19T17:08:25.115Z"
+        },
+        {
+          "path": "/api/tracks\\recently-played",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "exists": true,
+          "lastModified": "2025-07-19T17:08:58.386Z"
+        }
+      ],
+      "lastChecked": "2025-07-20T00:17:54.784Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
     },
     "components": {
       "components": [
@@ -760,13 +802,21 @@
         {
           "path": "src\\components\\spotify-main-content.tsx",
           "hasDatabase": false,
+<<<<<<< HEAD
           "lastModified": "2025-07-20T01:38:16.429Z",
+=======
+          "lastModified": "2025-07-20T00:06:07.868Z",
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
           "hardcodedDataRemoved": false
         },
         {
           "path": "src\\components\\spotify-player.tsx",
           "hasDatabase": true,
+<<<<<<< HEAD
           "lastModified": "2025-07-20T01:38:16.431Z",
+=======
+          "lastModified": "2025-07-19T17:19:48.737Z",
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
           "hardcodedDataRemoved": true
         },
         {
@@ -1526,11 +1576,16 @@
           "hardcodedDataRemoved": false
         }
       ],
+<<<<<<< HEAD
       "lastChecked": "2025-07-20T01:38:26.131Z"
+=======
+      "lastChecked": "2025-07-20T00:17:54.786Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
     },
     "migrations": {
       "executedMigrations": [
         {
+<<<<<<< HEAD
           "filename": "20250720T012849_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
           "description": "create a 'recently played' table in supabase to store track play history with user association",
           "executedAt": "2025-07-20T01:28:50.970Z"
@@ -1556,6 +1611,8 @@
           "executedAt": "2025-07-20T00:18:19.340Z"
         },
         {
+=======
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
           "filename": "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
           "description": "create 'playlists' table to store 'made for you' playlists",
           "executedAt": "2025-07-20T00:07:16.903Z"
@@ -1610,6 +1667,7 @@
           "description": "create a 'recently played' table in supabase to store user's recently played tracks with proper relationships",
           "executedAt": "2025-07-18T22:31:49.724Z"
         }
+<<<<<<< HEAD
       ],
       "pendingMigrations": [
         "20250717T220714_create_a_'recently_played'_table_in_supabase_to_store_track_history_with_user_association.sql",
@@ -1618,6 +1676,11 @@
         "20250717T223322_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
       ],
       "lastChecked": "2025-07-20T01:38:26.198Z"
+=======
+      ],
+      "pendingMigrations": [],
+      "lastChecked": "2025-07-20T00:17:54.857Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
     },
     "features": {
       "recently_played": {
@@ -1629,35 +1692,55 @@
           "/api/recently-played"
         ],
         "components": [],
+<<<<<<< HEAD
         "implementedAt": "2025-07-20T01:38:26.378Z"
+=======
+        "implementedAt": "2025-07-20T00:17:55.013Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
       },
       "made_for_you": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
+<<<<<<< HEAD
         "implementedAt": "2025-07-20T01:38:26.462Z"
+=======
+        "implementedAt": "2025-07-20T00:17:55.108Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
       },
       "popular_albums": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
+<<<<<<< HEAD
         "implementedAt": "2025-07-20T01:38:26.536Z"
+=======
+        "implementedAt": "2025-07-20T00:17:55.183Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
       },
       "user_playlists": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
+<<<<<<< HEAD
         "implementedAt": "2025-07-20T01:38:26.593Z"
+=======
+        "implementedAt": "2025-07-20T00:17:55.245Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
       },
       "search_functionality": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
+<<<<<<< HEAD
         "implementedAt": "2025-07-20T01:38:26.677Z"
+=======
+        "implementedAt": "2025-07-20T00:17:55.301Z"
+>>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
       }
     }
   }

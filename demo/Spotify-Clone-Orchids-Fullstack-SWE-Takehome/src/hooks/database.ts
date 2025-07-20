@@ -40,7 +40,7 @@ interface UseRecentlyPlayedTracksOptions {
 /**
  * Custom hook to fetch and manage recently played tracks
  * 
- * @param options Configuration options for the hook
+ * @param options - Configuration options for the hook
  * @returns Object containing tracks, loading state, error state, and refetch function
  */
 export function useRecentlyPlayedTracks(
@@ -56,65 +56,82 @@ export function useRecentlyPlayedTracks(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   
-  // Create a cache key based on the limit
+  // Cache key for localStorage
   const cacheKey = `recently-played-tracks-${limit}`;
-
+  
   /**
-   * Fetches recently played tracks from the API
+   * Fetch recently played tracks from the API
    */
   const fetchTracks = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       
-      // Check cache first
-      const cachedData = localStorage.getItem(cacheKey);
-      const cachedTime = localStorage.getItem(`${cacheKey}-timestamp`);
+      const response = await axios.get<RecentTrack[]>('/api/tracks/recently-played', {
+        params: { limit }
+      });
       
-      // Use cache if it's less than 5 minutes old
-      if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < 300000) {
-        setTracks(JSON.parse(cachedData));
-        setLoading(false);
-        return;
-      }
-      
-      const response = await axios.get<RecentTrack[]>(`/api/recently-played?limit=${limit}`);
-      
-      // Update state with fetched data
       setTracks(response.data);
       
-      // Cache the response
-      localStorage.setItem(cacheKey, JSON.stringify(response.data));
-      localStorage.setItem(`${cacheKey}-timestamp`, Date.now().toString());
-      
+      // Cache the results
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data: response.data,
+        timestamp: Date.now()
+      }));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch recently played tracks'));
+      
+      // Try to load from cache if API request fails
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        try {
+          const { data } = JSON.parse(cachedData);
+          setTracks(data);
+        } catch (cacheErr) {
+          // If cache parsing fails, keep the error state
+        }
+      }
     } finally {
       setLoading(false);
     }
   }, [limit, cacheKey]);
-
-  // Initial fetch
+  
+  /**
+   * Initialize the hook by loading from cache first, then fetching fresh data
+   */
   useEffect(() => {
+    // Try to load from cache first for immediate display
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+      try {
+        const { data, timestamp } = JSON.parse(cachedData);
+        
+        // Only use cache if it's less than 5 minutes old
+        if (Date.now() - timestamp < 5 * 60 * 1000) {
+          setTracks(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        // If cache parsing fails, continue to fetch
+      }
+    }
+    
+    // Fetch fresh data
     fetchTracks();
-  }, [fetchTracks]);
-
-  // Set up auto-refresh if enabled
-  useEffect(() => {
-    if (!autoRefresh) return;
     
-    const intervalId = setInterval(() => {
-      fetchTracks();
-    }, refreshInterval);
+    // Set up auto-refresh if enabled
+    let intervalId: NodeJS.Timeout | undefined;
+    if (autoRefresh && refreshInterval > 0) {
+      intervalId = setInterval(fetchTracks, refreshInterval);
+    }
     
-    return () => clearInterval(intervalId);
-  }, [autoRefresh, refreshInterval, fetchTracks]);
-
-  return {
-    tracks,
-    loading,
-    error,
-    refetch: fetchTracks
-  };
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [fetchTracks, autoRefresh, refreshInterval, cacheKey]);
+  
+  return { tracks, loading, error, refetch: fetchTracks };
 }
 ```

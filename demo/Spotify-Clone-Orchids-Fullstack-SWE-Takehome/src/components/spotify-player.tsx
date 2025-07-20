@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { 
@@ -18,6 +18,7 @@ import {
   Heart,
   PictureInPicture2 
 } from 'lucide-react'
+import { toast } from "@/components/ui/use-toast"
 
 interface Track {
   id: string
@@ -68,6 +69,7 @@ export default function SpotifyPlayer({
   const [localVolume, setLocalVolume] = useState(volume)
   const [isMuted, setIsMuted] = useState(false)
   const [previousVolume, setPreviousVolume] = useState(volume)
+  const [isRecordingPlay, setIsRecordingPlay] = useState(false)
 
   // Default track when no track is selected
   const defaultTrack: Track = {
@@ -90,6 +92,38 @@ export default function SpotifyPlayer({
   useEffect(() => {
     setLocalVolume(volume)
   }, [volume])
+
+  // Record track play when a song starts playing
+  useEffect(() => {
+    const recordTrackPlay = async () => {
+      if (isPlaying && currentTrack && !isRecordingPlay) {
+        setIsRecordingPlay(true)
+        try {
+          const response = await fetch('/api/track-plays', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              trackId: currentTrack.id,
+              playedAt: new Date().toISOString(),
+            }),
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to record track play');
+          }
+        } catch (error) {
+          console.error('Error recording track play:', error);
+          // Silent failure - don't interrupt user experience
+        } finally {
+          setIsRecordingPlay(false)
+        }
+      }
+    };
+
+    recordTrackPlay();
+  }, [isPlaying, currentTrack, isRecordingPlay]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
@@ -124,6 +158,10 @@ export default function SpotifyPlayer({
       onVolumeChange(0)
     }
   }
+
+  const handlePlayPause = useCallback(async () => {
+    onPlayPause();
+  }, [onPlayPause]);
 
   const getVolumeIcon = () => {
     if (isMuted || localVolume === 0) return VolumeX
@@ -271,8 +309,8 @@ export default function SpotifyPlayer({
                     ? 'bg-white text-black hover:bg-[#f0f0f0]' 
                     : 'bg-[#535353] text-[#b3b3b3] cursor-not-allowed'
                 }`}
-                onClick={onPlayPause}
-                disabled={!currentTrack}
+                onClick={handlePlayPause}
+                disabled={!currentTrack || isRecordingPlay}
               >
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
               </Button>
@@ -353,7 +391,7 @@ export default function SpotifyPlayer({
                   max={100}
                   step={1}
                   onValueChange={handleVolumeChange}
-                  className="custom-slider volume-slider w-full"
+                  className="volume-slider custom-slider"
                 />
               </div>
             </div>

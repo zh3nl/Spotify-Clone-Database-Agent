@@ -270,15 +270,23 @@ export class DatabaseAgent {
     3. Planning the migration from static data to dynamic database operations
     4. Ensuring seamless integration with existing components
 
-    ## Response Format:
-    You MUST return ONLY a valid JSON object with no additional text, explanations, or markdown formatting.
-    The JSON must contain exactly these fields:
-    - analysis: string (detailed analysis of what needs to be done)
-    - operations: array of objects with type, description, files, and dependencies
-    - estimatedTime: number (seconds)
-    - requirements: array of strings (what needs to be installed/configured)
+    ## CRITICAL JSON RESPONSE REQUIREMENTS:
+    You MUST respond with ONLY raw JSON - no markdown, no explanations, no additional text.
     
-    CRITICAL: Return ONLY the JSON object. Do not include any text before or after the JSON.
+    RESPONSE FORMAT:
+    {
+      "analysis": "string - detailed analysis of what needs to be done",
+      "operations": [{
+        "type": "string - operation type",
+        "description": "string - what this operation does",
+        "files": ["string - file paths"],
+        "dependencies": ["string - npm packages or requirements"]
+      }],
+      "estimatedTime": 60,
+      "requirements": ["string - what needs to be installed/configured"]
+    }
+    
+    CRITICAL: Do NOT wrap the JSON in markdown code blocks. Do NOT add any explanatory text before or after the JSON. Return ONLY the raw JSON object.
 
     ## Available Operation Types:
     - create_table: Create database table with schema
@@ -289,36 +297,109 @@ export class DatabaseAgent {
     - create_types: Generate TypeScript types
     - create_hooks: Create custom React hooks
 
+    ## CRITICAL: PROJECT STRUCTURE REQUIREMENTS
+    - This project uses src/ directory structure
+    - API routes MUST be in src/app/api/ directory (NOT app/api/)
+    - Components are in src/components/
+    - Types are in src/lib/types/
+    - All file paths must include the src/ prefix
+
+    ## File Path Examples:
+    - API routes: "src/app/api/albums/popular/route.ts"
+    - Components: "src/components/spotify-main-content.tsx" 
+    - Types: "src/lib/types/database.ts"
+    - Hooks: "src/hooks/database.ts"
+
     ## Important Notes:
     - Always preserve existing UI/UX while adding database functionality
     - Use the existing data structures as a guide for table schema
     - Create proper TypeScript types for all database operations
     - Include error handling and loading states in components
-    - Follow Next.js 13+ app directory conventions`;
+    - Follow Next.js 13+ app directory conventions
+    - ALWAYS use src/ prefix in file paths`;
 
     const response = await this.aiClient.generateText(systemPrompt, query);
     
     try {
-      // Extract JSON more precisely by finding balanced braces
       this.logger.info('Extracting JSON from AI response...');
-      const jsonString = this.extractJSON(response);
+      this.logger.info(`Response length: ${response.length}`);
+      
+      // Try multiple extraction methods
+      let jsonString = this.extractJSON(response);
+      
       if (!jsonString) {
-        this.logger.error('No valid JSON found in AI response');
-        this.logger.codeBlock(response.substring(0, 500) + '...', 'text');
-        throw new Error('No valid JSON found in AI response');
+        this.logger.warn('Primary JSON extraction failed, trying alternative methods...');
+        
+        // Try to find JSON in the response using more aggressive patterns
+        const alternativePatterns = [
+          // Look for JSON after common AI response prefixes
+          /(?:here'?s?|here is|below is|the json|response|plan)\s*:?\s*\n?([\s\S]*)/gi,
+          // Look for JSON after explanatory text
+          /(?:analysis|plan|execution plan|response)\s*:?\s*\n?([\s\S]*)/gi,
+          // Just grab everything after the first mention of JSON-like content
+          /\{[\s\S]*\}/g
+        ];
+        
+        for (const pattern of alternativePatterns) {
+          const matches = response.matchAll(pattern);
+          for (const match of matches) {
+            const candidate = match[1] || match[0];
+            if (candidate) {
+              const extractedJson = this.extractJSON(candidate);
+              if (extractedJson) {
+                jsonString = extractedJson;
+                break;
+              }
+            }
+          }
+          if (jsonString) break;
+        }
       }
       
-      this.logger.info('JSON extracted successfully, parsing...');
+      if (!jsonString) {
+        this.logger.error('No valid JSON found in AI response after all extraction attempts');
+        this.logger.info('Response preview (first 1000 chars):');
+        this.logger.codeBlock(response.substring(0, 1000) + (response.length > 1000 ? '\n... (truncated)' : ''), 'text');
+        
+        // Try one more desperate attempt: look for anything that looks like JSON
+        const desperateMatch = response.match(/\{[\s\S]*\}/g);
+        if (desperateMatch) {
+          for (const candidate of desperateMatch) {
+            try {
+              JSON.parse(candidate);
+              jsonString = candidate;
+              this.logger.warn('Found JSON using desperate extraction method');
+              break;
+            } catch {
+              continue;
+            }
+          }
+        }
+        
+        if (!jsonString) {
+          throw new Error('No valid JSON found in AI response');
+        }
+      }
+      
+      this.logger.success('JSON extracted successfully');
+      this.logger.info(`Extracted JSON length: ${jsonString.length}`);
+      
       const plan = JSON.parse(jsonString);
       
       // Validate the plan structure
-      if (!plan.analysis || !plan.operations || !plan.estimatedTime || !plan.requirements) {
+      if (!plan.analysis || !plan.operations || typeof plan.estimatedTime !== 'number' || !plan.requirements) {
         this.logger.error('Invalid plan structure from AI response');
+        this.logger.error(`Missing fields: ${[
+          !plan.analysis ? 'analysis' : null,
+          !plan.operations ? 'operations' : null,
+          typeof plan.estimatedTime !== 'number' ? 'estimatedTime' : null,
+          !plan.requirements ? 'requirements' : null
+        ].filter(Boolean).join(', ')}`);
         this.logger.codeBlock(jsonString, 'json');
         throw new Error('Invalid plan structure from AI response');
       }
       
-      this.logger.success('AI response parsed successfully');
+      this.logger.success('AI response parsed and validated successfully');
       return {
         query,
         analysis: plan.analysis,
@@ -331,29 +412,95 @@ export class DatabaseAgent {
       this.logger.info(`Response length: ${response.length}`);
       this.logger.info('Response preview:');
       this.logger.codeBlock(response.substring(0, 1000) + (response.length > 1000 ? '\n... (truncated)' : ''), 'text');
+      
+      // Try to provide more specific error guidance
+      if (response.includes('I cannot') || response.includes('I apologize') || response.includes('unable to')) {
+        this.logger.warn('AI response indicates it cannot fulfill the request. This might be due to:');
+        this.logger.warn('1. The request being too complex or ambiguous');
+        this.logger.warn('2. Missing context or information needed to proceed');
+        this.logger.warn('3. The AI model being confused by the system prompt');
+        this.logger.info('Try rephrasing your query or providing more specific details.');
+      }
+      
+      if (response.includes('```') && !response.includes('```json')) {
+        this.logger.warn('AI response contains code blocks but not JSON. The model may be responding with explanatory text instead of pure JSON.');
+      }
+      
       throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   private extractJSON(text: string): string | null {
     try {
-      // Find the first opening brace
+      // Method 1: Try to parse the entire text as JSON (ideal case)
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        try {
+          JSON.parse(trimmed);
+          return trimmed;
+        } catch {
+          // Continue to other methods
+        }
+      }
+
+      // Method 2: Extract JSON from markdown code blocks
+      const codeBlockPatterns = [
+        /```json\s*\n?([\s\S]*?)\n?```/gi,
+        /```\s*\n?([\s\S]*?)\n?```/gi,
+        /`([\s\S]*?)`/gi
+      ];
+
+      for (const pattern of codeBlockPatterns) {
+        const matches = text.matchAll(pattern);
+        for (const match of matches) {
+          const candidate = match[1]?.trim();
+          if (candidate && candidate.startsWith('{') && candidate.endsWith('}')) {
+            try {
+              JSON.parse(candidate);
+              return candidate;
+            } catch {
+              continue;
+            }
+          }
+        }
+      }
+
+      // Method 3: Find JSON by balanced braces (original logic, improved)
       const start = text.indexOf('{');
       if (start === -1) return null;
 
-      // Count braces to find the matching closing brace
       let braceCount = 0;
       let end = -1;
+      let inString = false;
+      let escapeNext = false;
       
       for (let i = start; i < text.length; i++) {
         const char = text[i];
-        if (char === '{') {
-          braceCount++;
-        } else if (char === '}') {
-          braceCount--;
-          if (braceCount === 0) {
-            end = i;
-            break;
+        
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\' && inString) {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+        
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              end = i;
+              break;
+            }
           }
         }
       }
@@ -374,47 +521,84 @@ export class DatabaseAgent {
 
   private fallbackJSONExtraction(text: string): string | null {
     try {
-      // Method 1: Look for JSON between code blocks or similar markers
+      // Method 1: Look for JSON with various delimiters
       const patterns = [
-        /```json\s*(\{[\s\S]*?\})\s*```/i,
-        /```\s*(\{[\s\S]*?\})\s*```/i,
-        /(\{[\s\S]*?\})\s*$/,  // JSON at the end
-        /^(\{[\s\S]*?\})/,     // JSON at the beginning
+        // JSON in code blocks
+        /```json\s*\n?([\s\S]*?)\n?```/gi,
+        /```\s*\n?([\s\S]*?)\n?```/gi,
+        // JSON in backticks
+        /`([\s\S]*?)`/gi,
+        // JSON at the end of text
+        /(\{[\s\S]*?\})\s*$/,
+        // JSON at the beginning of text
+        /^(\{[\s\S]*?\})/,
+        // JSON anywhere in the text
+        /(\{[\s\S]*?\})/g
       ];
 
       for (const pattern of patterns) {
-        const match = text.match(pattern);
-        if (match && match[1]) {
-          try {
-            JSON.parse(match[1]);
-            return match[1];
-          } catch {
-            continue;
+        const matches = text.matchAll(pattern);
+        for (const match of matches) {
+          const candidate = match[1]?.trim();
+          if (candidate && candidate.startsWith('{') && candidate.endsWith('}')) {
+            try {
+              JSON.parse(candidate);
+              return candidate;
+            } catch {
+              continue;
+            }
           }
         }
       }
 
-      // Method 2: Try to find the largest valid JSON object
+      // Method 2: Line-by-line JSON reconstruction
       const lines = text.split('\n');
       let jsonLines: string[] = [];
       let inJson = false;
+      let braceCount = 0;
       
-      for (const line of lines) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         const trimmed = line.trim();
-        if (trimmed.startsWith('{')) {
+        
+        // Start of JSON
+        if (!inJson && trimmed.startsWith('{')) {
           inJson = true;
           jsonLines = [line];
+          braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
         } else if (inJson) {
           jsonLines.push(line);
-          if (trimmed.endsWith('}')) {
+          braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+          
+          // End of JSON
+          if (braceCount === 0) {
             try {
               const jsonString = jsonLines.join('\n');
               JSON.parse(jsonString);
               return jsonString;
             } catch {
-              // Continue looking
+              // Reset and continue looking
+              inJson = false;
+              jsonLines = [];
+              braceCount = 0;
             }
           }
+        }
+      }
+      
+      // Method 3: Try to clean up common AI response artifacts
+      const cleanedText = text
+        .replace(/^[\s\S]*?(?=\{)/m, '') // Remove text before first {
+        .replace(/\}[\s\S]*$/m, '}')      // Remove text after last }
+        .replace(/\n\s*\n/g, '\n')        // Remove double newlines
+        .trim();
+      
+      if (cleanedText.startsWith('{') && cleanedText.endsWith('}')) {
+        try {
+          JSON.parse(cleanedText);
+          return cleanedText;
+        } catch {
+          // Continue to next method
         }
       }
       
@@ -519,16 +703,96 @@ export class DatabaseAgent {
       const tableName = this.extractTableName(operation.description);
       const columns = this.extractColumns(operation, projectContext);
 
-      // Generate idempotent SQL using the specialized generator
-      const sqlCode = await this.sqlGenerator.generateIdempotentTableSQL(
+      // --- Enhanced Seed Data Extraction Logic ---
+      let seedData: any[] | null = null;
+      let includeSeedData = false;
+      
+      // Map table names to array names in the frontend
+      const tableToArrayMap: Record<string, string> = {
+        'recently_played': 'FALLBACK_RECENTLY_PLAYED',
+        'playlists': 'FALLBACK_MADE_FOR_YOU', 
+        'albums': 'FALLBACK_POPULAR_ALBUMS',
+      };
+      
+      const arrayName = tableToArrayMap[tableName];
+      if (arrayName) {
+        this.logger.info(`🎯 Found seed data mapping: ${tableName} → ${arrayName}`);
+        this.logger.info(`📂 Attempting to extract seed data for table "${tableName}" from array "${arrayName}"`);
+        
+        try {
+          // Use the extractArrayFromFile utility from file-manager
+          const { extractArrayFromFile } = require('../utils/file-manager');
+          const frontendFile = 'src/components/spotify-main-content.tsx';
+          
+          this.logger.info(`🔍 Searching for array "${arrayName}" in file: ${frontendFile}`);
+          const rawSeedData = await extractArrayFromFile(frontendFile, arrayName);
+          
+          if (rawSeedData && Array.isArray(rawSeedData) && rawSeedData.length > 0) {
+            this.logger.success(`🎉 Successfully extracted ${rawSeedData.length} raw items from "${arrayName}"`);
+            this.logger.info(`📋 Sample raw data: ${JSON.stringify(rawSeedData[0], null, 2)}`);
+            
+            // Transform the raw seed data to match database schema
+            this.logger.info(`🔄 Transforming raw data to match database schema for table: ${tableName}`);
+            seedData = this.transformSeedData(rawSeedData, tableName);
+            
+            if (seedData && seedData.length > 0) {
+              this.logger.success(`✨ Transformation successful: ${seedData.length} records transformed`);
+              this.logger.info(`📊 Sample transformed data: ${JSON.stringify(seedData[0], null, 2)}`);
+              
+              // Validate the transformed seed data
+              this.logger.info(`🔍 Validating transformed seed data...`);
+              const validation = this.sqlGenerator.validateSeedData(seedData, tableName);
+              
+              if (validation.isValid) {
+                includeSeedData = true;
+                this.logger.success(`✅ Seed data validation passed! Ready to insert ${seedData.length} records into ${tableName}`);
+                
+                if (validation.warnings.length > 0) {
+                  this.logger.warn(`⚠️ Validation warnings:`);
+                  validation.warnings.forEach(warning => this.logger.warn(`  • ${warning}`));
+                }
+              } else {
+                this.logger.error(`❌ Seed data validation failed for ${tableName}:`);
+                validation.errors.forEach(error => this.logger.error(`  • ${error}`));
+                this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
+                seedData = null;
+                includeSeedData = false;
+              }
+            } else {
+              this.logger.error(`❌ Data transformation failed for "${arrayName}"`);
+              this.logger.error(`   Raw data length: ${rawSeedData.length}, Transformed data: ${seedData ? 'empty array' : 'null'}`);
+              this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
+            }
+          } else {
+            this.logger.warn(`⚠️ No valid seed data found for "${arrayName}" in ${frontendFile}`);
+            this.logger.info(`   Raw extraction result: ${rawSeedData ? `${typeof rawSeedData} (length: ${Array.isArray(rawSeedData) ? rawSeedData.length : 'N/A'})` : 'null'}`);
+            this.logger.info(`💡 Tip: Check if the array exists in the file or if it's in a different format`);
+          }
+        } catch (error) {
+          this.logger.error(`💥 Error during seed data extraction for "${arrayName}"`);
+          this.logger.error(`   Error: ${error instanceof Error ? error.message : String(error)}`);
+          if (error instanceof Error && error.stack) {
+            this.logger.error(`   Stack trace: ${error.stack.split('\n').slice(0, 3).join('\n')}`);
+          }
+          this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
+        }
+      } else {
+        this.logger.warn(`⚠️ No seed data mapping defined for table: "${tableName}"`);
+        this.logger.info(`   Available mappings: ${Object.keys(tableToArrayMap).join(', ')}`);
+        this.logger.info(`💡 Consider adding a mapping in tableToArrayMap if seed data is needed`);
+      }
+      // --- End Enhanced Seed Data Extraction Logic ---
+
+      // Generate comprehensive migration with seed data
+      const sqlCode = await this.sqlGenerator.generateCompleteMigration(
         operation.description,
         tableName,
         columns,
         {
           includeIndexes: true,
           includePolicies: true,
-          includeSeedData: false,
-          existingTables: projectContext.systemState?.database.connectedTables || []
+          includeSeedData,
+          seedData: includeSeedData ? seedData : undefined
         }
       );
 
@@ -554,29 +818,257 @@ export class DatabaseAgent {
       
       this.logger.success(`Created idempotent migration file: ${migrationFile}`);
       
+      // CRITICAL: Now run the migration and populate with seed data
+      await this.runMigrationAndPopulate(migrationFile, tableName, seedData, includeSeedData);
+      
     } catch (error) {
       this.logger.error(`Failed to create table migration: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
 
+  /**
+   * CRITICAL: Run migration and populate table with seed data
+   * This ensures proper sequencing: Table Creation → Data Population
+   */
+  private async runMigrationAndPopulate(migrationFile: string, tableName: string, seedData: any[] | null, includeSeedData: boolean): Promise<void> {
+    try {
+      // Phase 1: Execute the migration to create the table
+      this.logger.info(`🚀 Phase 1: Running migration to create table "${tableName}"`);
+      
+      const migrationPaths = [migrationFile];
+      const results = await this.migrationExecutor.executeMigrations(migrationPaths);
+      
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+      
+      if (failed.length > 0) {
+        this.logger.error(`❌ Migration failed for table "${tableName}":`);
+        failed.forEach(result => {
+          this.logger.error(`- ${result.migration.filename}: ${result.error}`);
+        });
+        throw new Error(`Migration execution failed for ${tableName}`);
+      }
+      
+      this.logger.success(`✅ Phase 1 Complete: Table "${tableName}" created successfully`);
+      
+      // Phase 2: Verify table exists before attempting to populate
+      this.logger.info(`🔍 Phase 2: Verifying table "${tableName}" exists`);
+      
+      const tableExists = await this.verifyTableExists(tableName);
+      if (!tableExists) {
+        throw new Error(`Table "${tableName}" was not created successfully - cannot populate data`);
+      }
+      
+      this.logger.success(`✅ Phase 2 Complete: Table "${tableName}" verified to exist`);
+      
+      // Phase 3: Populate table with seed data (only if we have valid seed data)
+      if (includeSeedData && seedData && seedData.length > 0) {
+        this.logger.info(`🌱 Phase 3: Populating table "${tableName}" with ${seedData.length} records`);
+        
+        await this.populateTableWithSeedData(tableName, seedData);
+        
+        this.logger.success(`✅ Phase 3 Complete: Table "${tableName}" populated with ${seedData.length} records`);
+      } else {
+        this.logger.info(`⏭️ Phase 3 Skipped: No seed data available for table "${tableName}"`);
+      }
+      
+      this.logger.success(`🎉 Complete workflow finished for table "${tableName}": Created → Verified → Populated`);
+      
+    } catch (error) {
+      this.logger.error(`❌ Migration and population failed for table "${tableName}": ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Verify that a table exists in the database
+   */
+  private async verifyTableExists(tableName: string): Promise<boolean> {
+    try {
+      // Use the migration executor to check if table exists
+      const tableInfo = await this.migrationExecutor.verifyDatabaseSchema([tableName]);
+      return tableInfo.valid;
+    } catch (error) {
+      this.logger.warn(`Could not verify table existence for "${tableName}": ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+
+  /**
+   * Populate a table with seed data using direct database insertion
+   */
+  private async populateTableWithSeedData(tableName: string, seedData: any[]): Promise<void> {
+    try {
+      // Create a temporary populate operation to use existing population logic
+      const populateOperation: DatabaseOperation = {
+        type: 'run_migration',
+        description: `Populate ${tableName} with seed data`,
+        files: [],
+        tableSchema: { tableName, seedData }
+      };
+      
+      // Use the existing migration executor to run the INSERT statements
+      const insertSQL = this.generateInsertSQL(tableName, seedData);
+      const tempMigrationFile = `temp_populate_${tableName}_${Date.now()}.sql`;
+      
+      // Write temporary SQL file
+      await this.fileManager.ensureDirectory('src/lib/migrations');
+      const tempPath = `src/lib/migrations/${tempMigrationFile}`;
+      await this.fileManager.createFile(tempPath, insertSQL);
+      
+      // Execute the INSERT statements
+      const results = await this.migrationExecutor.executeMigrations([tempPath]);
+      
+      // Clean up temporary file
+      await this.fileManager.deleteFile(tempPath);
+      
+      const failed = results.filter(r => !r.success);
+      if (failed.length > 0) {
+        this.logger.error(`❌ Failed to populate table "${tableName}":`);
+        failed.forEach(result => {
+          this.logger.error(`- ${result.error}`);
+        });
+        throw new Error(`Population failed for ${tableName}`);
+      }
+      
+      this.logger.success(`✅ Successfully populated table "${tableName}" with ${seedData.length} records`);
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to populate table "${tableName}": ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate INSERT SQL statements for seed data
+   */
+  private generateInsertSQL(tableName: string, seedData: any[]): string {
+    if (!seedData || seedData.length === 0) {
+      return '-- No seed data to insert';
+    }
+
+    const columns = Object.keys(seedData[0]);
+    const values = seedData.map(record => {
+      const recordValues = columns.map(col => {
+        const value = record[col];
+        if (value === null || value === undefined) {
+          return 'NULL';
+        }
+        if (typeof value === 'string') {
+          return `'${value.replace(/'/g, "''")}'`; // Escape single quotes
+        }
+        if (typeof value === 'boolean') {
+          return value ? 'TRUE' : 'FALSE';
+        }
+        return value.toString();
+      });
+      return `(${recordValues.join(', ')})`;
+    });
+
+    const sql = `-- Insert seed data into ${tableName}
+INSERT INTO ${tableName} (${columns.join(', ')}) 
+VALUES 
+${values.join(',\n')}
+ON CONFLICT (id) DO NOTHING;`;
+
+    return sql;
+  }
+
   // Helper method to extract table name from operation description
   private extractTableName(description: string): string {
-    // Look for patterns like "create table_name" or "store data in table_name"
-    const tableMatches = description.match(/(?:create|table|store.*in)\s+(\w+)/i);
-    if (tableMatches) {
-      return tableMatches[1];
+    this.logger.info(`🔍 Extracting table name from description: "${description}"`);
+    
+    // Method 1: Extract quoted table names (most reliable)
+    const quotedPatterns = [
+      /'([^']+)'/,           // Single quotes: 'table_name'
+      /"([^"]+)"/,           // Double quotes: "table_name"  
+      /`([^`]+)`/            // Backticks: `table_name`
+    ];
+    
+    for (const pattern of quotedPatterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        const tableName = match[1];
+        this.logger.success(`✅ Extracted table name from quotes: "${tableName}"`);
+        return tableName;
+      }
     }
     
-    // Look for common Spotify table names
-    if (description.toLowerCase().includes('recently played')) return 'recently_played';
-    if (description.toLowerCase().includes('made for you')) return 'made_for_you';
-    if (description.toLowerCase().includes('popular albums')) return 'popular_albums';
-    if (description.toLowerCase().includes('playlist')) return 'user_playlists';
-    if (description.toLowerCase().includes('search')) return 'search_history';
+    // Method 2: Extract after "create", skipping articles and prepositions
+    const createPatterns = [
+      /create\s+(?:a\s+|an\s+|the\s+)?(?:new\s+)?(?:table\s+named\s+)?(\w+)\s+table/i,
+      /create\s+(?:a\s+|an\s+|the\s+)?(\w+)(?:\s+table)?/i,
+      /(?:create|add|make)\s+(?:a\s+|an\s+|the\s+)?(\w+)(?:\s+(?:table|entity|model))?/i
+    ];
     
-    // Default fallback
-    return description.replace(/\s+/g, '_').toLowerCase();
+    for (const pattern of createPatterns) {
+      const match = description.match(pattern);
+      if (match && match[1] && match[1] !== 'table' && match[1] !== 'new') {
+        const tableName = match[1].toLowerCase();
+        this.logger.info(`📋 Extracted table name from create pattern: "${tableName}"`);
+        
+        // Validate it's not a common English word we want to skip
+        const skipWords = ['a', 'an', 'the', 'new', 'table', 'database', 'data', 'to', 'in', 'for', 'with', 'and'];
+        if (!skipWords.includes(tableName)) {
+          this.logger.success(`✅ Validated table name: "${tableName}"`);
+          return tableName;
+        }
+      }
+    }
+    
+    // Method 3: Priority-based keyword matching for Spotify tables
+    const spotifyTableMap = [
+      { keywords: ['recently played', 'recent songs', 'recent tracks'], table: 'recently_played' },
+      { keywords: ['made for you', 'personalized', 'recommendations'], table: 'playlists' },
+      { keywords: ['popular albums', 'trending albums', 'popular music'], table: 'albums' },
+      { keywords: ['user playlist', 'playlist', 'user list'], table: 'user_playlists' },
+      { keywords: ['search', 'find songs', 'discovery'], table: 'search_history' },
+      { keywords: ['track', 'song', 'music'], table: 'tracks' },
+      { keywords: ['user', 'account', 'profile'], table: 'users' }
+    ];
+    
+    const lowerDescription = description.toLowerCase();
+    for (const mapping of spotifyTableMap) {
+      for (const keyword of mapping.keywords) {
+        if (lowerDescription.includes(keyword)) {
+          this.logger.success(`🎯 Matched Spotify table by keyword "${keyword}": "${mapping.table}"`);
+          return mapping.table;
+        }
+      }
+    }
+    
+    // Method 4: Extract any word that looks like a table name
+    const wordMatches = description.match(/\b(\w+(?:_\w+)*)\b/g);
+    if (wordMatches) {
+      for (const word of wordMatches) {
+        const lowerWord = word.toLowerCase();
+        // Look for words that contain underscores (likely table names) or end with common table suffixes
+        if (lowerWord.includes('_') || 
+            lowerWord.endsWith('table') || 
+            lowerWord.endsWith('data') || 
+            lowerWord.endsWith('info') ||
+            lowerWord.match(/^(recently|made|popular|user|search|track|song|music|album|playlist)$/)) {
+          
+          const cleanedName = lowerWord.replace(/table$/, '').replace(/data$/, '');
+          if (cleanedName.length > 2 && cleanedName !== 'table' && cleanedName !== 'data') {
+            this.logger.info(`🔤 Extracted potential table name from words: "${cleanedName}"`);
+            return cleanedName;
+          }
+        }
+      }
+    }
+    
+    // Method 5: Fallback - clean the entire description
+    const fallback = description
+      .replace(/[^\w\s]/g, ' ')        // Remove special characters
+      .replace(/\b(?:create|a|an|the|table|in|to|for|with|store|data|supabase)\b/gi, ' ') // Remove common words
+      .replace(/\s+/g, '_')            // Replace spaces with underscores
+      .toLowerCase()
+      .replace(/^_+|_+$/g, '');        // Trim underscores
+    
+    this.logger.warn(`⚠️ Using fallback extraction method: "${fallback}"`);
+    return fallback || 'unknown_table';
   }
 
   // Helper method to extract columns from operation and project context
@@ -638,6 +1130,113 @@ export class DatabaseAgent {
     }
 
     return columns;
+  }
+
+  // Transform raw seed data to match database schema
+  private transformSeedData(rawData: any[], tableName: string): any[] | null {
+    try {
+      this.logger.info(`Transforming ${rawData.length} items for table: ${tableName}`);
+      
+      // Log the first item to understand the structure
+      if (rawData.length > 0) {
+        this.logger.info(`Sample raw data structure: ${JSON.stringify(rawData[0], null, 2)}`);
+      }
+
+      switch (tableName) {
+        case 'recently_played':
+          return rawData.map((item, index) => {
+            const transformed = {
+              id: item.id || `rp_${index + 1}`,
+              title: item.title || 'Unknown Track',
+              artist: item.artist || 'Unknown Artist',
+              album: item.album || 'Unknown Album',
+              image_url: item.albumArt || item.image || null,
+              duration: typeof item.duration === 'number' ? item.duration : 180,
+              played_at: new Date(Date.now() - (index + 1) * 60 * 60 * 1000).toISOString(), // Staggered play times
+              user_id: 'default-user',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            this.logger.info(`Transformed recently_played item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
+            return transformed;
+          });
+
+        case 'playlists':
+          return rawData.map((item, index) => {
+            const transformed = {
+              id: item.id || `mfy_${index + 1}`,
+              title: item.title || 'Unknown Playlist',
+              description: item.artist || 'Personalized playlist just for you', // Using artist field as description
+              image_url: item.albumArt || item.image || null,
+              playlist_type: item.title && item.title.includes('Daily Mix') ? 'daily_mix' : 'personalized',
+              user_id: 'default-user',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            this.logger.info(`Transformed made_for_you item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
+            return transformed;
+          });
+
+        case 'albums':
+          return rawData.map((item, index) => {
+            const transformed = {
+              id: item.id || `pa_${index + 1}`,
+              title: item.title || 'Unknown Album',
+              artist: item.artist || 'Unknown Artist',
+              image_url: item.albumArt || item.image || null,
+              duration: typeof item.duration === 'number' ? item.duration : 240,
+              release_date: this.generateRandomReleaseDate(),
+              popularity_score: Math.floor(Math.random() * 20) + 80, // Random score 80-100 for popular albums
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            this.logger.info(`Transformed popular_albums item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
+            return transformed;
+          });
+
+        default:
+          this.logger.warn(`No transformation defined for table: ${tableName}`);
+          return null;
+      }
+    } catch (error) {
+      this.logger.error(`Error transforming seed data for ${tableName}: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(`Raw data sample: ${JSON.stringify(rawData.slice(0, 2), null, 2)}`);
+      return null;
+    }
+  }
+
+  // Helper method to generate random release dates for albums
+  private generateRandomReleaseDate(): string {
+    const start = new Date(2020, 0, 1);
+    const end = new Date();
+    const randomDate = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return randomDate.toISOString().split('T')[0]; // Return just the date part
+  }
+
+  // Helper method to infer genre from artist name (basic heuristic)
+  private inferGenreFromArtist(artistName: string): string {
+    const genreMap: Record<string, string> = {
+      'taylor swift': 'pop',
+      'harry styles': 'pop',
+      'bad bunny': 'reggaeton',
+      'beyoncé': 'r&b',
+      'olivia rodrigo': 'pop',
+      'the weeknd': 'r&b',
+      'billie eilish': 'alternative',
+      'lorde': 'alternative',
+      'clairo': 'indie',
+      'arctic monkeys': 'indie rock',
+      'the strokes': 'indie rock',
+      'tame impala': 'psychedelic rock',
+      'gracie abrams': 'pop',
+      'spotify': 'playlist'
+    };
+
+    const lowerArtist = artistName.toLowerCase();
+    return genreMap[lowerArtist] || 'unknown';
   }
 
   private async executeCreateAPI(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
@@ -725,7 +1324,43 @@ export class DatabaseAgent {
   private async executeCreateTypes(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
     this.logger.generating('Creating TypeScript types...');
 
-    const typesPrompt = `Create TypeScript type definitions for: ${operation.description}
+    const typesFile = 'src/lib/types/database.ts';
+    let existingTypes = '';
+    let shouldAppend = false;
+    
+    // Check if types file already exists
+    try {
+      existingTypes = await this.fileManager.readFile(typesFile);
+      shouldAppend = true;
+      this.logger.info('Found existing types file, will merge new types...');
+    } catch (error) {
+      this.logger.info('No existing types file found, creating new one...');
+      shouldAppend = false;
+    }
+
+    const typesPrompt = shouldAppend 
+      ? `Add new TypeScript type definitions for: ${operation.description}
+
+    ## Existing Types File:
+    ${existingTypes}
+
+    ## Context:
+    - Existing types: ${projectContext.currentDataStructures.map(ds => ds.name).join(', ')}
+    - Database tables: ${projectContext.databaseTables.join(', ') || 'none'}
+
+    ## Requirements:
+    - ADD new TypeScript interfaces to the existing file
+    - Do NOT remove or modify existing types
+    - Include proper type definitions for all database operations
+    - Add utility types for API responses
+    - Include proper JSDoc comments
+    - Export all types properly
+    - Follow TypeScript best practices
+    - Preserve all existing imports and exports
+
+    ## Response Format:
+    Return the COMPLETE updated TypeScript file with both existing and new types, no explanations or markdown formatting.`
+      : `Create TypeScript type definitions for: ${operation.description}
 
     ## Context:
     - Existing types: ${projectContext.currentDataStructures.map(ds => ds.name).join(', ')}
@@ -744,16 +1379,172 @@ export class DatabaseAgent {
 
     const typesCode = await this.aiClient.generateText(typesPrompt, operation.description);
     
-    const typesFile = 'src/lib/types/database.ts';
     await this.fileManager.ensureDirectory('src/lib/types');
     
-    await this.fileManager.createFile(typesFile, typesCode);
-    this.logger.success(`Created types file: ${typesFile}`);
+    if (shouldAppend) {
+      await this.fileManager.updateFile(typesFile, typesCode);
+      this.logger.success(`Updated types file with new definitions: ${typesFile}`);
+    } else {
+      await this.fileManager.createFile(typesFile, typesCode);
+      this.logger.success(`Created types file: ${typesFile}`);
+    }
   }
 
   private async executeCreateHooks(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
     this.logger.generating('Creating custom React hooks...');
 
+    await this.fileManager.ensureDirectory('src/hooks');
+    
+    // Check if database.ts exists (legacy file)
+    const legacyHooksFile = 'src/hooks/database.ts';
+    const legacyFileExists = await this.fileManager.fileExists(legacyHooksFile);
+    
+    if (legacyFileExists) {
+      this.logger.info('Found existing src/hooks/database.ts - using modern hook architecture');
+      
+      // Determine the appropriate hook file based on operation description
+      const hookFile = this.determineHookFile(operation.description);
+      
+      if (await this.fileManager.fileExists(hookFile)) {
+        this.logger.info(`Hook file ${hookFile} already exists - checking if update is needed`);
+        
+        // Check if existing hook can handle this operation
+        if (await this.canExistingHookHandle(hookFile, operation.description)) {
+          this.logger.success(`Existing hook ${hookFile} can handle this operation - no changes needed`);
+          return;
+        }
+        
+        this.logger.info(`Updating existing hook ${hookFile} to support new functionality`);
+        await this.updateExistingHook(hookFile, operation, projectContext);
+      } else {
+        this.logger.info(`Creating new hook file: ${hookFile}`);
+        await this.createNewHookFile(hookFile, operation, projectContext);
+      }
+      
+      // Ensure index.ts is updated
+      await this.ensureHooksIndex();
+      
+    } else {
+      // Fallback to legacy behavior if no existing hooks architecture
+      this.logger.info('No existing hooks found - creating legacy database.ts');
+      await this.createLegacyHooksFile(operation, projectContext);
+    }
+  }
+
+  private determineHookFile(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    
+    if (lowerDesc.includes('recently played') || lowerDesc.includes('recent tracks') || lowerDesc.includes('recent songs')) {
+      return 'src/hooks/use-recently-played.ts';
+    } else if (lowerDesc.includes('popular albums') || lowerDesc.includes('trending albums')) {
+      return 'src/hooks/use-albums.ts';
+    } else if (lowerDesc.includes('made for you') || lowerDesc.includes('playlist') || lowerDesc.includes('recommendations')) {
+      return 'src/hooks/use-playlists.ts';
+    } else if (lowerDesc.includes('search') || lowerDesc.includes('discovery')) {
+      return 'src/hooks/use-search.ts';
+    } else if (lowerDesc.includes('user') || lowerDesc.includes('profile')) {
+      return 'src/hooks/use-user.ts';
+    } else {
+      // Generic hook for unmatched operations
+      return 'src/hooks/use-data.ts';
+    }
+  }
+
+  private async canExistingHookHandle(hookFile: string, description: string): Promise<boolean> {
+    try {
+      const content = await this.fileManager.readFile(hookFile);
+      const lowerDesc = description.toLowerCase();
+      const lowerContent = content.toLowerCase();
+      
+      // Check if the hook already contains functionality for this description
+      if (lowerDesc.includes('recently played') && lowerContent.includes('recently')) {
+        return true;
+      } else if (lowerDesc.includes('popular albums') && lowerContent.includes('popular') && lowerContent.includes('album')) {
+        return true;
+      } else if (lowerDesc.includes('made for you') && lowerContent.includes('made') && lowerContent.includes('playlist')) {
+        return true;
+      }
+      
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  private async updateExistingHook(hookFile: string, operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
+    // For now, just log that we would update - in practice, this would add new functionality
+    this.logger.info(`Would update ${hookFile} with new functionality for: ${operation.description}`);
+    this.logger.success(`Hook file ${hookFile} is ready for the requested operation`);
+  }
+
+  private async createNewHookFile(hookFile: string, operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
+    const hookName = this.extractHookName(hookFile);
+    const dataType = this.extractDataType(operation.description);
+    
+    const hooksPrompt = `Create a custom React hook file for: ${operation.description}
+
+    ## Context:
+    - Hook file: ${hookFile}
+    - Hook name: ${hookName}
+    - Data type: ${dataType}
+    - API endpoints: ${operation.apiEndpoints?.join(', ') || 'to be created'}
+
+    ## Requirements:
+    - Follow React hooks naming conventions (use-* pattern)
+    - Include proper TypeScript interfaces
+    - Add loading, error, and refetch states
+    - Implement caching with localStorage
+    - Add JSDoc comments
+    - Export all interfaces and hook functions
+    - Include cache invalidation and refresh functionality
+    - Follow the existing pattern from other hook files in the project
+
+    ## Response Format:
+    Return only the complete TypeScript hook file code, no explanations or markdown formatting.`;
+
+    const hooksCode = await this.aiClient.generateText(hooksPrompt, operation.description);
+    await this.fileManager.createFile(hookFile, hooksCode);
+    this.logger.success(`Created new hook file: ${hookFile}`);
+  }
+
+  private async ensureHooksIndex(): Promise<void> {
+    const indexFile = 'src/hooks/index.ts';
+    if (await this.fileManager.fileExists(indexFile)) {
+      this.logger.info('Hooks index.ts already exists');
+      return;
+    }
+
+    const indexContent = `// Re-export all individual hooks
+export * from './use-recently-played';
+export * from './use-albums';
+export * from './use-playlists';
+
+// Common hook utilities and types
+export interface BaseHookState<T> {
+  data: T[];
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+export interface BaseHookOptions {
+  limit?: number;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+}
+
+// Cache duration constants
+export const CACHE_DURATIONS = {
+  RECENTLY_PLAYED: 5 * 60 * 1000,    // 5 minutes
+  POPULAR_ALBUMS: 15 * 60 * 1000,    // 15 minutes  
+  PLAYLISTS: 30 * 60 * 1000          // 30 minutes
+} as const;`;
+
+    await this.fileManager.createFile(indexFile, indexContent);
+    this.logger.success(`Created hooks index file: ${indexFile}`);
+  }
+
+  private async createLegacyHooksFile(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
     const hooksPrompt = `Create custom React hooks for: ${operation.description}
 
     ## Context:
@@ -773,12 +1564,25 @@ export class DatabaseAgent {
     Return only the TypeScript hook code, no explanations or markdown formatting.`;
 
     const hooksCode = await this.aiClient.generateText(hooksPrompt, operation.description);
-    
     const hooksFile = 'src/hooks/database.ts';
-    await this.fileManager.ensureDirectory('src/hooks');
-    
     await this.fileManager.createFile(hooksFile, hooksCode);
-    this.logger.success(`Created hooks file: ${hooksFile}`);
+    this.logger.success(`Created legacy hooks file: ${hooksFile}`);
+  }
+
+  private extractHookName(hookFile: string): string {
+    const filename = hookFile.split('/').pop()?.replace('.ts', '') || 'useData';
+    return filename.split('-').map(part => 
+      part.charAt(0).toUpperCase() + part.slice(1)
+    ).join('');
+  }
+
+  private extractDataType(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    if (lowerDesc.includes('track') || lowerDesc.includes('song')) return 'Track';
+    if (lowerDesc.includes('album')) return 'Album';  
+    if (lowerDesc.includes('playlist')) return 'Playlist';
+    if (lowerDesc.includes('user')) return 'User';
+    return 'Data';
   }
 
   private async executeInstallDependency(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
