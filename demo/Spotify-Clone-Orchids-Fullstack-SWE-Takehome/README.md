@@ -40,6 +40,7 @@ git clone <repository-url>
 cd Spotify-Clone-Orchids-Fullstack-SWE-Takehome
 npm install
 ```
+Note: If you run into compatibility issues with React 19 when setting up the project, feel free to downgrade to React 18 or run `npm install –-legacy-peer-deps`
 
 ### 2. Environment Setup
 Create a `.env.local` file in the project root:
@@ -265,12 +266,5 @@ npm run db-agent:migrations status
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
-
-- **Issues**: Open a GitHub issue for bugs or feature requests
-- **Discussions**: Use GitHub Discussions for questions
-- **Documentation**: Check the docs folder for detailed guides
-
----
-
-**Happy coding! 🎵✨**
+** Final Notes
+This project was created by Zhen Liu. Unapproved distribution, modification, and use of this project is strictly prohibited. 
