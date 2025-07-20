@@ -210,5 +210,81 @@
         "src/hooks/useRecentlyPlayed.ts"
       ]
     }
+  },
+  {
+    "operationId": "1752975544135-0",
+    "type": "create_table",
+    "description": "Create 'albums' table to store album information",
+    "targetFiles": [
+      "migrations/create_albums_table.sql",
+      "src/lib/migrations/20250720T013923_create_'albums'_table_to_store_album_information.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T01:39:23.025Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752975563029-1",
+    "type": "create_table",
+    "description": "Create 'made_for_you' table to store personalized recommendations",
+    "targetFiles": [
+      "migrations/create_made_for_you_table.sql",
+      "src/lib/migrations/20250720T013941_create_'made_for_you'_table_to_store_personalized_recommendations.sql"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T01:39:41.575Z",
+    "rollbackAvailable": true,
+    "metadata": {
+      "dependencies": []
+    }
+  },
+  {
+    "operationId": "1752975581577-2",
+    "type": "create_api",
+    "description": "Create API endpoint for fetching popular albums",
+    "targetFiles": [
+      "/app/api/popular-albums/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T01:39:59.556Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "albums table"
+      ]
+    }
+  },
+  {
+    "operationId": "1752975599559-3",
+    "type": "create_api",
+    "description": "Create API endpoint for fetching made-for-you recommendations",
+    "targetFiles": [
+      "/app/api/made-for-you/route.ts"
+    ],
+    "success": true,
+    "executedAt": "2025-07-20T01:40:20.268Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": [
+        "made_for_you table"
+      ]
+    }
+  },
+  {
+    "operationId": "1752975620271-4",
+    "type": "run_migration",
+    "description": "Create TypeScript types for albums and recommendations",
+    "targetFiles": [
+      "/types/music.ts"
+    ],
+    "success": false,
+    "executedAt": "2025-07-20T01:40:36.776Z",
+    "rollbackAvailable": false,
+    "metadata": {
+      "dependencies": []
+    }
   }
 ]
