@@ -1,4 +1,3 @@
-```tsx
 "use client"
 
 import { Play, User } from "lucide-react"
@@ -15,6 +14,7 @@ interface Track {
   artist: string
   album: string
   albumArt: string
+  image?: string
   duration: number
 }
 
@@ -88,53 +88,53 @@ interface SpotifyMainContentProps {
 // Fallback data in case API fails
 const FALLBACK_RECENTLY_PLAYED: Track[] = [
   { 
-    id: "1",
-    title: "Liked Songs", 
-    artist: "320 songs",
-    album: "Your Music",
-    albumArt: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
-    duration: 180
-  },
-  { 
-    id: "2",
-    title: "Discover Weekly", 
-    artist: "Spotify",
-    album: "Weekly Mix",
-    albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
-    duration: 210
-  },
-  { 
-    id: "3",
-    title: "Release Radar", 
-    artist: "Spotify",
-    album: "New Releases",
-    albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
-    duration: 195
-  },
-  { 
-    id: "4",
-    title: "Daily Mix 1", 
-    artist: "Spotify",
-    album: "Daily Mix",
-    albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
-    duration: 225
-  },
-  { 
-    id: "5",
-    title: "Chill Hits", 
-    artist: "Spotify",
-    album: "Chill Collection",
-    albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
-    duration: 240
-  },
-  { 
-    id: "6",
-    title: "Top 50 - Global", 
-    artist: "Spotify",
-    album: "Global Charts",
-    albumArt: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
-    duration: 205
-  }
+      id: "1",
+      title: "Liked Songs", 
+      artist: "320 songs",
+      album: "Your Music",
+      albumArt: "https://v3.fal.media/files/panda/kvQ0deOgoUWHP04ajVH3A_output.png",
+      duration: 180
+    },
+    { 
+      id: "2",
+      title: "Discover Weekly", 
+      artist: "Spotify",
+      album: "Weekly Mix",
+      albumArt: "https://v3.fal.media/files/kangaroo/HRayeBi01JIqfkCjjoenp_output.png",
+      duration: 210
+    },
+    { 
+      id: "3",
+      title: "Release Radar", 
+      artist: "Spotify",
+      album: "New Releases",
+      albumArt: "https://v3.fal.media/files/panda/q7hWJCgH2Fy4cJdWqAzuk_output.png",
+      duration: 195
+    },
+    { 
+      id: "4",
+      title: "Daily Mix 1", 
+      artist: "Spotify",
+      album: "Daily Mix",
+      albumArt: "https://v3.fal.media/files/elephant/N5qDbXOpqAlIcK7kJ4BBp_output.png",
+      duration: 225
+    },
+    { 
+      id: "5",
+      title: "Chill Hits", 
+      artist: "Spotify",
+      album: "Chill Collection",
+      albumArt: "https://v3.fal.media/files/rabbit/tAQ6AzJJdlEZW-y4eNdxO_output.png",
+      duration: 240
+    },
+    { 
+      id: "6",
+      title: "Top 50 - Global", 
+      artist: "Spotify",
+      album: "Global Charts",
+      albumArt: "https://v3.fal.media/files/kangaroo/0OgdfDAzLEbkda0m7uLJw_output.png",
+      duration: 205
+    }
 ];
 
 const FALLBACK_MADE_FOR_YOU: Track[] = [
@@ -257,12 +257,11 @@ const FALLBACK_POPULAR_ALBUMS: Track[] = [
 
 export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentProps) {
   // Use the custom hooks to fetch data
-  const { data: recentlyPlayed, isLoading: recentlyPlayedLoading, error: recentlyPlayedError } = useRecentlyPlayedTracks(12);
-  const { data: popularAlbums, isLoading: albumsLoading, error: albumsError } = usePopularAlbums(12);
-  const { data: madeForYou, isLoading: playlistsLoading, error: playlistsError } = useMadeForYouPlaylists(12);
+  const { data: recentlyPlayed, isLoading: recentlyPlayedLoading, error: recentlyPlayedError } = useRecentlyPlayedTracks({ limit: 12 });
+  const { data: popularAlbums, isLoading: albumsLoading, error: albumsError } = usePopularAlbums({ limit: 12 });
+  const { data: madeForYou, isLoading: playlistsLoading, error: playlistsError } = useMadeForYouPlaylists({ limit: 12 });
 
   // Determine overall loading and error states
-  const isLoading = recentlyPlayedLoading || albumsLoading || playlistsLoading;
   const hasError = recentlyPlayedError || albumsError || playlistsError;
 
   const handlePlayTrack = (item: Track) => {
@@ -315,10 +314,10 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         {recentlyPlayedLoading ? (
           <LoadingSkeleton />
         ) : recentlyPlayedError ? (
-          <ErrorMessage message={recentlyPlayedError} />
+          <ErrorMessage message={recentlyPlayedError || 'Unknown error'} />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {(recentlyPlayed || FALLBACK_RECENTLY_PLAYED).map((item) => (
+            {(recentlyPlayed || FALLBACK_RECENTLY_PLAYED).map((item: any) => (
               <MusicCard
                 key={item.id}
                 title={item.title}
@@ -338,10 +337,10 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         {playlistsLoading ? (
           <LoadingSkeleton />
         ) : playlistsError ? (
-          <ErrorMessage message={playlistsError} />
+          <ErrorMessage message={playlistsError || 'Unknown error'} />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {(madeForYou || FALLBACK_MADE_FOR_YOU).map((item) => (
+            {(madeForYou || FALLBACK_MADE_FOR_YOU).map((item: any) => (
               <MusicCard
                 key={item.id}
                 title={item.title}
@@ -361,10 +360,10 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
         {albumsLoading ? (
           <LoadingSkeleton />
         ) : albumsError ? (
-          <ErrorMessage message={albumsError} />
+          <ErrorMessage message={albumsError || 'Unknown error'} />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {(popularAlbums || FALLBACK_POPULAR_ALBUMS).map((item) => (
+            {(popularAlbums || FALLBACK_POPULAR_ALBUMS).map((item: any) => (
               <MusicCard
                 key={item.id}
                 title={item.title}
@@ -387,4 +386,3 @@ export default function SpotifyMainContent({ onPlayTrack }: SpotifyMainContentPr
     </div>
   )
 }
-```

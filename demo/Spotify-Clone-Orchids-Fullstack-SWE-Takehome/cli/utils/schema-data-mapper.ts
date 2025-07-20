@@ -1,5 +1,9 @@
 import { Logger } from './logger';
-import { ExtractedDataItem } from './hardcoded-data-extractor';
+import { ExtractedDataItem, MultiTableDataResult } from './hardcoded-data-extractor';
+
+// CRITICAL FIX: Default user UUID for development/demo purposes
+// This ensures consistent UUID format for all user_id fields that expect UUID type
+const DEFAULT_USER_UUID = '00000000-0000-0000-0000-000000000001';
 
 export interface SQLFunction {
   __sqlFunction: true;
@@ -16,6 +20,13 @@ export interface MappingResult {
   insertSql: string;
 }
 
+export interface MultiTableMappingResult {
+  recentlyPlayed?: MappingResult;
+  playlists?: MappingResult;
+  albums?: MappingResult;
+  allMappings: MappingResult[];
+}
+
 export class SchemaDataMapper {
   private logger: Logger;
 
@@ -24,7 +35,46 @@ export class SchemaDataMapper {
   }
 
   /**
-   * Maps extracted data to database records based on operation context
+   * Maps multi-table extracted data to database records (FIXED: Multi-table support)
+   */
+  mapMultiTableDataToSchema(
+    multiTableData: MultiTableDataResult,
+    operationDescription: string
+  ): MultiTableMappingResult {
+    this.logger.info(`🗃️ Multi-table mapping for: "${operationDescription}"`);
+    
+    const result: MultiTableMappingResult = {
+      allMappings: []
+    };
+
+    // Map recently played data if present
+    if (multiTableData.hasRecentlyPlayed && multiTableData.recentlyPlayed.length > 0) {
+      this.logger.info(`🎵 Mapping ${multiTableData.recentlyPlayed.length} recently played items`);
+      result.recentlyPlayed = this.mapToRecentlyPlayedSchema(multiTableData.recentlyPlayed, 'recently_played');
+      result.allMappings.push(result.recentlyPlayed);
+    }
+
+    // Map playlist data if present
+    if (multiTableData.hasMadeForYou && multiTableData.madeForYou.length > 0) {
+      this.logger.info(`🎧 Mapping ${multiTableData.madeForYou.length} made for you items`);
+      result.playlists = this.mapToPlaylistSchema(multiTableData.madeForYou, 'playlists');
+      result.allMappings.push(result.playlists);
+    }
+
+    // Map album data if present
+    if (multiTableData.hasPopularAlbums && multiTableData.popularAlbums.length > 0) {
+      this.logger.info(`💿 Mapping ${multiTableData.popularAlbums.length} popular album items`);
+      result.albums = this.mapToAlbumsSchema(multiTableData.popularAlbums, 'albums');
+      result.allMappings.push(result.albums);
+    }
+
+    this.logger.success(`✅ Multi-table mapping complete: ${result.allMappings.length} table(s) mapped`);
+    return result;
+  }
+
+  /**
+   * Maps extracted data to database records based on operation context (Legacy single-table method)
+   * @deprecated Use mapMultiTableDataToSchema for new implementations
    */
   mapDataToSchema(
     data: ExtractedDataItem[], 
@@ -52,23 +102,21 @@ export class SchemaDataMapper {
   }
 
   /**
-   * Maps data to recently_played table schema
+   * Maps data to recently_played table schema (FIXED: Use actual database fields)
    */
   private mapToRecentlyPlayedSchema(data: ExtractedDataItem[], tableName: string): MappingResult {
     this.logger.info('🎵 Mapping to recently_played schema');
     
     const records = data.map((item, index) => ({
-      id: this.generateUUID(item.id),
-      user_id: 'default-user',
-      track_id: item.id,
-      track_name: item.title,
-      artist_name: item.artist,
-      album_name: item.album || item.title,
+      id: item.id || `track_${index + 1}`,
+      user_id: DEFAULT_USER_UUID,
+      title: item.title,
+      artist: item.artist,
+      album: item.album || item.title,
       image_url: item.albumArt || item.image || '',
       played_at: this.generateRecentTimestamp(index),
-      duration_ms: (item.duration || 0) * 1000, // Convert to milliseconds
-      created_at: { __sqlFunction: true, expression: 'NOW()' },
-      updated_at: { __sqlFunction: true, expression: 'NOW()' }
+      duration: item.duration || 180, // Duration in seconds (not milliseconds)
+      created_at: { __sqlFunction: true, expression: 'NOW()' }
     }));
 
     const insertSql = this.generateInsertSQL(tableName, records);
@@ -88,7 +136,7 @@ export class SchemaDataMapper {
     
     const records = data.map(item => ({
       id: this.generateUUID(item.id),
-      user_id: 'default-user',
+      user_id: DEFAULT_USER_UUID,
       title: item.title,
       description: item.artist, // Artist field becomes description for playlists
       image_url: item.albumArt || item.image || '',

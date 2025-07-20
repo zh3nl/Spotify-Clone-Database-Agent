@@ -334,11 +334,11 @@ export interface RecentlyPlayedTrackRecord {
   id: string;
   user_id: string;
   track_id: string;
-  track_name: string;
-  artist_names: string[];
-  album_name: string;
-  album_image_url: string;
-  duration_ms: number;
+  title: string;
+  artist: string;
+  album: string;
+  image_url: string;
+  duration: number;
   played_at: string;
   spotify_url: string;
   created_at: string;
@@ -350,11 +350,11 @@ export interface RecentlyPlayedTrackRecord {
 export interface RecentlyPlayedTrackInsert {
   user_id: string;
   track_id: string;
-  track_name: string;
-  artist_names: string[];
-  album_name: string;
-  album_image_url: string;
-  duration_ms: number;
+  title: string;
+  artist: string;
+  album: string;
+  image_url: string;
+  duration: number;
   played_at: string;
   spotify_url: string;
 }
@@ -401,11 +401,11 @@ export interface RecentlyPlayedTrackStats {
   totalPlayTime: number;
   mostPlayedTrack: {
     track_id: string;
-    track_name: string;
+    title: string;
     count: number;
   } | null;
   mostPlayedArtist: {
-    artist_name: string;
+    artist: string;
     count: number;
   } | null;
 }
@@ -590,11 +590,11 @@ export interface RecentlyPlayedTracksTable {
   id: string;
   user_id: string;
   track_id: string;
-  track_name: string;
-  artist_names: string[];
-  album_name: string;
-  album_image_url: string;
-  duration_ms: number;
+  title: string;
+  artist: string;
+  album: string;
+  image_url: string;
+  duration: number;
   played_at: string;
   spotify_url: string;
   created_at: string;
@@ -606,11 +606,11 @@ export interface RecentlyPlayedTracksTable {
 export interface RecentlyPlayedTracksInsert {
   user_id: string;
   track_id: string;
-  track_name: string;
-  artist_names: string[];
-  album_name: string;
-  album_image_url: string;
-  duration_ms: number;
+  title: string;
+  artist: string;
+  album: string;
+  image_url: string;
+  duration: number;
   played_at: string;
   spotify_url: string;
 }
@@ -638,6 +638,3 @@ export interface TrackListeningHistoryInsert {
   context_type?: string;
   context_id?: string;
 }
-
-/**
- *

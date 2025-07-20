@@ -6,9 +6,13 @@ import { CodeGenerator } from './code-generator';
 import { MigrationExecutor, MigrationResult } from '../utils/migration-executor';
 import { StateAnalyzer } from '../utils/state-analyzer';
 import { IdempotentSQLGenerator } from '../utils/idempotent-sql-generator';
-import { HardcodedDataExtractor } from '../utils/hardcoded-data-extractor';
-import { SchemaDataMapper } from '../utils/schema-data-mapper';
+import { HardcodedDataExtractor, MultiTableDataResult } from '../utils/hardcoded-data-extractor';
+import { SchemaDataMapper, MultiTableMappingResult } from '../utils/schema-data-mapper';
 import { APIRouteOrchestrator } from '../utils/api-route-orchestrator';
+
+// CRITICAL FIX: Default user UUID for development/demo purposes
+// This ensures consistent UUID format for all user_id fields that expect UUID type
+const DEFAULT_USER_UUID = '00000000-0000-0000-0000-000000000001';
 
 export interface DatabaseOperation {
   type: 'create_table' | 'create_api' | 'update_component' | 'install_dependency' | 'run_migration' | 'create_types' | 'create_hooks';
@@ -409,10 +413,19 @@ export class DatabaseAgent {
       }
       
       this.logger.success('AI response parsed and validated successfully');
+      
+      // CRITICAL FIX: Sanitize AI-generated file paths that may be hallucinated
+      const sanitizedOperations = plan.operations.map((operation: any) => {
+        if (operation.files && Array.isArray(operation.files)) {
+          operation.files = operation.files.map((filePath: string) => this.sanitizeAIGeneratedPath(filePath));
+        }
+        return operation;
+      });
+      
       return {
         query,
         analysis: plan.analysis,
-        operations: plan.operations,
+        operations: sanitizedOperations,
         estimatedTime: plan.estimatedTime,
         requirements: plan.requirements
       };
@@ -702,182 +715,262 @@ export class DatabaseAgent {
   }
 
   private async executeCreateTable(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
-    this.logger.generating('Creating idempotent database table schema...');
+    this.logger.generating('Creating idempotent database table schema... (ENHANCED: Multi-table support)');
 
     try {
       // Initialize the SQL generator
       await this.sqlGenerator.initialize();
 
-      // Extract table name and columns from the operation
-      const tableName = this.extractTableName(operation.description);
+      // ENHANCED: Detect all table types from operation description
+      const detectedTableTypes = this.detectTableTypesFromDescription(operation.description);
       
-      // PHASE 3: Pre-migration conflict detection
-      this.logger.info(`🔍 Checking for existing migrations for table: ${tableName}`);
-      const conflictCheck = await this.detectMigrationConflicts(tableName, operation.description);
-      
-      if (conflictCheck.hasConflicts) {
-        this.logger.warn(`⚠️ Migration conflicts detected for table '${tableName}'`);
-        this.logger.warn(`Found ${conflictCheck.existingMigrations.length} existing migration(s):`);
-        conflictCheck.existingMigrations.forEach(migration => {
-          this.logger.warn(`  - ${migration.filename} (${migration.description})`);
-        });
-        
-        if (conflictCheck.shouldSkip) {
-          this.logger.info(`✅ Skipping migration - existing migration provides complete schema`);
-          return;
-        } else {
-          this.logger.warn(`⚠️ Proceeding with migration - existing schema may be incomplete`);
-        }
+      if (detectedTableTypes.length === 0) {
+        this.logger.warn(`⚠️ No table types detected in operation: "${operation.description}"`);
+        return;
       }
-      
-      const columns = this.extractColumns(operation, projectContext);
 
-      // --- Comprehensive Data Population Pipeline ---
-      this.logger.info('🚀 Starting comprehensive data population pipeline...');
-      let seedData: any[] | null = null;
-      let includeSeedData = false;
-      let populationScript = '';
-      
-      try {
-        // Extract data using new comprehensive system
-        const extractedData = await this.dataExtractor.getDataForContext(
-          process.cwd(), 
-          operation.description
-        );
-        
-        if (extractedData.length > 0) {
-          this.logger.success(`📊 Extracted ${extractedData.length} items for context: ${operation.description}`);
-          
-          // Map data to database schema
-          const mappingResult = this.dataMapper.mapDataToSchema(
-            extractedData,
-            operation.description,
-            tableName
-          );
-          
-          if (mappingResult.records.length > 0) {
-            seedData = mappingResult.records;
-            populationScript = mappingResult.insertSql;
-            includeSeedData = true;
-            
-            this.logger.success(`✨ Successfully mapped ${mappingResult.records.length} records for ${tableName}`);
-            this.logger.info(`📝 Generated population script (${populationScript.length} chars)`);
-            
-            // Save population script for later use
-            await this.savePopulationScript(tableName, populationScript);
-            
-          } else {
-            this.logger.warn(`⚠️ No records generated from mapping for ${tableName}`);
-          }
-        } else {
-          this.logger.warn(`⚠️ No data extracted for context: ${operation.description}`);
-        }
-      } catch (error) {
-        this.logger.error(`💥 Error in data population pipeline: ${error instanceof Error ? error.message : String(error)}`);
-        this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
-      }
-      // --- End Comprehensive Data Population Pipeline ---
-
-      // Generate comprehensive migration with seed data
-      const sqlCode = await this.sqlGenerator.generateCompleteMigration(
-        operation.description,
-        tableName,
-        columns,
-        {
-          includeIndexes: true,
-          includePolicies: true,
-          includeSeedData,
-          seedData: includeSeedData ? seedData : undefined
-        }
-      );
-
-
-      // PHASE 4: Enhanced migration logging and validation
-      this.logger.info(`📝 SQL generation completed:`);
-      this.logger.info(`  - Table: ${tableName}`);
-      this.logger.info(`  - Columns: ${columns.length}`);
-      this.logger.info(`  - Seed data: ${includeSeedData ? `Yes (${seedData?.length || 0} records)` : 'No'}`);
-      this.logger.info(`  - SQL size: ${sqlCode.length} characters`);
-      
-      // Validate the SQL is idempotent
-      const validation = this.sqlGenerator.validateIdempotency(sqlCode);
-      if (!validation.isIdempotent) {
-        this.logger.warn('⚠️ Generated SQL may not be fully idempotent:');
-        validation.issues.forEach(issue => this.logger.warn(`  - ${issue}`));
+      if (detectedTableTypes.length === 1) {
+        // Single table operation - use existing logic
+        this.logger.info(`📋 Single table operation detected: ${detectedTableTypes[0]}`);
+        await this.executeCreateSingleTable(operation, projectContext, detectedTableTypes[0]);
       } else {
-        this.logger.success(`✅ SQL validation passed - migration is idempotent`);
-      }
-      
-      // Create migration file with enhanced naming
-      const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
-      const operationName = operation.description.replace(/\s+/g, '_').toLowerCase();
-      const migrationFile = `src/lib/migrations/${timestamp}_${operationName}.sql`;
-      
-      this.logger.info(`📄 Creating migration file: ${migrationFile}`);
-      
-      // Ensure migrations directory exists
-      await this.fileManager.ensureDirectory('src/lib/migrations');
-      
-      await this.fileManager.createFile(migrationFile, sqlCode);
-      
-      // Add the migration file to the operation for tracking
-      operation.files.push(migrationFile);
-      
-      this.logger.success(`✅ Created idempotent migration file: ${migrationFile}`);
-      
-      // PHASE 4: Post-creation validation
-      this.logger.info(`🔍 Validating migration file creation...`);
-      const fileStats = await this.validateMigrationFile(migrationFile, tableName, columns.length);
-      
-      if (fileStats.isValid) {
-        this.logger.success(`✅ Migration file validation passed:`);
-        this.logger.info(`  - File size: ${fileStats.fileSize} bytes`);
-        this.logger.info(`  - Contains table creation: ${fileStats.hasTableCreation ? 'Yes' : 'No'}`);
-        this.logger.info(`  - Has expected columns: ${fileStats.expectedColumns}/${columns.length}`);
-      } else {
-        this.logger.error(`⚠️ Migration file validation failed:`);
-        fileStats.errors.forEach(error => this.logger.error(`  - ${error}`));
-      }
-      
-      // CRITICAL: Now run the migration and populate with seed data
-      await this.runMigrationAndPopulate(migrationFile, tableName, seedData, includeSeedData);
-      
-      // PHASE 5: Auto-generate API route if needed
-      this.logger.info(`🚀 Checking if API route auto-generation is needed...`);
-      try {
-        const apiResult = await this.apiOrchestrator.createAPIRouteIfNeeded(
-          operation.description,
-          tableName,
-          { createBackup: true, dryRun: false }
-        );
-        
-        if (apiResult.success) {
-          if (apiResult.generated) {
-            this.logger.success(`✅ API route auto-generated: ${apiResult.config?.endpoint}`);
-            this.logger.info(`📁 Created: ${apiResult.filePath}`);
-            if (apiResult.backupPath) {
-              this.logger.info(`💾 Backup: ${apiResult.backupPath}`);
-            }
-            // Add the API file to operation tracking
-            if (apiResult.filePath) {
-              operation.files.push(apiResult.filePath);
-            }
-          } else if (apiResult.skipped) {
-            this.logger.info(`ℹ️ API route already exists: ${apiResult.details}`);
-          }
-        } else {
-          this.logger.warn(`⚠️ API route auto-generation failed: ${apiResult.error}`);
-          this.logger.info(`💡 You may need to create the API route manually later`);
-        }
-      } catch (apiError) {
-        this.logger.warn(`⚠️ API auto-generation encountered an error: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
-        this.logger.info(`💡 Table creation was successful, but API route may need manual creation`);
+        // Multi-table operation - new logic
+        this.logger.info(`🔄 Multi-table operation detected: ${detectedTableTypes.join(', ')}`);
+        await this.executeCreateMultipleTables(operation, projectContext, detectedTableTypes);
       }
       
     } catch (error) {
       this.logger.error(`Failed to create table migration: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
+  }
+
+  /**
+   * Execute single table creation (existing logic preserved for backward compatibility)
+   */
+  private async executeCreateSingleTable(operation: DatabaseOperation, projectContext: ProjectContext, tableType: string): Promise<void> {
+    // Extract table name and columns from the operation
+    const tableName = tableType; // Use detected table type as table name
+    
+    // PHASE 3: Pre-migration conflict detection
+    this.logger.info(`🔍 Checking for existing migrations for table: ${tableName}`);
+    const conflictCheck = await this.detectMigrationConflicts(tableName, operation.description);
+    
+    if (conflictCheck.hasConflicts) {
+      this.logger.warn(`⚠️ Migration conflicts detected for table '${tableName}'`);
+      this.logger.warn(`Found ${conflictCheck.existingMigrations.length} existing migration(s):`);
+      conflictCheck.existingMigrations.forEach(migration => {
+        this.logger.warn(`  - ${migration.filename} (${migration.description})`);
+      });
+      
+      if (conflictCheck.shouldSkip) {
+        this.logger.info(`✅ Skipping migration - existing migration provides complete schema`);
+        return;
+      } else {
+        this.logger.warn(`⚠️ Proceeding with migration - existing schema may be incomplete`);
+      }
+    }
+    
+    const columns = this.extractColumns(operation, projectContext);
+
+    // --- Enhanced Data Population Pipeline ---
+    this.logger.info('🚀 Starting enhanced data population pipeline...');
+    let seedData: any[] | null = null;
+    let includeSeedData = false;
+    let populationScript = '';
+    
+    try {
+      // Use legacy method for backward compatibility
+      const extractedData = await this.dataExtractor.getDataForSingleContext(
+        process.cwd(), 
+        operation.description
+      );
+      
+      if (extractedData.length > 0) {
+        this.logger.success(`📊 Extracted ${extractedData.length} items for context: ${operation.description}`);
+        
+        // Map data to database schema
+        const mappingResult = this.dataMapper.mapDataToSchema(
+          extractedData,
+          operation.description,
+          tableName
+        );
+        
+        if (mappingResult.records.length > 0) {
+          seedData = mappingResult.records;
+          populationScript = mappingResult.insertSql;
+          includeSeedData = true;
+          
+          this.logger.success(`✨ Successfully mapped ${mappingResult.records.length} records for ${tableName}`);
+          this.logger.info(`📝 Generated population script (${populationScript.length} chars)`);
+          
+          // Save population script for later use
+          await this.savePopulationScript(tableName, populationScript);
+          
+        } else {
+          this.logger.warn(`⚠️ No records generated from mapping for ${tableName}`);
+        }
+      } else {
+        this.logger.warn(`⚠️ No data extracted for context: ${operation.description}`);
+      }
+    } catch (error) {
+      this.logger.error(`💥 Error in data population pipeline: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
+    }
+
+    // Check if this is a re-run and table already exists with data
+    const tableAlreadyExists = await this.verifyTableExists(tableName);
+    const shouldEmbedSeedData = includeSeedData && !tableAlreadyExists;
+    
+    if (tableAlreadyExists && includeSeedData) {
+      this.logger.info(`📋 Table "${tableName}" already exists - will create migration without embedded seed data`);
+      this.logger.info(`🌱 Seed data population will be handled separately with conflict resolution`);
+    }
+
+    // Generate migration with conditional seed data embedding
+    const sqlCode = await this.sqlGenerator.generateCompleteMigration(
+      operation.description,
+      tableName,
+      columns,
+      {
+        includeIndexes: true,
+        includePolicies: true,
+        includeSeedData: shouldEmbedSeedData,
+        seedData: shouldEmbedSeedData ? (seedData || undefined) : undefined
+      }
+    );
+
+    // PHASE 4: Enhanced migration logging and validation
+    this.logger.info(`📝 SQL generation completed:`);
+    this.logger.info(`  - Table: ${tableName}`);
+    this.logger.info(`  - Columns: ${columns.length}`);
+    this.logger.info(`  - Seed data: ${includeSeedData ? `Yes (${seedData?.length || 0} records)` : 'No'}`);
+    this.logger.info(`  - SQL size: ${sqlCode.length} characters`);
+    
+    // Validate the SQL is idempotent
+    const validation = this.sqlGenerator.validateIdempotency(sqlCode);
+    if (!validation.isIdempotent) {
+      this.logger.warn('⚠️ Generated SQL may not be fully idempotent:');
+      validation.issues.forEach(issue => this.logger.warn(`  - ${issue}`));
+    } else {
+      this.logger.success(`✅ SQL validation passed - migration is idempotent`);
+    }
+    
+    // Create migration file with enhanced naming
+    const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
+    const operationName = `${operation.description}_${tableName}`.replace(/\s+/g, '_').toLowerCase();
+    const migrationFile = `src/lib/migrations/${timestamp}_${operationName}.sql`;
+    
+    this.logger.info(`📄 Creating migration file: ${migrationFile}`);
+    
+    // Ensure migrations directory exists
+    await this.fileManager.ensureDirectory('src/lib/migrations');
+    
+    await this.fileManager.createFile(migrationFile, sqlCode);
+    
+    // Add the migration file to the operation for tracking
+    operation.files.push(migrationFile);
+    
+    this.logger.success(`✅ Created idempotent migration file: ${migrationFile}`);
+    
+    // PHASE 4: Post-creation validation
+    this.logger.info(`🔍 Validating migration file creation...`);
+    const fileStats = await this.validateMigrationFile(migrationFile, tableName, columns.length);
+    
+    if (fileStats.isValid) {
+      this.logger.success(`✅ Migration file validation passed:`);
+      this.logger.info(`  - File size: ${fileStats.fileSize} bytes`);
+      this.logger.info(`  - Contains table creation: ${fileStats.hasTableCreation ? 'Yes' : 'No'}`);
+      this.logger.info(`  - Has expected columns: ${fileStats.expectedColumns}/${columns.length}`);
+    } else {
+      this.logger.error(`⚠️ Migration file validation failed:`);
+      fileStats.errors.forEach(error => this.logger.error(`  - ${error}`));
+    }
+    
+    // CRITICAL: Run migration and populate with conditional logic
+    await this.runMigrationAndPopulate(migrationFile, tableName, seedData, includeSeedData && !shouldEmbedSeedData);
+    
+    // PHASE 5: Auto-generate API route if needed
+    this.logger.info(`🚀 Checking if API route auto-generation is needed...`);
+    try {
+      const apiResult = await this.apiOrchestrator.createAPIRouteIfNeeded(
+        operation.description,
+        tableName,
+        { createBackup: true, dryRun: false }
+      );
+      
+      if (apiResult.success) {
+        if (apiResult.generated) {
+          this.logger.success(`✅ API route auto-generated: ${apiResult.config?.endpoint}`);
+          this.logger.info(`📁 Created: ${apiResult.filePath}`);
+          if (apiResult.backupPath) {
+            this.logger.info(`💾 Backup: ${apiResult.backupPath}`);
+          }
+          // Add the API file to operation tracking
+          if (apiResult.filePath) {
+            operation.files.push(apiResult.filePath);
+          }
+        } else if (apiResult.skipped) {
+          this.logger.info(`ℹ️ API route already exists: ${apiResult.details}`);
+        }
+      } else {
+        this.logger.warn(`⚠️ API route auto-generation failed: ${apiResult.error}`);
+        this.logger.info(`💡 You may need to create the API route manually later`);
+      }
+    } catch (apiError) {
+      this.logger.warn(`⚠️ API auto-generation encountered an error: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
+      this.logger.info(`💡 Table creation was successful, but API route may need manual creation`);
+    }
+  }
+
+  /**
+   * Execute multiple table creation (NEW: Multi-table support)
+   */
+  private async executeCreateMultipleTables(operation: DatabaseOperation, projectContext: ProjectContext, tableTypes: string[]): Promise<void> {
+    this.logger.info(`🔄 Starting multi-table creation for: ${tableTypes.join(', ')}`);
+    
+    // Extract multi-table data using new enhanced system
+    const multiTableData = await this.dataExtractor.getDataForContext(
+      process.cwd(), 
+      operation.description
+    );
+    
+    // Map data to multiple database schemas
+    const multiMappingResult = this.dataMapper.mapMultiTableDataToSchema(
+      multiTableData,
+      operation.description
+    );
+    
+    this.logger.success(`✅ Multi-table data mapped: ${multiMappingResult.allMappings.length} table(s) ready for creation`);
+    
+    // Create separate operations for each table type
+    for (const mapping of multiMappingResult.allMappings) {
+      this.logger.subsection(`Creating table: ${mapping.tableName}`);
+      
+      try {
+        // Create a separate operation for this table
+        const tableOperation: DatabaseOperation = {
+          type: 'create_table',
+          description: `Create ${mapping.tableName} table from multi-table operation: ${operation.description}`,
+          files: [],
+          tableSchema: mapping
+        };
+        
+        // Execute single table creation for this specific table type
+        await this.executeCreateSingleTable(tableOperation, projectContext, mapping.tableName);
+        
+        // Add any generated files to the original operation for tracking
+        operation.files.push(...tableOperation.files);
+        
+        this.logger.success(`✅ Table ${mapping.tableName} created and populated successfully`);
+        
+      } catch (error) {
+        this.logger.error(`❌ Failed to create table ${mapping.tableName}: ${error instanceof Error ? error.message : String(error)}`);
+        // Continue with other tables rather than failing the entire operation
+      }
+    }
+    
+    this.logger.success(`🎉 Multi-table creation completed for: ${tableTypes.join(', ')}`);
   }
 
   /**
@@ -915,13 +1008,18 @@ export class DatabaseAgent {
       
       this.logger.success(`✅ Phase 2 Complete: Table "${tableName}" verified to exist`);
       
-      // Phase 3: Populate table with seed data (only if we have valid seed data)
+      // Phase 3: Check if table needs population (DEDUPLICATION LOGIC)
       if (includeSeedData && seedData && seedData.length > 0) {
-        this.logger.info(`🌱 Phase 3: Populating table "${tableName}" with ${seedData.length} records`);
+        this.logger.info(`🌱 Phase 3: Checking if table "${tableName}" needs population...`);
         
-        await this.populateTableWithSeedData(tableName, seedData);
-        
-        this.logger.success(`✅ Phase 3 Complete: Table "${tableName}" populated with ${seedData.length} records`);
+        const isAlreadyPopulated = await this.isTableAlreadyPopulated(tableName);
+        if (isAlreadyPopulated) {
+          this.logger.info(`⏭️ Phase 3 Skipped: Table "${tableName}" already contains data`);
+        } else {
+          this.logger.info(`🌱 Populating table "${tableName}" with ${seedData.length} records`);
+          await this.populateTableWithSeedData(tableName, seedData);
+          this.logger.success(`✅ Phase 3 Complete: Table "${tableName}" populated with ${seedData.length} records`);
+        }
       } else {
         this.logger.info(`⏭️ Phase 3 Skipped: No seed data available for table "${tableName}"`);
       }
@@ -949,17 +1047,57 @@ export class DatabaseAgent {
   }
 
   /**
+   * Check if a table already contains seed data to prevent duplicate population
+   */
+  private async isTableAlreadyPopulated(tableName: string): Promise<boolean> {
+    try {
+      // Check if table has any rows - if it does, consider it populated
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        this.logger.warn('Supabase credentials not available, cannot check population status');
+        return false; // If we can't check, assume not populated to be safe
+      }
+
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error, count } = await supabase
+        .from(tableName)
+        .select('*', { count: 'exact', head: true });
+
+      if (error) {
+        this.logger.warn(`Could not check population status for "${tableName}": ${error.message}`);
+        return false; // If we can't check, assume not populated
+      }
+
+      const rowCount = count || 0;
+      this.logger.info(`Table "${tableName}" currently has ${rowCount} rows`);
+      
+      // Consider table populated if it has any rows
+      return rowCount > 0;
+      
+    } catch (error) {
+      this.logger.warn(`Error checking table population for "${tableName}": ${error instanceof Error ? error.message : String(error)}`);
+      return false; // If we can't check, assume not populated to be safe
+    }
+  }
+
+  /**
    * Populate a table with seed data using direct database insertion
+   * Enhanced with pre-population checks to prevent duplicates
    */
   private async populateTableWithSeedData(tableName: string, seedData: any[]): Promise<void> {
     try {
-      // Create a temporary populate operation to use existing population logic
-      const populateOperation: DatabaseOperation = {
-        type: 'run_migration',
-        description: `Populate ${tableName} with seed data`,
-        files: [],
-        tableSchema: { tableName, seedData }
-      };
+      // ADDITIONAL SAFETY CHECK: Verify table is not already populated
+      this.logger.info(`🔍 Pre-population check: Verifying "${tableName}" needs data...`);
+      const isAlreadyPopulated = await this.isTableAlreadyPopulated(tableName);
+      
+      if (isAlreadyPopulated) {
+        this.logger.info(`⏭️ Table "${tableName}" already contains data - skipping population`);
+        return; // Early return to prevent duplicate population
+      }
       
       // Use the existing migration executor to run the INSERT statements
       const insertSQL = this.generateInsertSQL(tableName, seedData);
@@ -969,6 +1107,9 @@ export class DatabaseAgent {
       await this.fileManager.ensureDirectory('src/lib/migrations');
       const tempPath = `src/lib/migrations/${tempMigrationFile}`;
       await this.fileManager.createFile(tempPath, insertSQL);
+      
+      this.logger.info(`📝 Created temporary population script: ${tempMigrationFile}`);
+      this.logger.info(`🎯 Using conflict resolution: ON CONFLICT (${this.getConflictColumnForTable(tableName)}) DO NOTHING`);
       
       // Execute the INSERT statements
       const results = await this.migrationExecutor.executeMigrations([tempPath]);
@@ -1010,13 +1151,37 @@ export class DatabaseAgent {
       return `(${recordValues.join(', ')})`;
     });
 
+    // Determine the appropriate conflict resolution based on table type
+    const conflictColumn = this.getConflictColumnForTable(tableName);
+
     const sql = `-- Insert seed data into ${tableName}
 INSERT INTO ${tableName} (${columns.join(', ')}) 
 VALUES 
 ${values.join(',\n')}
-ON CONFLICT (id) DO NOTHING;`;
+ON CONFLICT (${conflictColumn}) DO NOTHING;`;
 
     return sql;
+  }
+
+  /**
+   * Get the appropriate conflict resolution column for each table type
+   */
+  private getConflictColumnForTable(tableName: string): string {
+    switch (tableName.toLowerCase()) {
+      case 'albums':
+        return 'album_id';
+      case 'playlists':
+        return 'id';
+      case 'recently_played':
+        return 'id';
+      case 'tracks':
+        return 'id';
+      case 'users':
+        return 'id';
+      default:
+        // Default to 'id' for unknown tables
+        return 'id';
+    }
   }
 
   /**
@@ -1174,6 +1339,67 @@ ON CONFLICT (id) DO NOTHING;`;
 
   // Helper method to extract columns from operation and project context
   // PHASE 3: Enhanced with validation and logging
+  /**
+   * Sanitize AI-generated file paths to prevent hallucinated incorrect paths (CRITICAL FIX)
+   */
+  private sanitizeAIGeneratedPath(filePath: string): string {
+    this.logger.info(`🔧 Sanitizing AI-generated path: ${filePath}`);
+    
+    // Fix common AI hallucinations:
+    // 1. Wrong directory: src/lib/database/migrations/ → src/lib/migrations/
+    // 2. Wrong naming: 001_create_* → timestamp-based naming
+    
+    if (filePath.includes('src/lib/database/migrations/')) {
+      this.logger.warn(`⚠️ AI hallucinated wrong migration directory: ${filePath}`);
+      
+      // Extract the operation type from the filename
+      const filename = filePath.split('/').pop() || 'migration.sql';
+      
+      // Generate proper timestamp-based filename
+      const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
+      
+      // Extract table name/operation from old filename
+      let operationName = filename.replace('.sql', '').replace(/^\d+_/, '');
+      
+      // Generate correct path
+      const correctedPath = `src/lib/migrations/${timestamp}_${operationName}.sql`;
+      
+      this.logger.success(`✅ Corrected path: ${correctedPath}`);
+      return correctedPath;
+    }
+    
+    // Fix other potential path issues
+    if (filePath.includes('database/migrations/')) {
+      this.logger.warn(`⚠️ AI used incorrect migration path pattern: ${filePath}`);
+      return filePath.replace('database/migrations/', 'migrations/');
+    }
+    
+    // If path looks correct, return as-is
+    this.logger.success(`✅ Path validated: ${filePath}`);
+    return filePath;
+  }
+
+  /**
+   * Detects all table types mentioned in an operation description (ADDED: Multi-table support)
+   */
+  private detectTableTypesFromDescription(description: string): string[] {
+    const lowerDesc = description.toLowerCase();
+    const detectedTypes: string[] = [];
+    
+    if (lowerDesc.includes('recently played')) {
+      detectedTypes.push('recently_played');
+    }
+    if (lowerDesc.includes('made for you') || lowerDesc.includes('playlist')) {
+      detectedTypes.push('playlists');
+    }
+    if (lowerDesc.includes('popular albums') || (lowerDesc.includes('albums') && !lowerDesc.includes('playlist'))) {
+      detectedTypes.push('albums');
+    }
+    
+    this.logger.info(`🔍 Detected table types from "${description}": ${detectedTypes.join(', ')}`);
+    return detectedTypes;
+  }
+
   private extractColumns(operation: DatabaseOperation, projectContext: ProjectContext): any[] {
     const columns = [
       { name: 'id', type: 'UUID', constraints: 'PRIMARY KEY', default: 'gen_random_uuid()' },
@@ -1191,23 +1417,22 @@ ON CONFLICT (id) DO NOTHING;`;
     if (description.includes('recently played')) {
       this.logger.info(`⏮️ Detected 'recently played' - adding track history schema`);
       columns.push(
-        { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
-        { name: 'track_id', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'track_name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'artist_name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'album_name', type: 'TEXT', default: '' },
+        { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: `'${DEFAULT_USER_UUID}'` },
+        { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'artist', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'album', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'image_url', type: 'TEXT', default: '' },
         { name: 'played_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'NOW()' },
-        { name: 'duration_ms', type: 'INTEGER', default: '' }
+        { name: 'duration', type: 'INTEGER', constraints: 'NOT NULL', default: '' }
       );
     } else if (description.includes('made for you')) {
       this.logger.info(`🎧 Detected 'made for you' - adding personalized playlist schema`);
       columns.push(
-        { name: 'playlist_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'description', type: 'TEXT', default: '' },
         { name: 'image_url', type: 'TEXT', default: '' },
-        { name: 'playlist_type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' },
         { name: 'genre', type: 'TEXT', default: '' }
       );
@@ -1225,14 +1450,14 @@ ON CONFLICT (id) DO NOTHING;`;
     } else if (description.includes('playlist')) {
       this.logger.info(`📜 Detected 'playlist' - adding general playlist schema`);
       columns.push(
-        { name: 'playlist_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
-        { name: 'name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'description', type: 'TEXT', default: '' },
         { name: 'is_public', type: 'BOOLEAN', default: 'false' },
         { name: 'image_url', type: 'TEXT', default: '' },
-        { name: 'playlist_type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'track_count', type: 'INTEGER', default: '0' },
+        { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' },
         { name: 'genre', type: 'TEXT', default: '' }
       );
     } else if (description.includes('search')) {
@@ -1302,7 +1527,7 @@ ON CONFLICT (id) DO NOTHING;`;
               image_url: item.albumArt || item.image || null,
               duration: typeof item.duration === 'number' ? item.duration : 180,
               played_at: new Date(Date.now() - (index + 1) * 60 * 60 * 1000).toISOString(), // Staggered play times
-              user_id: 'default-user',
+              user_id: DEFAULT_USER_UUID,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };
@@ -1324,7 +1549,7 @@ ON CONFLICT (id) DO NOTHING;`;
               description: item.artist || 'Personalized playlist just for you', // Using artist field as description
               image_url: item.albumArt || item.image || null,
               playlist_type: playlistType,
-              user_id: 'default-user',
+              user_id: DEFAULT_USER_UUID,
               recommendation_score: Math.random() * 1.0, // Random score 0.0-1.0 for playlists
               genre: genre,
               created_at: { __sqlFunction: true, expression: 'NOW()' },
