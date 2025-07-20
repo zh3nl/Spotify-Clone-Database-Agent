@@ -18,9 +18,9 @@ export interface RecentTrack {
  * Response state for the recently played tracks hook
  */
 interface UseRecentlyPlayedTracksState {
-  tracks: RecentTrack[];
-  loading: boolean;
-  error: Error | null;
+  data: RecentTrack[];
+  isLoading: boolean;
+  error: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -53,7 +53,7 @@ export function useRecentlyPlayedTracks(
   
   const [tracks, setTracks] = useState<RecentTrack[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   // Cache key for localStorage
   const cacheKey = `recently-played-tracks-${limit}`;
@@ -78,7 +78,8 @@ export function useRecentlyPlayedTracks(
         timestamp: Date.now()
       }));
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch recently played tracks'));
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch recently played tracks';
+      setError(errorMessage);
       
       // Try to load from cache if API request fails
       const cachedData = localStorage.getItem(cacheKey);
@@ -131,5 +132,5 @@ export function useRecentlyPlayedTracks(
     };
   }, [fetchTracks, autoRefresh, refreshInterval, cacheKey]);
   
-  return { tracks, loading, error, refetch: fetchTracks };
+  return { data: tracks, isLoading: loading, error, refetch: fetchTracks };
 }

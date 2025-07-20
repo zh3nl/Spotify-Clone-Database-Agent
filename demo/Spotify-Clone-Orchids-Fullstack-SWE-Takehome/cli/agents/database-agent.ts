@@ -8,6 +8,7 @@ import { StateAnalyzer } from '../utils/state-analyzer';
 import { IdempotentSQLGenerator } from '../utils/idempotent-sql-generator';
 import { HardcodedDataExtractor } from '../utils/hardcoded-data-extractor';
 import { SchemaDataMapper } from '../utils/schema-data-mapper';
+import { APIRouteOrchestrator } from '../utils/api-route-orchestrator';
 
 export interface DatabaseOperation {
   type: 'create_table' | 'create_api' | 'update_component' | 'install_dependency' | 'run_migration' | 'create_types' | 'create_hooks';
@@ -36,6 +37,7 @@ export class DatabaseAgent {
   private sqlGenerator: IdempotentSQLGenerator;
   private dataExtractor: HardcodedDataExtractor;
   private dataMapper: SchemaDataMapper;
+  private apiOrchestrator: APIRouteOrchestrator;
 
   constructor() {
     this.logger = new Logger();
@@ -47,6 +49,7 @@ export class DatabaseAgent {
     this.sqlGenerator = new IdempotentSQLGenerator();
     this.dataExtractor = new HardcodedDataExtractor();
     this.dataMapper = new SchemaDataMapper();
+    this.apiOrchestrator = new APIRouteOrchestrator();
   }
 
   async executeQuery(query: string, projectContext: ProjectContext): Promise<void> {
@@ -839,6 +842,38 @@ export class DatabaseAgent {
       // CRITICAL: Now run the migration and populate with seed data
       await this.runMigrationAndPopulate(migrationFile, tableName, seedData, includeSeedData);
       
+      // PHASE 5: Auto-generate API route if needed
+      this.logger.info(`🚀 Checking if API route auto-generation is needed...`);
+      try {
+        const apiResult = await this.apiOrchestrator.createAPIRouteIfNeeded(
+          operation.description,
+          tableName,
+          { createBackup: true, dryRun: false }
+        );
+        
+        if (apiResult.success) {
+          if (apiResult.generated) {
+            this.logger.success(`✅ API route auto-generated: ${apiResult.config?.endpoint}`);
+            this.logger.info(`📁 Created: ${apiResult.filePath}`);
+            if (apiResult.backupPath) {
+              this.logger.info(`💾 Backup: ${apiResult.backupPath}`);
+            }
+            // Add the API file to operation tracking
+            if (apiResult.filePath) {
+              operation.files.push(apiResult.filePath);
+            }
+          } else if (apiResult.skipped) {
+            this.logger.info(`ℹ️ API route already exists: ${apiResult.details}`);
+          }
+        } else {
+          this.logger.warn(`⚠️ API route auto-generation failed: ${apiResult.error}`);
+          this.logger.info(`💡 You may need to create the API route manually later`);
+        }
+      } catch (apiError) {
+        this.logger.warn(`⚠️ API auto-generation encountered an error: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
+        this.logger.info(`💡 Table creation was successful, but API route may need manual creation`);
+      }
+      
     } catch (error) {
       this.logger.error(`Failed to create table migration: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
@@ -970,16 +1005,7 @@ export class DatabaseAgent {
     const values = seedData.map(record => {
       const recordValues = columns.map(col => {
         const value = record[col];
-        if (value === null || value === undefined) {
-          return 'NULL';
-        }
-        if (typeof value === 'string') {
-          return `'${value.replace(/'/g, "''")}'`; // Escape single quotes
-        }
-        if (typeof value === 'boolean') {
-          return value ? 'TRUE' : 'FALSE';
-        }
-        return value.toString();
+        return this.formatSQLValue(value);
       });
       return `(${recordValues.join(', ')})`;
     });
@@ -991,6 +1017,52 @@ ${values.join(',\n')}
 ON CONFLICT (id) DO NOTHING;`;
 
     return sql;
+  }
+
+  /**
+   * Formats a value for SQL insertion, handling SQL functions properly
+   */
+  private formatSQLValue(value: any): string {
+    // Handle SQL functions FIRST (like gen_random_uuid(), NOW(), etc.)
+    if (value && typeof value === 'object' && value.__sqlFunction === true) {
+      return value.expression;
+    }
+    
+    // Handle null/undefined values
+    if (value === null || value === undefined) {
+      return 'NULL';
+    }
+    
+    // Handle strings
+    if (typeof value === 'string') {
+      // Escape single quotes and wrap in quotes
+      return `'${value.replace(/'/g, "''")}'`;
+    }
+    
+    // Handle numbers
+    if (typeof value === 'number') {
+      return value.toString();
+    }
+    
+    // Handle booleans
+    if (typeof value === 'boolean') {
+      return value ? 'TRUE' : 'FALSE';
+    }
+    
+    // Handle dates
+    if (value instanceof Date) {
+      return `'${value.toISOString()}'`;
+    }
+    
+    // Handle other objects (but SQLFunction should be caught above)
+    if (typeof value === 'object') {
+      // This should not be reached for SQLFunction objects
+      this.logger.warn(`⚠️ Unexpected object in SQL value: ${JSON.stringify(value)}`);
+      return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
+    }
+    
+    // Default: convert to string and escape
+    return `'${String(value).replace(/'/g, "''")}'`;
   }
 
   // Helper method to extract table name from operation description
@@ -1057,8 +1129,9 @@ ON CONFLICT (id) DO NOTHING;`;
           const nameValidation = this.validateTableName(tableName, description);
           if (!nameValidation.isValid) {
             this.logger.warn(`⚠️ Table name validation warning: ${nameValidation.warning}`);
-            this.logger.info(`💡 Suggested table name: ${nameValidation.suggestedName}`);
-            return nameValidation.suggestedName;
+            const suggestedName = nameValidation.suggestedName || tableName;
+            this.logger.info(`💡 Suggested table name: ${suggestedName}`);
+            return suggestedName;
           }
           
           return tableName;
@@ -1129,12 +1202,14 @@ ON CONFLICT (id) DO NOTHING;`;
     } else if (description.includes('made for you')) {
       this.logger.info(`🎧 Detected 'made for you' - adding personalized playlist schema`);
       columns.push(
+        { name: 'playlist_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'description', type: 'TEXT', default: '' },
         { name: 'image_url', type: 'TEXT', default: '' },
-        { name: 'type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
-        { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' }
+        { name: 'playlist_type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' },
+        { name: 'genre', type: 'TEXT', default: '' }
       );
     } else if (description.includes('popular albums') || (description.includes('albums') && !description.includes('playlist'))) {
       this.logger.info(`🎵 Detected 'albums' - adding comprehensive album schema`);
@@ -1150,12 +1225,15 @@ ON CONFLICT (id) DO NOTHING;`;
     } else if (description.includes('playlist')) {
       this.logger.info(`📜 Detected 'playlist' - adding general playlist schema`);
       columns.push(
+        { name: 'playlist_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'description', type: 'TEXT', default: '' },
         { name: 'is_public', type: 'BOOLEAN', default: 'false' },
         { name: 'image_url', type: 'TEXT', default: '' },
-        { name: 'track_count', type: 'INTEGER', default: '0' }
+        { name: 'playlist_type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
+        { name: 'track_count', type: 'INTEGER', default: '0' },
+        { name: 'genre', type: 'TEXT', default: '' }
       );
     } else if (description.includes('search')) {
       columns.push(
@@ -1235,15 +1313,22 @@ ON CONFLICT (id) DO NOTHING;`;
 
         case 'playlists':
           return rawData.map((item, index) => {
+            const playlistId = item.id || `mfy_${index + 1}`;
+            const playlistType = item.title && item.title.includes('Daily Mix') ? 'daily_mix' : 'personalized';
+            const genre = this.inferPlaylistGenre(item.title, item.artist);
+            
             const transformed = {
-              id: item.id || `mfy_${index + 1}`,
+              id: { __sqlFunction: true, expression: 'gen_random_uuid()' },
+              playlist_id: playlistId,
               title: item.title || 'Unknown Playlist',
               description: item.artist || 'Personalized playlist just for you', // Using artist field as description
               image_url: item.albumArt || item.image || null,
-              playlist_type: item.title && item.title.includes('Daily Mix') ? 'daily_mix' : 'personalized',
+              playlist_type: playlistType,
               user_id: 'default-user',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              recommendation_score: Math.random() * 1.0, // Random score 0.0-1.0 for playlists
+              genre: genre,
+              created_at: { __sqlFunction: true, expression: 'NOW()' },
+              updated_at: { __sqlFunction: true, expression: 'NOW()' }
             };
             
             this.logger.info(`Transformed made_for_you item ${index + 1}: ${JSON.stringify(transformed, null, 2)}`);
@@ -1285,6 +1370,36 @@ ON CONFLICT (id) DO NOTHING;`;
     const end = new Date();
     const randomDate = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
     return randomDate.toISOString().split('T')[0]; // Return just the date part
+  }
+
+  // Helper method to infer playlist genre from title and description
+  private inferPlaylistGenre(title: string, description: string): string {
+    const playlistGenreMap: Record<string, string> = {
+      'daily mix': 'mixed',
+      'discover weekly': 'discovery',
+      'release radar': 'new_releases',
+      'liked songs': 'favorites',
+      'chill': 'chill',
+      'hits': 'popular',
+      'top 50': 'charts',
+      'on repeat': 'personal_favorites',
+      'made for you': 'personalized',
+      'alternative': 'alternative',
+      'indie rock': 'indie',
+      'pop': 'pop'
+    };
+
+    const lowerTitle = title.toLowerCase();
+    const lowerDesc = description.toLowerCase();
+    const combined = `${lowerTitle} ${lowerDesc}`;
+    
+    for (const [key, genre] of Object.entries(playlistGenreMap)) {
+      if (combined.includes(key)) {
+        return genre;
+      }
+    }
+    
+    return 'mixed';
   }
 
   // Helper method to infer genre from artist name (basic heuristic)

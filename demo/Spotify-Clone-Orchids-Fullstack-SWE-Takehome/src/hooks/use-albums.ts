@@ -19,9 +19,9 @@ export interface PopularAlbum {
  * Response state for the popular albums hook
  */
 interface UsePopularAlbumsState {
-  albums: PopularAlbum[];
-  loading: boolean;
-  error: Error | null;
+  data: PopularAlbum[];
+  isLoading: boolean;
+  error: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -54,7 +54,7 @@ export function usePopularAlbums(
   
   const [albums, setAlbums] = useState<PopularAlbum[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   // Cache key for localStorage
   const cacheKey = `popular-albums-${limit}`;
@@ -79,7 +79,8 @@ export function usePopularAlbums(
         timestamp: Date.now()
       }));
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch popular albums'));
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch popular albums';
+      setError(errorMessage);
       
       // Try to load from cache if API request fails
       const cachedData = localStorage.getItem(cacheKey);
@@ -132,14 +133,14 @@ export function usePopularAlbums(
     };
   }, [fetchAlbums, autoRefresh, refreshInterval, cacheKey]);
   
-  return { albums, loading, error, refetch: fetchAlbums };
+  return { data: albums, isLoading: loading, error, refetch: fetchAlbums };
 }
 
 /**
  * Hook to get a single album by ID
  */
 export function useAlbum(albumId: string) {
-  const { albums, loading, error } = usePopularAlbums();
+  const { data: albums, isLoading: loading, error } = usePopularAlbums();
   
   const album = albums.find(a => a.id === albumId);
   
