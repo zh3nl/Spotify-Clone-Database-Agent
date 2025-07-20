@@ -85,11 +85,11 @@ export class SchemaDataMapper {
     
     const description = operationDescription.toLowerCase();
     
-    if (description.includes('recently played')) {
+    if (description.includes('recently played') || description.includes('recently_played')) {
       return this.mapToRecentlyPlayedSchema(data, tableName);
-    } else if (description.includes('made for you') || description.includes('playlist')) {
+    } else if (description.includes('made for you') || description.includes('made_for_you') || description.includes('playlist')) {
       return this.mapToPlaylistSchema(data, tableName);
-    } else if (description.includes('albums') || description.includes('popular')) {
+    } else if (description.includes('albums') || description.includes('popular') || description.includes('popular_albums')) {
       return this.mapToAlbumsSchema(data, tableName);
     }
 

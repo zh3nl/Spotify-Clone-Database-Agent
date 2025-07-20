@@ -1173,7 +1173,7 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
       case 'playlists':
         return 'id';
       case 'recently_played':
-        return 'id';
+        return 'user_id, track_id';
       case 'tracks':
         return 'id';
       case 'users':
@@ -1417,6 +1417,7 @@ ON CONFLICT (${conflictColumn}) DO NOTHING;`;
     if (description.includes('recently played') || description.includes('recently_played')) {
       this.logger.info(`⏮️ Detected 'recently played' - adding track history schema`);
       columns.push(
+        { name: 'track_id', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: `'${DEFAULT_USER_UUID}'` },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'artist', type: 'TEXT', constraints: 'NOT NULL', default: '' },
