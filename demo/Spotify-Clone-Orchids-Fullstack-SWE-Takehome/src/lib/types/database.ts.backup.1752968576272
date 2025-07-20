@@ -1,0 +1,163 @@
+/**
+ * Represents a Spotify artist
+ */
+export interface SpotifyArtist {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  external_urls: {
+    spotify: string;
+  };
+}
+
+/**
+ * Represents a Spotify album
+ */
+export interface SpotifyAlbum {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  album_type: string;
+  release_date: string;
+  release_date_precision: string;
+  total_tracks: number;
+  images: SpotifyImage[];
+  external_urls: {
+    spotify: string;
+  };
+  artists: SpotifyArtist[];
+}
+
+/**
+ * Represents a Spotify image
+ */
+export interface SpotifyImage {
+  url: string;
+  height: number | null;
+  width: number | null;
+}
+
+/**
+ * Represents a Spotify track
+ */
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  duration_ms: number;
+  explicit: boolean;
+  popularity: number;
+  preview_url: string | null;
+  track_number: number;
+  disc_number: number;
+  external_urls: {
+    spotify: string;
+  };
+  album: SpotifyAlbum;
+  artists: SpotifyArtist[];
+}
+
+/**
+ * Represents a recently played track item from Spotify API
+ */
+export interface RecentlyPlayedItem {
+  track: SpotifyTrack;
+  played_at: string;
+  context: {
+    type: string;
+    uri: string;
+    href: string | null;
+    external_urls: {
+      spotify: string | null;
+    };
+  } | null;
+}
+
+/**
+ * Represents the response from Spotify's recently played tracks API
+ */
+export interface RecentlyPlayedResponse {
+  items: RecentlyPlayedItem[];
+  next: string | null;
+  cursors: {
+    after: string;
+    before: string;
+  };
+  limit: number;
+  href: string;
+}
+
+/**
+ * Represents a simplified version of a track for UI display
+ */
+export interface SimplifiedTrack {
+  id: string;
+  name: string;
+  artists: string[];
+  album: string;
+  albumImageUrl: string;
+  duration: number;
+  playedAt: string;
+  spotifyUrl: string;
+}
+
+/**
+ * Represents an error response from the Spotify API
+ */
+export interface SpotifyErrorResponse {
+  error: {
+    status: number;
+    message: string;
+  };
+}
+
+/**
+ * Represents the response structure for our own API endpoints
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: string;
+}
+
+/**
+ * Represents the response for recently played tracks from our API
+ */
+export interface RecentlyPlayedApiResponse extends ApiResponse<SimplifiedTrack[]> {
+  total?: number;
+  nextCursor?: string;
+}
+
+/**
+ * Represents parameters for fetching recently played tracks
+ */
+export interface RecentlyPlayedParams {
+  limit?: number;
+  before?: string;
+  after?: string;
+}
+
+/**
+ * Represents the current playback state
+ */
+export interface PlaybackState {
+  isPlaying: boolean;
+  device: {
+    id: string;
+    name: string;
+    type: string;
+    volume_percent: number;
+  };
+  currentTrack: SpotifyTrack | null;
+  progressMs: number;
+  timestamp: number;
+}
+
+/**
+ * Represents the response for current playback state from our API
+ */
+export interface PlaybackStateApiResponse extends ApiResponse<PlaybackState> {}

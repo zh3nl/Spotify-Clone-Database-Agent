@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     
     // Fetch made for you playlists (simplified for demo - no auth required)
     const { data, error } = await supabase
-      .from('playlists')
+      .from('made_for_you')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(parseInt(limit));
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     // For demo purposes, insert the playlist data directly
     const { data, error } = await supabase
-      .from('playlists')
+      .from('made_for_you')
       .insert({
         title: body.title,
         description: body.description,
@@ -82,7 +82,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { error } = await supabase
-      .from('playlists')
+      .from('made_for_you')
       .delete()
       .eq('id', playlistId);
 

@@ -164,6 +164,24 @@ export class FileManager {
     }
   }
 
+  // Delete file
+  async deleteFile(relativePath: string): Promise<void> {
+    const fullPath = path.resolve(this.projectRoot, relativePath);
+    
+    try {
+      await fs.unlink(fullPath);
+      this.logger.info(`Deleted file: ${relativePath}`);
+      
+      // Record deletion operation
+      this.operationHistory.push({
+        type: 'delete',
+        path: relativePath
+      });
+    } catch (error) {
+      throw new Error(`Failed to delete file ${relativePath}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   // Rollback operations
   async rollbackOperations(): Promise<void> {
     this.logger.info('Starting rollback of operations...');

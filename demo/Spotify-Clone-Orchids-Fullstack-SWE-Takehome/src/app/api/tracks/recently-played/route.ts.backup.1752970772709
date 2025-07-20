@@ -2,23 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 /**
- * GET handler to fetch popular albums
+ * GET handler to fetch recently played tracks
  * @param request - The incoming request object
- * @returns NextResponse with the popular albums or error
+ * @returns NextResponse with the recently played tracks or error
  */
 export async function GET(request: NextRequest) {
   try {
     const limit = request.nextUrl.searchParams.get('limit') || '20';
     
-    // Fetch popular albums (simplified for demo - no auth required)
+    // Fetch recently played tracks (simplified for demo - no auth required)
     const { data, error } = await supabase
-      .from('albums')
+      .from('recently_played')
       .select('*')
-      .order('popularity_score', { ascending: false })
+      .order('played_at', { ascending: false })
       .limit(parseInt(limit));
     
     if (error) {
-      console.error('Error fetching popular albums:', error);
+      console.error('Error fetching recently played tracks:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     
@@ -27,16 +27,15 @@ export async function GET(request: NextRequest) {
       id: item.id,
       title: item.title,
       artist: item.artist,
-      album: item.title, // Use title as album name for albums
+      album: item.album,
       albumArt: item.image_url,
       duration: item.duration,
-      releaseDate: item.release_date,
-      popularityScore: item.popularity_score
+      playedAt: item.played_at
     })) || [];
     
     return NextResponse.json(transformedData);
   } catch (error) {
-    console.error('Unexpected error in GET /api/albums/popular:', error);
+    console.error('Unexpected error in GET /api/tracks/recently-played:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }
@@ -45,7 +44,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST handler to add a new popular album (simplified for demo)
+ * POST handler to add a new recently played track (simplified for demo)
  * @param request - The incoming request object
  * @returns NextResponse with success message
  */
@@ -53,28 +52,29 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // For demo purposes, insert the album data directly
+    // For demo purposes, just insert the track data directly
     const { data, error } = await supabase
-      .from('albums')
+      .from('recently_played')
       .insert({
         title: body.title,
         artist: body.artist,
+        album: body.album,
         image_url: body.albumArt,
         duration: body.duration,
-        release_date: body.releaseDate || '2023-01-01',
-        popularity_score: body.popularityScore || 80
+        played_at: new Date().toISOString(),
+        user_id: 'default-user'
       })
       .select()
       .single();
     
     if (error) {
-      console.error('Error inserting popular album:', error);
+      console.error('Error inserting recently played track:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
-    console.error('Unexpected error in POST /api/albums/popular:', error);
+    console.error('Unexpected error in POST /api/tracks/recently-played:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }

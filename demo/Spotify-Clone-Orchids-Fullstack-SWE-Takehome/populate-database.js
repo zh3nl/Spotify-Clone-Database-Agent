@@ -235,7 +235,7 @@ async function populateMadeForYou() {
   }));
 
   const { data, error } = await supabase
-    .from('made_for_you')
+    .from('playlists')
     .upsert(transformedData, { onConflict: 'id' });
   
   if (error) {
@@ -262,7 +262,7 @@ async function populatePopularAlbums() {
   }));
 
   const { data, error } = await supabase
-    .from('popular_albums')
+    .from('albums')
     .upsert(transformedData, { onConflict: 'id' });
   
   if (error) {
@@ -307,8 +307,8 @@ async function main() {
     console.log('🔍 Verifying data...');
     const counts = await Promise.all([
       supabase.from('recently_played').select('*'),
-      supabase.from('made_for_you').select('*'),
-      supabase.from('popular_albums').select('*')
+      supabase.from('playlists').select('*'),
+      supabase.from('albums').select('*')
     ]);
     
     console.log('📊 Final counts:');
