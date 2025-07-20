@@ -701,6 +701,26 @@ export class DatabaseAgent {
 
       // Extract table name and columns from the operation
       const tableName = this.extractTableName(operation.description);
+      
+      // PHASE 3: Pre-migration conflict detection
+      this.logger.info(`🔍 Checking for existing migrations for table: ${tableName}`);
+      const conflictCheck = await this.detectMigrationConflicts(tableName, operation.description);
+      
+      if (conflictCheck.hasConflicts) {
+        this.logger.warn(`⚠️ Migration conflicts detected for table '${tableName}'`);
+        this.logger.warn(`Found ${conflictCheck.existingMigrations.length} existing migration(s):`);
+        conflictCheck.existingMigrations.forEach(migration => {
+          this.logger.warn(`  - ${migration.filename} (${migration.description})`);
+        });
+        
+        if (conflictCheck.shouldSkip) {
+          this.logger.info(`✅ Skipping migration - existing migration provides complete schema`);
+          return;
+        } else {
+          this.logger.warn(`⚠️ Proceeding with migration - existing schema may be incomplete`);
+        }
+      }
+      
       const columns = this.extractColumns(operation, projectContext);
 
       // --- Enhanced Seed Data Extraction Logic ---
@@ -796,17 +816,29 @@ export class DatabaseAgent {
         }
       );
 
+
+      // PHASE 4: Enhanced migration logging and validation
+      this.logger.info(`📝 SQL generation completed:`);
+      this.logger.info(`  - Table: ${tableName}`);
+      this.logger.info(`  - Columns: ${columns.length}`);
+      this.logger.info(`  - Seed data: ${includeSeedData ? `Yes (${seedData?.length || 0} records)` : 'No'}`);
+      this.logger.info(`  - SQL size: ${sqlCode.length} characters`);
+      
       // Validate the SQL is idempotent
       const validation = this.sqlGenerator.validateIdempotency(sqlCode);
       if (!validation.isIdempotent) {
-        this.logger.warn('Generated SQL may not be fully idempotent:');
+        this.logger.warn('⚠️ Generated SQL may not be fully idempotent:');
         validation.issues.forEach(issue => this.logger.warn(`  - ${issue}`));
+      } else {
+        this.logger.success(`✅ SQL validation passed - migration is idempotent`);
       }
-
-      // Create migration file
+      
+      // Create migration file with enhanced naming
       const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
       const operationName = operation.description.replace(/\s+/g, '_').toLowerCase();
       const migrationFile = `src/lib/migrations/${timestamp}_${operationName}.sql`;
+      
+      this.logger.info(`📄 Creating migration file: ${migrationFile}`);
       
       // Ensure migrations directory exists
       await this.fileManager.ensureDirectory('src/lib/migrations');
@@ -816,7 +848,21 @@ export class DatabaseAgent {
       // Add the migration file to the operation for tracking
       operation.files.push(migrationFile);
       
-      this.logger.success(`Created idempotent migration file: ${migrationFile}`);
+      this.logger.success(`✅ Created idempotent migration file: ${migrationFile}`);
+      
+      // PHASE 4: Post-creation validation
+      this.logger.info(`🔍 Validating migration file creation...`);
+      const fileStats = await this.validateMigrationFile(migrationFile, tableName, columns.length);
+      
+      if (fileStats.isValid) {
+        this.logger.success(`✅ Migration file validation passed:`);
+        this.logger.info(`  - File size: ${fileStats.fileSize} bytes`);
+        this.logger.info(`  - Contains table creation: ${fileStats.hasTableCreation ? 'Yes' : 'No'}`);
+        this.logger.info(`  - Has expected columns: ${fileStats.expectedColumns}/${columns.length}`);
+      } else {
+        this.logger.error(`⚠️ Migration file validation failed:`);
+        fileStats.errors.forEach(error => this.logger.error(`  - ${error}`));
+      }
       
       // CRITICAL: Now run the migration and populate with seed data
       await this.runMigrationAndPopulate(migrationFile, tableName, seedData, includeSeedData);
@@ -1032,8 +1078,18 @@ ON CONFLICT (id) DO NOTHING;`;
     for (const mapping of spotifyTableMap) {
       for (const keyword of mapping.keywords) {
         if (lowerDescription.includes(keyword)) {
-          this.logger.success(`🎯 Matched Spotify table by keyword "${keyword}": "${mapping.table}"`);
-          return mapping.table;
+          const tableName = mapping.table;
+          this.logger.success(`🎯 Matched Spotify table by keyword "${keyword}": "${tableName}"`);
+          
+          // PHASE 3: Migration file naming validation
+          const nameValidation = this.validateTableName(tableName, description);
+          if (!nameValidation.isValid) {
+            this.logger.warn(`⚠️ Table name validation warning: ${nameValidation.warning}`);
+            this.logger.info(`💡 Suggested table name: ${nameValidation.suggestedName}`);
+            return nameValidation.suggestedName;
+          }
+          
+          return tableName;
         }
       }
     }
@@ -1072,17 +1128,23 @@ ON CONFLICT (id) DO NOTHING;`;
   }
 
   // Helper method to extract columns from operation and project context
+  // PHASE 3: Enhanced with validation and logging
   private extractColumns(operation: DatabaseOperation, projectContext: ProjectContext): any[] {
     const columns = [
       { name: 'id', type: 'UUID', constraints: 'PRIMARY KEY', default: 'gen_random_uuid()' },
       { name: 'created_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'NOW()' },
       { name: 'updated_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'NOW()' }
     ];
+    
+    const initialColumnCount = columns.length;
 
     // Add columns based on operation description
     const description = operation.description.toLowerCase();
     
+    this.logger.info(`📊 Extracting columns for operation: "${operation.description}"`);
+    
     if (description.includes('recently played')) {
+      this.logger.info(`⏮️ Detected 'recently played' - adding track history schema`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'track_id', type: 'TEXT', constraints: 'NOT NULL', default: '' },
@@ -1093,6 +1155,7 @@ ON CONFLICT (id) DO NOTHING;`;
         { name: 'duration_ms', type: 'INTEGER', default: '' }
       );
     } else if (description.includes('made for you')) {
+      this.logger.info(`🎧 Detected 'made for you' - adding personalized playlist schema`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
@@ -1102,6 +1165,7 @@ ON CONFLICT (id) DO NOTHING;`;
         { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' }
       );
     } else if (description.includes('popular albums')) {
+      this.logger.info(`🎵 Detected 'popular albums' - adding comprehensive album schema`);
       columns.push(
         { name: 'album_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
@@ -1112,6 +1176,7 @@ ON CONFLICT (id) DO NOTHING;`;
         { name: 'genre', type: 'TEXT', default: '' }
       );
     } else if (description.includes('playlist')) {
+      this.logger.info(`📜 Detected 'playlist' - adding general playlist schema`);
       columns.push(
         { name: 'user_id', type: 'UUID', constraints: 'NOT NULL', default: '' },
         { name: 'name', type: 'TEXT', constraints: 'NOT NULL', default: '' },
@@ -1129,6 +1194,40 @@ ON CONFLICT (id) DO NOTHING;`;
       );
     }
 
+    // PHASE 3: Validation and logging
+    const finalColumnCount = columns.length;
+    const addedColumns = finalColumnCount - initialColumnCount;
+    
+    this.logger.info(`📋 Column extraction complete:`);
+    this.logger.info(`  - Base columns: ${initialColumnCount}`);
+    this.logger.info(`  - Added columns: ${addedColumns}`);
+    this.logger.info(`  - Total columns: ${finalColumnCount}`);
+    
+    // Validate minimum expected columns
+    const expectedMinimums = {
+      'popular albums': 9, // id, created_at, updated_at + 6 album-specific
+      'made for you': 9,   // id, created_at, updated_at + 6 playlist-specific  
+      'recently played': 10, // id, created_at, updated_at + 7 track-specific
+      'playlist': 9        // id, created_at, updated_at + 6 general playlist
+    };
+    
+    const expectedMin = Object.entries(expectedMinimums).find(([key]) => description.includes(key))?.[1];
+    
+    if (expectedMin && finalColumnCount < expectedMin) {
+      this.logger.error(`⚠️ Column count validation failed!`);
+      this.logger.error(`  - Expected minimum: ${expectedMin} columns`);
+      this.logger.error(`  - Actual count: ${finalColumnCount} columns`);
+      this.logger.error(`  - This may indicate incomplete schema generation`);
+    } else if (expectedMin) {
+      this.logger.success(`✅ Column count validation passed (${finalColumnCount} >= ${expectedMin})`);
+    }
+    
+    // Log each column for debugging
+    this.logger.info(`📝 Generated columns:`);
+    columns.forEach((col, index) => {
+      this.logger.info(`  ${index + 1}. ${col.name} (${col.type}) ${col.constraints || ''}`);
+    });
+    
     return columns;
   }
 
@@ -1237,6 +1336,211 @@ ON CONFLICT (id) DO NOTHING;`;
 
     const lowerArtist = artistName.toLowerCase();
     return genreMap[lowerArtist] || 'unknown';
+  }
+
+  // PHASE 3: Migration conflict detection system
+  private async detectMigrationConflicts(tableName: string, description: string): Promise<{
+    hasConflicts: boolean;
+    existingMigrations: Array<{ filename: string; description: string; schema?: string }>;
+    shouldSkip: boolean;
+  }> {
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      const migrationsDir = path.join(process.cwd(), 'src/lib/migrations');
+      
+      if (!fs.existsSync(migrationsDir)) {
+        return { hasConflicts: false, existingMigrations: [], shouldSkip: false };
+      }
+      
+      const migrationFiles = fs.readdirSync(migrationsDir)
+        .filter((file: string) => file.endsWith('.sql'))
+        .sort(); // Chronological order
+      
+      const conflictingMigrations = [];
+      
+      for (const filename of migrationFiles) {
+        const filePath = path.join(migrationsDir, filename);
+        const content = fs.readFileSync(filePath, 'utf8');
+        
+        // Check if this migration creates the same table
+        const createTableRegex = new RegExp(`CREATE TABLE IF NOT EXISTS ${tableName}\\s*\\(`, 'i');
+        
+        if (createTableRegex.test(content)) {
+          // Extract description from migration file
+          const descMatch = content.match(/-- Description: (.+)/i);
+          const extractedDesc = descMatch ? descMatch[1].trim() : 'No description';
+          
+          // Get basic schema info (column count)
+          const columnMatches = content.match(/^\s*\w+\s+\w+/gm);
+          const columnCount = columnMatches ? columnMatches.length : 0;
+          
+          conflictingMigrations.push({
+            filename,
+            description: extractedDesc,
+            schema: `${columnCount} columns detected`
+          });
+        }
+      }
+      
+      if (conflictingMigrations.length === 0) {
+        return { hasConflicts: false, existingMigrations: [], shouldSkip: false };
+      }
+      
+      // Analyze if we should skip this migration
+      const shouldSkip = this.shouldSkipMigration(conflictingMigrations, description);
+      
+      return {
+        hasConflicts: true,
+        existingMigrations: conflictingMigrations,
+        shouldSkip
+      };
+      
+    } catch (error) {
+      this.logger.warn(`Error detecting migration conflicts: ${error instanceof Error ? error.message : String(error)}`);
+      return { hasConflicts: false, existingMigrations: [], shouldSkip: false };
+    }
+  }
+  
+  // Determine if we should skip creating a new migration
+  private shouldSkipMigration(existingMigrations: Array<{ filename: string; description: string; schema?: string }>, newDescription: string): boolean {
+    // If there are multiple existing migrations, assume the latest one is complete
+    if (existingMigrations.length >= 2) {
+      this.logger.info('Multiple migrations detected - using most recent');
+      return true;
+    }
+    
+    // Check if existing migration seems complete based on keywords
+    const existingDesc = existingMigrations[0]?.description.toLowerCase() || '';
+    const newDesc = newDescription.toLowerCase();
+    
+    // If existing migration contains same key terms, likely complete
+    if (newDesc.includes('popular albums') && existingDesc.includes('popular albums')) {
+      return true;
+    }
+    if (newDesc.includes('made for you') && existingDesc.includes('made for you')) {
+      return true;
+    }
+    if (newDesc.includes('recently played') && existingDesc.includes('recently played')) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // PHASE 3: Table name validation system
+  private validateTableName(tableName: string, description: string): {
+    isValid: boolean;
+    warning?: string;
+    suggestedName?: string;
+  } {
+    const descLower = description.toLowerCase();
+    
+    // Define table name consistency rules
+    const consistencyRules = [
+      {
+        patterns: ['recently played', 'recent songs'],
+        expectedName: 'recently_played',
+        wrongNames: ['user_recently_played', 'recent_tracks']
+      },
+      {
+        patterns: ['popular albums', 'trending albums'],
+        expectedName: 'albums',
+        wrongNames: ['popular_albums', 'album_data']
+      },
+      {
+        patterns: ['made for you', 'personalized'],
+        expectedName: 'playlists', 
+        wrongNames: ['made_for_you', 'user_playlists']
+      }
+    ];
+    
+    for (const rule of consistencyRules) {
+      const matches = rule.patterns.some(pattern => descLower.includes(pattern));
+      
+      if (matches) {
+        // Check if current name matches expected
+        if (tableName === rule.expectedName) {
+          return { isValid: true };
+        }
+        
+        // Check if it's a known problematic name
+        if (rule.wrongNames.includes(tableName)) {
+          return {
+            isValid: false,
+            warning: `Table name '${tableName}' may cause conflicts. Expected: '${rule.expectedName}'`,
+            suggestedName: rule.expectedName
+          };
+        }
+      }
+    }
+    
+    // General validation rules
+    if (tableName.includes('user_') && !descLower.includes('user')) {
+      return {
+        isValid: false,
+        warning: `Table name '${tableName}' includes 'user_' prefix but description doesn't mention users`,
+        suggestedName: tableName.replace('user_', '')
+      };
+    }
+    
+    return { isValid: true };
+  }
+  
+  // PHASE 4: Migration file validation
+  private async validateMigrationFile(filePath: string, tableName: string, expectedColumnCount: number): Promise<{
+    isValid: boolean;
+    fileSize: number;
+    hasTableCreation: boolean;
+    expectedColumns: number;
+    errors: string[];
+  }> {
+    const fs = require('fs');
+    const errors: string[] = [];
+    
+    try {
+      const stats = fs.statSync(filePath);
+      const content = fs.readFileSync(filePath, 'utf8');
+      
+      // Check if file contains table creation
+      const hasTableCreation = new RegExp(`CREATE TABLE IF NOT EXISTS ${tableName}`, 'i').test(content);
+      
+      if (!hasTableCreation) {
+        errors.push(`Missing table creation statement for '${tableName}'`);
+      }
+      
+      // Count potential columns (rough estimate)
+      const columnMatches = content.match(/^\s*\w+\s+\w+/gm) || [];
+      const detectedColumns = columnMatches.length;
+      
+      if (detectedColumns < expectedColumnCount - 2) { // Allow some margin for variations
+        errors.push(`Column count seems low: detected ${detectedColumns}, expected ~${expectedColumnCount}`);
+      }
+      
+      // Check for basic idempotency patterns
+      if (!content.includes('IF NOT EXISTS') && !content.includes('IF EXISTS')) {
+        errors.push('Migration may not be idempotent (missing IF NOT EXISTS/IF EXISTS)');
+      }
+      
+      return {
+        isValid: errors.length === 0,
+        fileSize: stats.size,
+        hasTableCreation,
+        expectedColumns: detectedColumns,
+        errors
+      };
+      
+    } catch (error) {
+      errors.push(`Failed to validate file: ${error instanceof Error ? error.message : String(error)}`);
+      return {
+        isValid: false,
+        fileSize: 0,
+        hasTableCreation: false,
+        expectedColumns: 0,
+        errors
+      };
+    }
   }
 
   private async executeCreateAPI(operation: DatabaseOperation, projectContext: ProjectContext): Promise<void> {
