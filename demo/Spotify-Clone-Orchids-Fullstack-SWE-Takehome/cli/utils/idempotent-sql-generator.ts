@@ -586,6 +586,11 @@ WHERE NOT EXISTS (
       return 'NULL';
     }
     
+    // Handle SQL functions (like gen_random_uuid(), NOW(), etc.)
+    if (value && typeof value === 'object' && value.__sqlFunction === true) {
+      return value.expression;
+    }
+    
     if (typeof value === 'string') {
       // Escape single quotes and wrap in quotes
       return `'${value.replace(/'/g, "''")}'`;

@@ -781,7 +781,7 @@ export class DatabaseAgent {
     
     try {
       // Use legacy method for backward compatibility
-      const extractedData = await this.dataExtractor.getDataForSingleContext(
+      const extractedData = await this.dataExtractor.getDataForContext(
         process.cwd(), 
         operation.description
       );

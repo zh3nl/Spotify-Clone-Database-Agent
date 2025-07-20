@@ -638,3 +638,12 @@ export interface TrackListeningHistoryInsert {
   context_type?: string;
   context_id?: string;
 }
+
+/**
+ * Represents a database table for albums
+ */
+export interface AlbumsTable {
+  id: string;
+  user_id: string;
+  album_id: string;
+  name:

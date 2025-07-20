@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "timestamp": "2025-07-20T01:38:26.677Z",
-=======
-  "timestamp": "2025-07-20T00:17:55.301Z",
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+  "timestamp": "2025-07-20T18:42:43.714Z",
   "state": {
     "database": {
       "tables": [],
@@ -21,20 +17,55 @@
         "20250719T234230_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
         "20250720T000431_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
         "20250720T000714_create_'albums'_table_to_store_popular_albums_data.sql",
-<<<<<<< HEAD
         "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
         "20250720T001818_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
         "20250720T002707_create_'albums'_table_in_supabase_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics.sql",
         "20250720T002709_create_'playlists'_table_in_supabase_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date.sql",
         "20250720T005419_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
-        "20250720T012849_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql"
+        "20250720T012849_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
+        "20250720T014701_create_'albums'_table_to_store_popular_albums_data.sql",
+        "20250720T014702_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
+        "20250720T020148_create_users_table_to_store_user_information.sql",
+        "20250720T020150_create_tracks_table_to_store_music_tracks_information.sql",
+        "20250720T020151_create_albums_table_to_store_album_information.sql",
+        "20250720T020152_create_artists_table_to_store_artist_information.sql",
+        "20250720T020153_create_playlists_table_to_store_playlist_information.sql",
+        "20250720T020154_create_playlist_tracks_junction_table_to_associate_tracks_with_playlists.sql",
+        "20250720T020154_create_user_recently_played_table_to_track_user_listening_history.sql",
+        "20250720T020537_create_'albums'_table_to_store_album_information_including_popular_albums.sql",
+        "20250720T020538_create_'playlists'_table_to_store_playlist_information_including_'made_for_you'_playlists.sql",
+        "20250720T023734_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_score.sql",
+        "20250720T025221_create_popular_albums_table_with_schema_for_album_data.sql",
+        "20250720T025223_create_made_for_you_playlists_table_with_schema_for_personalized_playlists.sql",
+        "20250720T025520_create_'albums'_table_to_store_album_information_including_title,_artist,_cover_image,_release_date,_and_popularity_metrics.sql",
+        "20250720T025521_create_'tracks'_table_to_store_track_information_that_can_be_associated_with_albums_and_playlists.sql",
+        "20250720T025523_create_'playlist_tracks'_junction_table_to_associate_tracks_with_playlists.sql",
+        "20250720T030603_create_'albums'_table_to_store_album_information_including_popularity_metrics.sql",
+        "20250720T030604_create_'made_for_you_playlists'_table_to_store_personalized_playlists.sql",
+        "20250720T042510_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics.sql",
+        "20250720T051432_create_'albums'_table_to_store_album_information_including_popular_albums.sql",
+        "20250720T052348_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image_url,_release_date,_and_popularity_score.sql",
+        "20250720T061849_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql",
+        "20250720T061850_create_'playlists'_table_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date_playlists.sql",
+        "20250720T062906_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql",
+        "20250720T062908_create_'playlists'_table_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date_playlists.sql",
+        "20250720T064116_create_'albums'_table_to_store_album_information_including_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql",
+        "20250720T064118_create_'playlists'_table_to_store_playlist_information_including_title,_description,_cover_image,_and_creator_playlists.sql",
+        "temp_populate_playlists_1752993679297.sql",
+        "20250720T070941_create_a_'recently_played'_table_in_supabase_to_store_recently_played_tracks_with_proper_relationships_to_users_recently_played.sql",
+        "20250720T081453_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_score_albums.sql",
+        "20250720T081454_create_'playlists'_table_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date_playlists.sql",
+        "20250720T092257_create_a_'recently_played'_table_in_supabase_to_store_recently_played_tracks_with_user_association_recently_played.sql",
+        "20250720T093754_create_a_recently_played_table_in_supabase_to_store_track_play_history_with_user_association_recently_played.sql",
+        "20250720T173837_create_albums_table_to_store_album_information_including_id_title_artist_cover_image_url_and_release_date_albums.sql",
+        "20250720T173839_create_playlists_table_to_store_playlist_information_including_id_title_description_cover_image_url_and_creator_playlists.sql",
+        "20250720T180313_create_popular_albums_table_with_schema_for_album_data_albums.sql",
+        "20250720T180314_create_made_for_you_playlists_table_with_schema_for_personalized_playlists_playlists.sql",
+        "20250720T182028_create_'albums'_table_to_store_album_information_including_popular_albums.sql",
+        "20250720T183548_create_made_for_you_playlists_table_playlists.sql",
+        "20250720T183549_create_popular_albums_table_albums.sql"
       ],
-      "lastChecked": "2025-07-20T01:38:25.628Z"
-=======
-        "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql"
-      ],
-      "lastChecked": "2025-07-20T00:17:54.314Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+      "lastChecked": "2025-07-20T18:42:42.682Z"
     },
     "api": {
       "routes": [
@@ -45,10 +76,7 @@
             "POST"
           ],
           "exists": true,
-<<<<<<< HEAD
-          "lastModified": "2025-07-20T01:38:16.428Z"
-=======
-          "lastModified": "2025-07-20T00:12:05.505Z"
+          "lastModified": "2025-07-20T18:00:44.545Z"
         },
         {
           "path": "/api/playlists\\made-for-you",
@@ -58,8 +86,7 @@
             "DELETE"
           ],
           "exists": true,
-          "lastModified": "2025-07-20T00:15:41.980Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+          "lastModified": "2025-07-20T18:00:44.544Z"
         },
         {
           "path": "/api/recently-played",
@@ -68,13 +95,7 @@
             "POST"
           ],
           "exists": true,
-<<<<<<< HEAD
-          "lastModified": "2025-07-20T01:38:16.429Z"
-        }
-      ],
-      "lastChecked": "2025-07-20T01:38:26.128Z"
-=======
-          "lastModified": "2025-07-19T17:08:25.115Z"
+          "lastModified": "2025-07-20T17:47:08.092Z"
         },
         {
           "path": "/api/tracks\\recently-played",
@@ -83,11 +104,10 @@
             "POST"
           ],
           "exists": true,
-          "lastModified": "2025-07-19T17:08:58.386Z"
+          "lastModified": "2025-07-20T17:47:08.124Z"
         }
       ],
-      "lastChecked": "2025-07-20T00:17:54.784Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+      "lastChecked": "2025-07-20T18:42:43.131Z"
     },
     "components": {
       "components": [
@@ -802,27 +822,19 @@
         {
           "path": "src\\components\\spotify-main-content.tsx",
           "hasDatabase": false,
-<<<<<<< HEAD
-          "lastModified": "2025-07-20T01:38:16.429Z",
-=======
-          "lastModified": "2025-07-20T00:06:07.868Z",
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+          "lastModified": "2025-07-20T18:38:36.901Z",
           "hardcodedDataRemoved": false
         },
         {
           "path": "src\\components\\spotify-player.tsx",
           "hasDatabase": true,
-<<<<<<< HEAD
-          "lastModified": "2025-07-20T01:38:16.431Z",
-=======
-          "lastModified": "2025-07-19T17:19:48.737Z",
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+          "lastModified": "2025-07-20T17:47:08.215Z",
           "hardcodedDataRemoved": true
         },
         {
           "path": "src\\components\\spotify-sidebar.tsx",
           "hasDatabase": true,
-          "lastModified": "2025-07-17T20:16:41.022Z",
+          "lastModified": "2025-07-20T17:47:08.248Z",
           "hardcodedDataRemoved": true
         },
         {
@@ -1576,16 +1588,216 @@
           "hardcodedDataRemoved": false
         }
       ],
-<<<<<<< HEAD
-      "lastChecked": "2025-07-20T01:38:26.131Z"
-=======
-      "lastChecked": "2025-07-20T00:17:54.786Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+      "lastChecked": "2025-07-20T18:42:43.135Z"
     },
     "migrations": {
       "executedMigrations": [
         {
-<<<<<<< HEAD
+          "filename": "20250720T183549_create_popular_albums_table_albums.sql",
+          "description": "create popular albums table albums",
+          "executedAt": "2025-07-20T18:35:50.475Z"
+        },
+        {
+          "filename": "20250720T183548_create_made_for_you_playlists_table_playlists.sql",
+          "description": "create made for you playlists table playlists",
+          "executedAt": "2025-07-20T18:35:49.227Z"
+        },
+        {
+          "filename": "20250720T182028_create_'albums'_table_to_store_album_information_including_popular_albums.sql",
+          "description": "create 'albums' table to store album information including popular albums",
+          "executedAt": "2025-07-20T18:20:29.862Z"
+        },
+        {
+          "filename": "20250720T180314_create_made_for_you_playlists_table_with_schema_for_personalized_playlists_playlists.sql",
+          "description": "create made for you playlists table with schema for personalized playlists playlists",
+          "executedAt": "2025-07-20T18:03:15.155Z"
+        },
+        {
+          "filename": "20250720T180313_create_popular_albums_table_with_schema_for_album_data_albums.sql",
+          "description": "create popular albums table with schema for album data albums",
+          "executedAt": "2025-07-20T18:03:14.082Z"
+        },
+        {
+          "filename": "20250720T173839_create_playlists_table_to_store_playlist_information_including_id_title_description_cover_image_url_and_creator_playlists.sql",
+          "description": "create playlists table to store playlist information including id title description cover image url and creator playlists",
+          "executedAt": "2025-07-20T17:38:39.801Z"
+        },
+        {
+          "filename": "20250720T173837_create_albums_table_to_store_album_information_including_id_title_artist_cover_image_url_and_release_date_albums.sql",
+          "description": "create albums table to store album information including id title artist cover image url and release date albums",
+          "executedAt": "2025-07-20T17:38:38.691Z"
+        },
+        {
+          "filename": "20250720T093754_create_a_recently_played_table_in_supabase_to_store_track_play_history_with_user_association_recently_played.sql",
+          "description": "create a recently played table in supabase to store track play history with user association recently played",
+          "executedAt": "2025-07-20T09:37:55.360Z"
+        },
+        {
+          "filename": "20250720T092257_create_a_'recently_played'_table_in_supabase_to_store_recently_played_tracks_with_user_association_recently_played.sql",
+          "description": "create a 'recently played' table in supabase to store recently played tracks with user association recently played",
+          "executedAt": "2025-07-20T09:22:58.380Z"
+        },
+        {
+          "filename": "20250720T081454_create_'playlists'_table_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date_playlists.sql",
+          "description": "create 'playlists' table to store playlist information including id, title, description, cover image, creator, and creation date playlists",
+          "executedAt": "2025-07-20T08:14:55.577Z"
+        },
+        {
+          "filename": "20250720T081453_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_score_albums.sql",
+          "description": "create 'albums' table to store album information including id, title, artist, cover image, release date, and popularity score albums",
+          "executedAt": "2025-07-20T08:14:54.391Z"
+        },
+        {
+          "filename": "20250720T070941_create_a_'recently_played'_table_in_supabase_to_store_recently_played_tracks_with_proper_relationships_to_users_recently_played.sql",
+          "description": "create a 'recently played' table in supabase to store recently played tracks with proper relationships to users recently played",
+          "executedAt": "2025-07-20T07:09:42.509Z"
+        },
+        {
+          "filename": "temp_populate_playlists_1752993679297.sql",
+          "description": "populate playlists 1752993679297",
+          "executedAt": "2025-07-20T06:41:19.705Z"
+        },
+        {
+          "filename": "20250720T064118_create_'playlists'_table_to_store_playlist_information_including_title,_description,_cover_image,_and_creator_playlists.sql",
+          "description": "create 'playlists' table to store playlist information including title, description, cover image, and creator playlists",
+          "executedAt": "2025-07-20T06:41:18.991Z"
+        },
+        {
+          "filename": "20250720T064116_create_'albums'_table_to_store_album_information_including_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql",
+          "description": "create 'albums' table to store album information including title, artist, cover image, release date, and popularity metrics albums",
+          "executedAt": "2025-07-20T06:41:17.713Z"
+        },
+        {
+          "filename": "20250720T062908_create_'playlists'_table_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date_playlists.sql",
+          "description": "create 'playlists' table to store playlist information including id, title, description, cover image, creator, and creation date playlists",
+          "executedAt": "2025-07-20T06:29:09.111Z"
+        },
+        {
+          "filename": "20250720T062906_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql",
+          "description": "create 'albums' table to store album information including id, title, artist, cover image, release date, and popularity metrics albums",
+          "executedAt": "2025-07-20T06:29:07.605Z"
+        },
+        {
+          "filename": "20250720T061850_create_'playlists'_table_to_store_playlist_information_including_id,_title,_description,_cover_image,_creator,_and_creation_date_playlists.sql",
+          "description": "create 'playlists' table to store playlist information including id, title, description, cover image, creator, and creation date playlists",
+          "executedAt": "2025-07-20T06:18:51.341Z"
+        },
+        {
+          "filename": "20250720T061849_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics_albums.sql",
+          "description": "create 'albums' table to store album information including id, title, artist, cover image, release date, and popularity metrics albums",
+          "executedAt": "2025-07-20T06:18:50.115Z"
+        },
+        {
+          "filename": "20250720T052348_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image_url,_release_date,_and_popularity_score.sql",
+          "description": "create 'albums' table to store album information including id, title, artist, cover image url, release date, and popularity score",
+          "executedAt": "2025-07-20T05:23:50.288Z"
+        },
+        {
+          "filename": "20250720T051432_create_'albums'_table_to_store_album_information_including_popular_albums.sql",
+          "description": "create 'albums' table to store album information including popular albums",
+          "executedAt": "2025-07-20T05:14:34.106Z"
+        },
+        {
+          "filename": "20250720T042510_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_metrics.sql",
+          "description": "create 'albums' table to store album information including id, title, artist, cover image, release date, and popularity metrics",
+          "executedAt": "2025-07-20T04:25:12.042Z"
+        },
+        {
+          "filename": "20250720T030604_create_'made_for_you_playlists'_table_to_store_personalized_playlists.sql",
+          "description": "create 'made for you playlists' table to store personalized playlists",
+          "executedAt": "2025-07-20T03:06:05.696Z"
+        },
+        {
+          "filename": "20250720T030603_create_'albums'_table_to_store_album_information_including_popularity_metrics.sql",
+          "description": "create 'albums' table to store album information including popularity metrics",
+          "executedAt": "2025-07-20T03:06:04.738Z"
+        },
+        {
+          "filename": "20250720T025523_create_'playlist_tracks'_junction_table_to_associate_tracks_with_playlists.sql",
+          "description": "create 'playlist tracks' junction table to associate tracks with playlists",
+          "executedAt": "2025-07-20T02:55:23.807Z"
+        },
+        {
+          "filename": "20250720T025521_create_'tracks'_table_to_store_track_information_that_can_be_associated_with_albums_and_playlists.sql",
+          "description": "create 'tracks' table to store track information that can be associated with albums and playlists",
+          "executedAt": "2025-07-20T02:55:22.841Z"
+        },
+        {
+          "filename": "20250720T025520_create_'albums'_table_to_store_album_information_including_title,_artist,_cover_image,_release_date,_and_popularity_metrics.sql",
+          "description": "create 'albums' table to store album information including title, artist, cover image, release date, and popularity metrics",
+          "executedAt": "2025-07-20T02:55:21.608Z"
+        },
+        {
+          "filename": "20250720T025223_create_made_for_you_playlists_table_with_schema_for_personalized_playlists.sql",
+          "description": "create made for you playlists table with schema for personalized playlists",
+          "executedAt": "2025-07-20T02:52:23.845Z"
+        },
+        {
+          "filename": "20250720T025221_create_popular_albums_table_with_schema_for_album_data.sql",
+          "description": "create popular albums table with schema for album data",
+          "executedAt": "2025-07-20T02:52:22.908Z"
+        },
+        {
+          "filename": "20250720T023734_create_'albums'_table_to_store_album_information_including_id,_title,_artist,_cover_image,_release_date,_and_popularity_score.sql",
+          "description": "create 'albums' table to store album information including id, title, artist, cover image, release date, and popularity score",
+          "executedAt": "2025-07-20T02:37:36.015Z"
+        },
+        {
+          "filename": "20250720T020538_create_'playlists'_table_to_store_playlist_information_including_'made_for_you'_playlists.sql",
+          "description": "create 'playlists' table to store playlist information including 'made for you' playlists",
+          "executedAt": "2025-07-20T02:05:39.310Z"
+        },
+        {
+          "filename": "20250720T020537_create_'albums'_table_to_store_album_information_including_popular_albums.sql",
+          "description": "create 'albums' table to store album information including popular albums",
+          "executedAt": "2025-07-20T02:05:38.293Z"
+        },
+        {
+          "filename": "20250720T020154_create_user_recently_played_table_to_track_user_listening_history.sql",
+          "description": "create user recently played table to track user listening history",
+          "executedAt": "2025-07-20T02:01:55.461Z"
+        },
+        {
+          "filename": "20250720T020154_create_playlist_tracks_junction_table_to_associate_tracks_with_playlists.sql",
+          "description": "create playlist tracks junction table to associate tracks with playlists",
+          "executedAt": "2025-07-20T02:01:54.673Z"
+        },
+        {
+          "filename": "20250720T020153_create_playlists_table_to_store_playlist_information.sql",
+          "description": "create playlists table to store playlist information",
+          "executedAt": "2025-07-20T02:01:53.892Z"
+        },
+        {
+          "filename": "20250720T020152_create_artists_table_to_store_artist_information.sql",
+          "description": "create artists table to store artist information",
+          "executedAt": "2025-07-20T02:01:53.095Z"
+        },
+        {
+          "filename": "20250720T020151_create_albums_table_to_store_album_information.sql",
+          "description": "create albums table to store album information",
+          "executedAt": "2025-07-20T02:01:52.283Z"
+        },
+        {
+          "filename": "20250720T020150_create_tracks_table_to_store_music_tracks_information.sql",
+          "description": "create tracks table to store music tracks information",
+          "executedAt": "2025-07-20T02:01:51.438Z"
+        },
+        {
+          "filename": "20250720T020148_create_users_table_to_store_user_information.sql",
+          "description": "create users table to store user information",
+          "executedAt": "2025-07-20T02:01:50.594Z"
+        },
+        {
+          "filename": "20250720T014702_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
+          "description": "create 'playlists' table to store 'made for you' playlists",
+          "executedAt": "2025-07-20T01:47:03.488Z"
+        },
+        {
+          "filename": "20250720T014701_create_'albums'_table_to_store_popular_albums_data.sql",
+          "description": "create 'albums' table to store popular albums data",
+          "executedAt": "2025-07-20T01:47:02.446Z"
+        },
+        {
           "filename": "20250720T012849_create_a_'recently_played'_table_in_supabase_to_store_track_play_history_with_user_association.sql",
           "description": "create a 'recently played' table in supabase to store track play history with user association",
           "executedAt": "2025-07-20T01:28:50.970Z"
@@ -1611,8 +1823,6 @@
           "executedAt": "2025-07-20T00:18:19.340Z"
         },
         {
-=======
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
           "filename": "20250720T000716_create_'playlists'_table_to_store_'made_for_you'_playlists.sql",
           "description": "create 'playlists' table to store 'made for you' playlists",
           "executedAt": "2025-07-20T00:07:16.903Z"
@@ -1667,20 +1877,9 @@
           "description": "create a 'recently played' table in supabase to store user's recently played tracks with proper relationships",
           "executedAt": "2025-07-18T22:31:49.724Z"
         }
-<<<<<<< HEAD
-      ],
-      "pendingMigrations": [
-        "20250717T220714_create_a_'recently_played'_table_in_supabase_to_store_track_history_with_user_association.sql",
-        "20250717T223258_create_a_'recently_played'_table_in_supabase_to_store_user's_recently_played_tracks_with_proper_relationships.sql",
-        "20250717T223312_create_a_'users'_table_in_supabase_to_store_user_information.sql",
-        "20250717T223322_create_a_'tracks'_table_in_supabase_to_store_track_information.sql"
-      ],
-      "lastChecked": "2025-07-20T01:38:26.198Z"
-=======
       ],
       "pendingMigrations": [],
-      "lastChecked": "2025-07-20T00:17:54.857Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+      "lastChecked": "2025-07-20T18:42:43.195Z"
     },
     "features": {
       "recently_played": {
@@ -1692,55 +1891,35 @@
           "/api/recently-played"
         ],
         "components": [],
-<<<<<<< HEAD
-        "implementedAt": "2025-07-20T01:38:26.378Z"
-=======
-        "implementedAt": "2025-07-20T00:17:55.013Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+        "implementedAt": "2025-07-20T18:42:43.368Z"
       },
       "made_for_you": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-<<<<<<< HEAD
-        "implementedAt": "2025-07-20T01:38:26.462Z"
-=======
-        "implementedAt": "2025-07-20T00:17:55.108Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+        "implementedAt": "2025-07-20T18:42:43.452Z"
       },
       "popular_albums": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-<<<<<<< HEAD
-        "implementedAt": "2025-07-20T01:38:26.536Z"
-=======
-        "implementedAt": "2025-07-20T00:17:55.183Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+        "implementedAt": "2025-07-20T18:42:43.554Z"
       },
       "user_playlists": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-<<<<<<< HEAD
-        "implementedAt": "2025-07-20T01:38:26.593Z"
-=======
-        "implementedAt": "2025-07-20T00:17:55.245Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+        "implementedAt": "2025-07-20T18:42:43.659Z"
       },
       "search_functionality": {
         "implemented": false,
         "tables": [],
         "apis": [],
         "components": [],
-<<<<<<< HEAD
-        "implementedAt": "2025-07-20T01:38:26.677Z"
-=======
-        "implementedAt": "2025-07-20T00:17:55.301Z"
->>>>>>> 24a1c30f1adf2b3b482765909ecf022f5b612925
+        "implementedAt": "2025-07-20T18:42:43.714Z"
       }
     }
   }
