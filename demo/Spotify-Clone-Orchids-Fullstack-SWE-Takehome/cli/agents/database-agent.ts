@@ -6,6 +6,8 @@ import { CodeGenerator } from './code-generator';
 import { MigrationExecutor, MigrationResult } from '../utils/migration-executor';
 import { StateAnalyzer } from '../utils/state-analyzer';
 import { IdempotentSQLGenerator } from '../utils/idempotent-sql-generator';
+import { HardcodedDataExtractor } from '../utils/hardcoded-data-extractor';
+import { SchemaDataMapper } from '../utils/schema-data-mapper';
 
 export interface DatabaseOperation {
   type: 'create_table' | 'create_api' | 'update_component' | 'install_dependency' | 'run_migration' | 'create_types' | 'create_hooks';
@@ -32,6 +34,8 @@ export class DatabaseAgent {
   private migrationExecutor: MigrationExecutor;
   private stateAnalyzer: StateAnalyzer;
   private sqlGenerator: IdempotentSQLGenerator;
+  private dataExtractor: HardcodedDataExtractor;
+  private dataMapper: SchemaDataMapper;
 
   constructor() {
     this.logger = new Logger();
@@ -41,6 +45,8 @@ export class DatabaseAgent {
     this.migrationExecutor = new MigrationExecutor();
     this.stateAnalyzer = new StateAnalyzer();
     this.sqlGenerator = new IdempotentSQLGenerator();
+    this.dataExtractor = new HardcodedDataExtractor();
+    this.dataMapper = new SchemaDataMapper();
   }
 
   async executeQuery(query: string, projectContext: ProjectContext): Promise<void> {
@@ -723,85 +729,51 @@ export class DatabaseAgent {
       
       const columns = this.extractColumns(operation, projectContext);
 
-      // --- Enhanced Seed Data Extraction Logic ---
+      // --- Comprehensive Data Population Pipeline ---
+      this.logger.info('🚀 Starting comprehensive data population pipeline...');
       let seedData: any[] | null = null;
       let includeSeedData = false;
+      let populationScript = '';
       
-      // Map table names to array names in the frontend
-      const tableToArrayMap: Record<string, string> = {
-        'recently_played': 'FALLBACK_RECENTLY_PLAYED',
-        'playlists': 'FALLBACK_MADE_FOR_YOU', 
-        'albums': 'FALLBACK_POPULAR_ALBUMS',
-      };
-      
-      const arrayName = tableToArrayMap[tableName];
-      if (arrayName) {
-        this.logger.info(`🎯 Found seed data mapping: ${tableName} → ${arrayName}`);
-        this.logger.info(`📂 Attempting to extract seed data for table "${tableName}" from array "${arrayName}"`);
+      try {
+        // Extract data using new comprehensive system
+        const extractedData = await this.dataExtractor.getDataForContext(
+          process.cwd(), 
+          operation.description
+        );
         
-        try {
-          // Use the extractArrayFromFile utility from file-manager
-          const { extractArrayFromFile } = require('../utils/file-manager');
-          const frontendFile = 'src/components/spotify-main-content.tsx';
+        if (extractedData.length > 0) {
+          this.logger.success(`📊 Extracted ${extractedData.length} items for context: ${operation.description}`);
           
-          this.logger.info(`🔍 Searching for array "${arrayName}" in file: ${frontendFile}`);
-          const rawSeedData = await extractArrayFromFile(frontendFile, arrayName);
+          // Map data to database schema
+          const mappingResult = this.dataMapper.mapDataToSchema(
+            extractedData,
+            operation.description,
+            tableName
+          );
           
-          if (rawSeedData && Array.isArray(rawSeedData) && rawSeedData.length > 0) {
-            this.logger.success(`🎉 Successfully extracted ${rawSeedData.length} raw items from "${arrayName}"`);
-            this.logger.info(`📋 Sample raw data: ${JSON.stringify(rawSeedData[0], null, 2)}`);
+          if (mappingResult.records.length > 0) {
+            seedData = mappingResult.records;
+            populationScript = mappingResult.insertSql;
+            includeSeedData = true;
             
-            // Transform the raw seed data to match database schema
-            this.logger.info(`🔄 Transforming raw data to match database schema for table: ${tableName}`);
-            seedData = this.transformSeedData(rawSeedData, tableName);
+            this.logger.success(`✨ Successfully mapped ${mappingResult.records.length} records for ${tableName}`);
+            this.logger.info(`📝 Generated population script (${populationScript.length} chars)`);
             
-            if (seedData && seedData.length > 0) {
-              this.logger.success(`✨ Transformation successful: ${seedData.length} records transformed`);
-              this.logger.info(`📊 Sample transformed data: ${JSON.stringify(seedData[0], null, 2)}`);
-              
-              // Validate the transformed seed data
-              this.logger.info(`🔍 Validating transformed seed data...`);
-              const validation = this.sqlGenerator.validateSeedData(seedData, tableName);
-              
-              if (validation.isValid) {
-                includeSeedData = true;
-                this.logger.success(`✅ Seed data validation passed! Ready to insert ${seedData.length} records into ${tableName}`);
-                
-                if (validation.warnings.length > 0) {
-                  this.logger.warn(`⚠️ Validation warnings:`);
-                  validation.warnings.forEach(warning => this.logger.warn(`  • ${warning}`));
-                }
-              } else {
-                this.logger.error(`❌ Seed data validation failed for ${tableName}:`);
-                validation.errors.forEach(error => this.logger.error(`  • ${error}`));
-                this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
-                seedData = null;
-                includeSeedData = false;
-              }
-            } else {
-              this.logger.error(`❌ Data transformation failed for "${arrayName}"`);
-              this.logger.error(`   Raw data length: ${rawSeedData.length}, Transformed data: ${seedData ? 'empty array' : 'null'}`);
-              this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
-            }
+            // Save population script for later use
+            await this.savePopulationScript(tableName, populationScript);
+            
           } else {
-            this.logger.warn(`⚠️ No valid seed data found for "${arrayName}" in ${frontendFile}`);
-            this.logger.info(`   Raw extraction result: ${rawSeedData ? `${typeof rawSeedData} (length: ${Array.isArray(rawSeedData) ? rawSeedData.length : 'N/A'})` : 'null'}`);
-            this.logger.info(`💡 Tip: Check if the array exists in the file or if it's in a different format`);
+            this.logger.warn(`⚠️ No records generated from mapping for ${tableName}`);
           }
-        } catch (error) {
-          this.logger.error(`💥 Error during seed data extraction for "${arrayName}"`);
-          this.logger.error(`   Error: ${error instanceof Error ? error.message : String(error)}`);
-          if (error instanceof Error && error.stack) {
-            this.logger.error(`   Stack trace: ${error.stack.split('\n').slice(0, 3).join('\n')}`);
-          }
-          this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
+        } else {
+          this.logger.warn(`⚠️ No data extracted for context: ${operation.description}`);
         }
-      } else {
-        this.logger.warn(`⚠️ No seed data mapping defined for table: "${tableName}"`);
-        this.logger.info(`   Available mappings: ${Object.keys(tableToArrayMap).join(', ')}`);
-        this.logger.info(`💡 Consider adding a mapping in tableToArrayMap if seed data is needed`);
+      } catch (error) {
+        this.logger.error(`💥 Error in data population pipeline: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(`⏭️ Proceeding without seed data for ${tableName}`);
       }
-      // --- End Enhanced Seed Data Extraction Logic ---
+      // --- End Comprehensive Data Population Pipeline ---
 
       // Generate comprehensive migration with seed data
       const sqlCode = await this.sqlGenerator.generateCompleteMigration(
@@ -1164,8 +1136,8 @@ ON CONFLICT (id) DO NOTHING;`;
         { name: 'type', type: 'TEXT', constraints: 'NOT NULL', default: '' },
         { name: 'recommendation_score', type: 'DECIMAL(3,2)', default: '' }
       );
-    } else if (description.includes('popular albums')) {
-      this.logger.info(`🎵 Detected 'popular albums' - adding comprehensive album schema`);
+    } else if (description.includes('popular albums') || (description.includes('albums') && !description.includes('playlist'))) {
+      this.logger.info(`🎵 Detected 'albums' - adding comprehensive album schema`);
       columns.push(
         { name: 'album_id', type: 'TEXT', constraints: 'NOT NULL UNIQUE', default: '' },
         { name: 'title', type: 'TEXT', constraints: 'NOT NULL', default: '' },
@@ -2238,5 +2210,41 @@ ${failedResults.map(result => `-- FAILED: ${result.migration.filename} - ${resul
     this.logger.warn('Cancelling current operation...');
     await this.fileManager.rollbackOperations();
     this.logger.success('Operation cancelled and changes rolled back');
+  }
+
+  // Save population script for later manual execution
+  private async savePopulationScript(tableName: string, script: string): Promise<void> {
+    const fs = require('fs').promises;
+    const path = require('path');
+    
+    try {
+      const scriptsDir = path.join(process.cwd(), 'database-population-scripts');
+      
+      // Create directory if it doesn't exist
+      try {
+        await fs.mkdir(scriptsDir, { recursive: true });
+      } catch (error) {
+        // Directory might already exist
+      }
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `${timestamp}_populate_${tableName}.sql`;
+      const filepath = path.join(scriptsDir, filename);
+      
+      const fullScript = `-- Population script for ${tableName}
+-- Generated: ${new Date().toISOString()}
+-- Use this script to populate your ${tableName} table with seed data
+
+${script}
+
+-- Script completed for ${tableName}`;
+      
+      await fs.writeFile(filepath, fullScript, 'utf8');
+      this.logger.success(`💾 Population script saved: ${filename}`);
+      this.logger.info(`📁 Location: ${filepath}`);
+      
+    } catch (error) {
+      this.logger.warn(`⚠️ Failed to save population script: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 } 
