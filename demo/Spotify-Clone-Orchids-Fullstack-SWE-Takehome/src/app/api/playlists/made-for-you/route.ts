@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         description: body.description,
         image_url: body.imageUrl,
-        playlist_type: 'made-for-you',
+        type: 'personalized', // Match the type used in GET query
         user_id: body.userId || 'system'
       })
       .select()
@@ -59,11 +59,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.songs?.length > 0) {
-      const songsToInsert = body.songs.map(song => ({
+      const songsToInsert = body.songs.map((song, index) => ({
         playlist_id: playlist.id,
         title: song.title,
         artist: song.artist,
-        duration: song.duration
+        duration: song.duration || 200,
+        position: index
       }));
 
       const { error: songsError } = await supabase
