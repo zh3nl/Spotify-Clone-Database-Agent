@@ -37,7 +37,8 @@ A modern Spotify clone built with Next.js 15, TypeScript, and Supabase, featurin
 ### 1. Clone and Install
 ```bash
 git clone <repository-url>
-cd Spotify-Clone-Orchids-Fullstack-SWE-Takehome
+cd demo
+cd Spotify-Clone-DB-Agent
 npm install
 ```
 Note: If you run into compatibility issues with React 19 when setting up the project, feel free to downgrade to React 18 or run `npm install –-legacy-peer-deps`
